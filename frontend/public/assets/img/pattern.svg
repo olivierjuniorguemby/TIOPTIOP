@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <rect width="120" height="120" fill="none"/>
+  <g fill="#ff7900" opacity="0.10">
+    <path d="M10 20l10-10 10 10-10 10z"/>
+    <path d="M50 20l10-10 10 10-10 10z"/>
+    <path d="M90 20l10-10 10 10-10 10z"/>
+    <path d="M30 50l10-10 10 10-10 10z"/>
+    <path d="M70 50l10-10 10 10-10 10z"/>
+    <path d="M10 80l10-10 10 10-10 10z"/>
+    <path d="M50 80l10-10 10 10-10 10z"/>
+    <path d="M90 80l10-10 10 10-10 10z"/>
+  </g>
+  <g stroke="#ff7900" opacity="0.10" stroke-width="2" fill="none">
+    <path d="M0 60h120"/>
+    <path d="M60 0v120"/>
+  </g>
+</svg>

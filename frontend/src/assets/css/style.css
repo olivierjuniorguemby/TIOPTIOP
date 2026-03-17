@@ -1,0 +1,266 @@
+:root {
+  --brand: #ff7900;
+  --brand-2: #ff9a33;
+  --dark: #1b1b1b;
+  --bg: #fff8f2;
+  --card: #ffffff;
+  --muted: #6c757d;
+  --border: rgba(0,0,0,0.08);
+}
+
+/* ===== GLOBAL ===== */
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--dark);
+  /*background-image: url('/assets/img/pattern.svg');*/
+  background-repeat: repeat;
+  background-size: 160px 160px;
+}
+
+a {
+  color: var(--dark);
+}
+a:hover {
+  color: var(--brand);
+}
+
+/* ===== TOPBAR ===== */
+
+.tt-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.tt-brand-badge {
+  background: var(--brand);
+  color: #fff;
+  border-radius: 14px;
+  padding: 6px 10px;
+  font-weight: 800;
+}
+
+/* ===== BUTTON ===== */
+
+.tt-btn {
+  border-radius: 14px;
+  font-weight: 700;
+}
+
+/* Taille normale */
+.btn-tt,
+.btn-tt-outline {
+  padding: 8px 12px;
+}
+
+/* Taille small bootstrap respectée */
+.btn-sm.btn-tt,
+.btn-sm.btn-tt-outline {
+  padding: 4px 10px;
+  font-size: 0.85rem;
+}
+
+.btn-tt {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+.btn-tt:hover {
+  background: #e66d00;
+  border-color: #e66d00;
+}
+
+.btn-tt-outline {
+  border: 1px solid var(--brand);
+  color: var(--brand);
+  background: #fff;
+}
+.btn-tt-outline:hover {
+  background: var(--brand);
+  color: #fff;
+}
+
+/* ===== CARD ===== */
+
+.tt-card {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+}
+
+/* ===== HERO ===== */
+
+.tt-hero-carousel {
+  border-radius: 18px;
+  overflow: hidden;
+  background: #fff3e8;
+}
+
+.tt-hero-carousel img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 576px) {
+  .tt-hero-carousel img {
+    height: 160px;
+  }
+}
+
+.tt-hero-slide {
+  position: relative;
+}
+
+.tt-hero-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: var(--brand);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+
+/* ===== CATEGORY SCROLL ===== */
+
+.tt-category-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.tt-category-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tt-category-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.12);
+  border-radius: 999px;
+}
+
+/* ===== MENU ITEM ===== */
+
+.tt-menu-item {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+/* ===== THUMB ===== */
+
+.tt-thumb {
+  width: 72px;
+  height: 72px;
+  min-width: 72px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f7efe7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tt-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ===== PRICE ===== */
+
+.tt-price {
+  font-weight: 900;
+}
+
+/* ===== BADGE ===== */
+
+.tt-badge {
+  background: rgba(255,121,0,0.12);
+  border: 1px solid rgba(255,121,0,0.22);
+  color: #b95500;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+/* ===== FOOTER ===== */
+
+.tt-footer {
+  background: #fff;
+  border-top: 1px solid var(--border);
+}
+
+.tt-footer a {
+  text-decoration: none;
+}
+
+/* ===== MOBILE NAV ===== */
+
+.tt-bottom-nav {
+  position: sticky;
+  bottom: 0;
+  z-index: 1010;
+  background: rgba(255,255,255,0.94);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border);
+}
+
+.tt-bottom-nav .nav-link {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.tt-bottom-nav .nav-link:hover {
+  color: var(--brand);
+}
+
+/* ===== FORM ===== */
+
+.form-control, .form-select {
+  border-radius: 14px;
+  border-color: var(--border);
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: rgba(255,121,0,0.45);
+  box-shadow: 0 0 0 .25rem rgba(255,121,0,0.15);
+}
+
+/* ===== PROMO CARD ===== */
+
+.promo-img {
+  height: 180px;
+  object-fit: cover;
+}
+
+/* ===== ADMIN ===== */
+
+.tt-admin-nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+}
+
+.tt-admin-nav a:hover {
+  background: rgba(255,121,0,0.10);
+  color: var(--brand);
+}
