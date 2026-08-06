@@ -1,0 +1,499 @@
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">🧾 Mes commandes</span>
+    <h1>🧾 Mes commandes</h1>
+    <p>Historique et factures</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <!-- =========================================================
+     TIOPTIOP - BLOC MES COMMANDES
+========================================================= -->
+
+<style>
+  .tiop-orders-block {
+    --orange: #ff7900;
+    --orange-hover: #e96f00;
+    --text: #1c1916;
+    --muted: #77716c;
+    --border: #dfdfdf;
+    --card: #ffffff;
+
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+  }
+
+  /* ==========================
+     FILTRES
+  ========================== */
+
+  .orders-filters {
+    display: grid;
+    grid-template-columns:
+      minmax(230px, 1.8fr)
+      minmax(170px, 1fr)
+      minmax(170px, 1fr)
+      minmax(150px, 1fr)
+      auto;
+
+    gap: 10px;
+
+    padding: 14px;
+
+    margin-bottom: 22px;
+
+    background: #fff;
+
+    border-radius: 23px;
+  }
+
+  .orders-field {
+    width: 100%;
+    height: 52px;
+
+    padding: 0 14px;
+
+    box-sizing: border-box;
+
+    border: 1px solid var(--border);
+    border-radius: 15px;
+
+    background: #fff;
+
+    color: var(--text);
+
+    font-size: 14px;
+
+    outline: none;
+
+    transition:
+      border-color .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .orders-field:focus {
+    border-color: var(--orange);
+
+    box-shadow:
+      0 0 0 3px rgba(255,121,0,.08);
+  }
+
+  .orders-filter-button {
+    min-width: 84px;
+    height: 52px;
+
+    padding: 0 18px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: var(--orange);
+    color: #fff;
+
+    font-weight: 800;
+    font-size: 14px;
+
+    cursor: pointer;
+
+    transition: .2s ease;
+  }
+
+  .orders-filter-button:hover {
+    background: var(--orange-hover);
+    transform: translateY(-1px);
+  }
+
+  /* ==========================
+     LISTE
+  ========================== */
+
+  .orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .order-card {
+    min-height: 82px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 16px;
+
+    background: var(--card);
+
+    border: 1px solid var(--border);
+    border-radius: 20px;
+
+    box-sizing: border-box;
+  }
+
+  /* ICONE */
+
+  .order-icon {
+    width: 48px;
+    height: 48px;
+
+    min-width: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-right: 13px;
+
+    border-radius: 13px;
+
+    background: #fff0df;
+
+    font-size: 20px;
+  }
+
+  /* INFORMATIONS */
+
+  .order-information {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .order-number {
+    display: block;
+
+    margin-bottom: 3px;
+
+    font-size: 14px;
+    font-weight: 900;
+  }
+
+  .order-description {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 14px;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ACTIONS */
+
+  .order-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    margin-left: 18px;
+  }
+
+  .order-status {
+    display: inline-flex;
+    align-items: center;
+
+    min-height: 28px;
+
+    padding: 0 12px;
+
+    border-radius: 999px;
+
+    background: #fff0dc;
+    color: #a85a00;
+
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .order-price {
+    min-width: 65px;
+
+    font-size: 14px;
+    font-weight: 900;
+
+    white-space: nowrap;
+  }
+
+  /* ==========================
+     FACTURE
+  ========================== */
+
+  .invoice-button {
+    min-height: 42px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    padding: 0 17px;
+
+    border-radius: 999px;
+
+    background: #fff;
+    color: var(--text);
+
+    text-decoration: none;
+
+    font-size: 13px;
+    font-weight: 900;
+
+    box-shadow:
+      0 5px 20px rgba(0,0,0,.055);
+
+    transition:
+      transform .2s ease,
+      color .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .invoice-button:hover {
+    color: var(--orange);
+
+    transform: translateY(-1px);
+
+    box-shadow:
+      0 7px 22px rgba(0,0,0,.08);
+  }
+
+  /* ==========================
+     RESPONSIVE
+  ========================== */
+
+  @media (max-width: 950px) {
+
+    .orders-filters {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .orders-filter-button {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 700px) {
+
+    .order-card {
+      align-items: flex-start;
+      flex-wrap: wrap;
+
+      padding: 15px;
+    }
+
+    .order-information {
+      width: calc(100% - 65px);
+    }
+
+    .order-actions {
+      width: 100%;
+
+      margin:
+        15px 0
+        0 61px;
+
+      flex-wrap: wrap;
+    }
+  }
+
+  @media (max-width: 520px) {
+
+    .orders-filters {
+      grid-template-columns: 1fr;
+
+      padding: 11px;
+
+      border-radius: 19px;
+    }
+
+    .order-description {
+      white-space: normal;
+    }
+
+    .order-actions {
+      margin-left: 0;
+
+      justify-content: space-between;
+    }
+
+    .invoice-button {
+      flex: 1;
+    }
+  }
+</style>
+
+
+<section class="tiop-orders-block">
+
+  <!-- ============================================
+       FILTRES
+  ============================================= -->
+
+  <form
+    class="orders-filters"
+    action="/commandes"
+    method="GET"
+  >
+
+    <!-- Recherche -->
+    <input
+      type="search"
+      name="search"
+      class="orders-field"
+      placeholder="Commande ou produit"
+    >
+
+
+    <!-- Statut -->
+    <select
+      name="status"
+      class="orders-field"
+    >
+
+      <option value="">
+        Tous statuts
+      </option>
+
+      <option value="pending">
+        En attente
+      </option>
+
+      <option value="preparation">
+        Préparation
+      </option>
+
+      <option value="delivery">
+        En livraison
+      </option>
+
+      <option value="delivered">
+        Livrée
+      </option>
+
+      <option value="cancelled">
+        Annulée
+      </option>
+
+    </select>
+
+
+    <!-- Catégorie -->
+    <select
+      name="category"
+      class="orders-field"
+    >
+
+      <option value="">
+        Toutes catégories
+      </option>
+
+      <option value="traditions">
+        Traditions
+      </option>
+
+      <option value="grillades">
+        Grillades
+      </option>
+
+      <option value="petit-dejeuner">
+        Petit-déjeuner
+      </option>
+
+      <option value="boissons">
+        Boissons
+      </option>
+
+      <option value="desserts">
+        Desserts
+      </option>
+
+    </select>
+
+
+    <!-- Prix maximum -->
+    <input
+      type="number"
+      name="maxPrice"
+      class="orders-field"
+      placeholder="Prix maximum"
+      min="0"
+    >
+
+
+    <button
+      type="submit"
+      class="orders-filter-button"
+    >
+      Filtrer
+    </button>
+
+  </form>
+
+
+  <!-- ============================================
+       COMMANDES
+  ============================================= -->
+
+  <div class="orders-list">
+
+
+    <!-- COMMANDE -->
+
+    <article class="order-card">
+
+      <!-- Icône -->
+      <div class="order-icon">
+        🧾
+      </div>
+
+
+      <!-- Informations -->
+      <div class="order-information">
+
+        <strong class="order-number">
+          TIOP-00124
+        </strong>
+
+        <p class="order-description">
+          Aujourd’hui 19:42 · Poulet Braisé Tiop, Jus de Bissap
+        </p>
+
+      </div>
+
+
+      <!-- Statut / prix / facture -->
+      <div class="order-actions">
+
+        <span class="order-status">
+          Préparation
+        </span>
+
+        <strong class="order-price">
+          27,30 €
+        </strong>
+
+
+        <!--
+          IMPORTANT :
+          Ce lien ouvre la page invoice de cette commande.
+        -->
+
+        <a
+          href="/commande/TIOP-00124"
+          class="invoice-button"
+          title="Consulter la facture"
+        >
+          🧾
+          Facture
+        </a>
+
+      </div>
+
+    </article>
+
+  </div>
+
+</section>
+  </div>
+</section>

@@ -1,0 +1,36 @@
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">💼 <%= job.contract_type %></span>
+    <h1><%= job.title %></h1>
+    <p><%= job.department %> · <%= job.location %></p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container two-columns">
+    <article class="panel">
+      <h2>Description</h2>
+      <p><%= job.description %></p>
+      <h2>Responsabilités</h2>
+      <p><%= job.responsibilities || "À préciser" %></p>
+      <h2>Profil recherché</h2>
+      <p><%= job.requirements || "À préciser" %></p>
+      <h2>Avantages</h2>
+      <p><%= job.benefits || "À préciser" %></p>
+    </article>
+
+    <form class="panel form" action="/candidatures" method="post" enctype="multipart/form-data">
+      <h2>📨 Envoyer ma candidature</h2>
+      <input type="hidden" name="job_id" value="<%= job.id %>">
+      <input class="field" name="first_name" placeholder="Prénom" required>
+      <input class="field" name="last_name" placeholder="Nom" required>
+      <input class="field" name="email" type="email" placeholder="Email" required>
+      <input class="field" name="phone" placeholder="Téléphone" required>
+      <input class="field" name="experience" placeholder="Expérience">
+      <input class="field" name="availability" placeholder="Disponibilité">
+      <textarea class="field" name="cover_message" placeholder="Motivation"></textarea>
+      <input class="field" name="documents" type="file" multiple accept=".pdf,.doc,.docx">
+      <button class="button primary">Envoyer ma candidature</button>
+    </form>
+  </div>
+</section>

@@ -1,0 +1,294 @@
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">🎁 Offres</span>
+    <h1>🎁 Offres</h1>
+    <p>Promotions et bons plans</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <!-- =========================================================
+     TIOPTIOP - BLOC OFFRES
+========================================================= -->
+
+<style>
+  .tiop-offers {
+    --orange: #ff7900;
+    --orange-hover: #e96e00;
+    --text: #1d1a17;
+    --muted: #746e68;
+    --border: #f0e6dc;
+
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+  }
+
+  /* =========================
+     GRILLE
+  ========================== */
+
+  .offers-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+
+  /* =========================
+     CARTE
+  ========================== */
+
+  .offer-card {
+    min-height: 220px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+
+    padding: 28px;
+
+    box-sizing: border-box;
+
+    background: #ffffff;
+
+    border: 1px solid var(--border);
+    border-radius: 28px;
+
+    transition:
+      transform .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .offer-card:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+      0 10px 30px rgba(0, 0, 0, .04);
+  }
+
+  /* =========================
+     BADGE
+  ========================== */
+
+  .offer-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 34px;
+
+    padding: 0 13px;
+
+    margin-bottom: 24px;
+
+    border-radius: 999px;
+
+    background: #fff0df;
+    color: var(--orange);
+
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  /* =========================
+     TITRE
+  ========================== */
+
+  .offer-title {
+    margin: 0 0 23px;
+
+    color: var(--text);
+
+    font-size: 24px;
+    line-height: 1.2;
+    font-weight: 900;
+
+    letter-spacing: -.3px;
+  }
+
+  /* =========================
+     CODE PROMO
+  ========================== */
+
+  .offer-code {
+    margin: 0 0 5px;
+
+    color: var(--muted);
+
+    font-size: 15px;
+  }
+
+  .offer-code strong {
+    color: #6b6661;
+    font-weight: 900;
+  }
+
+  /* =========================
+     BOUTON
+  ========================== */
+
+  .offer-action {
+    min-height: 44px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 17px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: var(--orange);
+    color: #ffffff;
+
+    font-size: 15px;
+    font-weight: 900;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+      background .2s ease,
+      transform .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .offer-action:hover {
+    background: var(--orange-hover);
+
+    transform: translateY(-1px);
+
+    box-shadow:
+      0 7px 18px rgba(255, 121, 0, .18);
+  }
+
+  /* =========================
+     RESPONSIVE TABLETTE
+  ========================== */
+
+  @media (max-width: 750px) {
+
+    .offers-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .offer-card {
+      min-height: 200px;
+    }
+  }
+
+  /* =========================
+     RESPONSIVE MOBILE
+  ========================== */
+
+  @media (max-width: 480px) {
+
+    .offers-grid {
+      gap: 12px;
+    }
+
+    .offer-card {
+      min-height: auto;
+
+      padding: 23px 20px;
+
+      border-radius: 22px;
+    }
+
+    .offer-badge {
+      margin-bottom: 20px;
+    }
+
+    .offer-title {
+      margin-bottom: 18px;
+
+      font-size: 21px;
+    }
+
+    .offer-action {
+      min-height: 42px;
+    }
+  }
+</style>
+
+
+<!-- =========================================================
+     OFFRES
+========================================================= -->
+
+<section class="tiop-offers">
+
+  <div class="offers-grid">
+
+
+    <!-- ================================================
+         OFFRE 1
+    ================================================= -->
+
+    <article class="offer-card">
+
+      <span class="offer-badge">
+        OFFRE
+      </span>
+
+
+      <h2 class="offer-title">
+        -20% Poulet Braisé
+      </h2>
+
+
+      <p class="offer-code">
+        Code :
+        <strong>BRAISE20</strong>
+      </p>
+
+
+      <a
+        href="/menu?promo=BRAISE20"
+        class="offer-action"
+      >
+        J’en profite
+      </a>
+
+    </article>
+
+
+    <!-- ================================================
+         OFFRE 2
+    ================================================= -->
+
+    <article class="offer-card">
+
+      <span class="offer-badge">
+        OFFRE
+      </span>
+
+
+      <h2 class="offer-title">
+        Livraison offerte dès 20 €
+      </h2>
+
+
+      <p class="offer-code">
+        Code :
+        <strong>TIOPFREE</strong>
+      </p>
+
+
+      <a
+        href="/menu?promo=TIOPFREE"
+        class="offer-action"
+      >
+        J’en profite
+      </a>
+
+    </article>
+
+  </div>
+
+</section>
+  </div>
+</section>

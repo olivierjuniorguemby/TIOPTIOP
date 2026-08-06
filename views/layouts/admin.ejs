@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <%- include("../partials/admin/head", { title }) %>
+</head>
+<body class="admin-body">
+  <div class="admin-shell">
+    <%- include("../partials/admin/sidebar") %>
+
+    <div class="admin-content">
+      <%- include("../partials/admin/header") %>
+      <%- include("../partials/shared-messages") %>
+
+      <main class="admin-main">
+        <%- body %>
+      </main>
+    </div>
+  </div>
+
+  <%- include("../partials/admin/scripts") %>
+</body>
+</html>

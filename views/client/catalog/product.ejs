@@ -1,0 +1,13 @@
+<section class="section">
+  <div class="container two-columns">
+    <div class="media-placeholder">🍽️</div>
+    <div class="panel">
+      <span class="badge"><%= product.category_name %></span>
+      <h1><%= product.name %></h1>
+      <p><%= product.description || product.short_description || "" %></p>
+      <p><strong>Préparation :</strong> <%= product.preparation_minutes %> minutes</p>
+      <h2><%= formatMoney(product.price) %></h2>
+      <button class="button primary" type="button">🛒 Ajouter au panier</button>
+    </div>
+  </div>
+</section>

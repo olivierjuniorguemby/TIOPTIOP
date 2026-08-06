@@ -1,0 +1,325 @@
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">❓ FAQ</span>
+    <h1>❓ FAQ</h1>
+    <p>Questions fréquentes</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <!-- =========================================================
+     TIOPTIOP - BLOC FAQ
+     views/client/content/faq.ejs
+========================================================= -->
+
+<style>
+  .tiop-faq {
+    --text: #1d1a17;
+    --muted: #77716c;
+    --border: #f0e8df;
+    --orange: #ff7900;
+
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+  }
+
+  /* =========================
+     LISTE FAQ
+  ========================== */
+
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+
+  /* =========================
+     CARTE
+  ========================== */
+
+  .faq-item {
+    background: #ffffff;
+
+    border: 1px solid var(--border);
+    border-radius: 25px;
+
+    overflow: hidden;
+
+    transition:
+      border-color .2s ease,
+      box-shadow .2s ease,
+      transform .2s ease;
+  }
+
+  .faq-item:hover {
+    border-color: #eadbcd;
+
+    box-shadow:
+      0 7px 25px rgba(0, 0, 0, .025);
+  }
+
+  /* =========================
+     QUESTION
+  ========================== */
+
+  .faq-question {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    min-height: 64px;
+
+    padding: 20px 25px;
+
+    box-sizing: border-box;
+
+    list-style: none;
+
+    color: var(--text);
+
+    font-size: 14px;
+    font-weight: 900;
+
+    cursor: pointer;
+
+    user-select: none;
+  }
+
+  /* Enlève la flèche native */
+
+  .faq-question::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-question::marker {
+    display: none;
+    content: "";
+  }
+
+  /* Flèche personnalisée */
+
+  .faq-question::before {
+    content: "▶";
+
+    display: inline-block;
+
+    margin-right: 8px;
+
+    font-size: 11px;
+
+    transform: rotate(0deg);
+
+    transition: transform .2s ease;
+  }
+
+  /* Question ouverte */
+
+  .faq-item[open] .faq-question::before {
+    transform: rotate(90deg);
+  }
+
+  /* =========================
+     RÉPONSE
+  ========================== */
+
+  .faq-answer {
+    padding:
+      0 25px
+      26px 25px;
+  }
+
+  .faq-answer p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+
+  /* =========================
+     RESPONSIVE
+  ========================== */
+
+  @media (max-width: 650px) {
+
+    .faq-list {
+      gap: 9px;
+    }
+
+    .faq-item {
+      border-radius: 20px;
+    }
+
+    .faq-question {
+      min-height: 60px;
+
+      padding: 18px;
+
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .faq-answer {
+      padding:
+        0 18px
+        20px;
+    }
+
+    .faq-answer p {
+      font-size: 13px;
+    }
+  }
+
+</style>
+
+
+<!-- =========================================================
+     FAQ
+========================================================= -->
+
+<section class="tiop-faq">
+
+  <div class="faq-list">
+
+
+    <!-- =============================================
+         QUESTION 1
+    ============================================== -->
+
+    <details class="faq-item" open>
+
+      <summary class="faq-question">
+        Comment suivre ma commande ?
+      </summary>
+
+      <div class="faq-answer">
+
+        <p>
+          Depuis Mes commandes, ouvrez la commande puis Suivre.
+          Les étapes se mettent à jour lorsque le restaurant
+          ou le livreur change le statut.
+        </p>
+
+      </div>
+
+    </details>
+
+
+    <!-- =============================================
+         QUESTION 2
+    ============================================== -->
+
+    <details class="faq-item" open>
+
+      <summary class="faq-question">
+        Puis-je commander à emporter ?
+      </summary>
+
+      <div class="faq-answer">
+
+        <p>
+          Oui. Choisissez À emporter dans le parcours
+          Commander maintenant.
+        </p>
+
+      </div>
+
+    </details>
+
+
+    <!-- =============================================
+         QUESTION 3
+    ============================================== -->
+
+    <details class="faq-item" open>
+
+      <summary class="faq-question">
+        Comment fonctionne Tiop+ ?
+      </summary>
+
+      <div class="faq-answer">
+
+        <p>
+          Vous cumulez des points à chaque commande puis
+          les échangez contre des récompenses.
+        </p>
+
+      </div>
+
+    </details>
+
+
+    <!-- =============================================
+         QUESTION 4
+    ============================================== -->
+
+    <details class="faq-item" open>
+
+      <summary class="faq-question">
+        Puis-je commander sans compte ?
+      </summary>
+
+      <div class="faq-answer">
+
+        <p>
+          Oui, en invité. Un employé peut aussi créer votre
+          commande depuis le POS si vous commandez par téléphone,
+          WhatsApp ou directement au restaurant.
+        </p>
+
+      </div>
+
+    </details>
+
+
+    <!-- =============================================
+         QUESTION 5
+    ============================================== -->
+
+    <details class="faq-item" open>
+
+      <summary class="faq-question">
+        Comment sont gérés les paiements en espèces ?
+      </summary>
+
+      <div class="faq-answer">
+
+        <p>
+          Le paiement reste EN ATTENTE jusqu’à ce qu’un caissier
+          ou livreur confirme l’encaissement. L’historique est
+          conservé.
+        </p>
+
+      </div>
+
+    </details>
+
+
+    <!-- =============================================
+         QUESTION 6
+    ============================================== -->
+
+    <details class="faq-item" open>
+
+      <summary class="faq-question">
+        Quels moyens de paiement sont prévus ?
+      </summary>
+
+      <div class="faq-answer">
+
+        <p>
+          Carte, Mobile Money et espèces selon le restaurant
+          et le canal de commande.
+        </p>
+
+      </div>
+
+    </details>
+
+  </div>
+
+</section>
+  </div>
+</section>

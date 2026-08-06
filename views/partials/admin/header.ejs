@@ -1,0 +1,13 @@
+<header class="admin-header">
+  <div>
+    <strong><%= title %></strong>
+    <small>TiopTiop Signature — Administration</small>
+  </div>
+
+  <div class="admin-header-actions">
+    <a class="button secondary" href="/">🌐 Voir le site</a>
+    <% if (currentAdmin) { %>
+      <span class="profile-chip">👤 <%= currentAdmin.name %></span>
+    <% } %>
+  </div>
+</header>

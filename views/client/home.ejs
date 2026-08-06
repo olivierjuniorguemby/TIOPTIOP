@@ -1,0 +1,312 @@
+<header class="hero">
+    <div class="container heroGrid">
+        <div>
+            <span class="eyebrow">
+                🇨🇬 Saveurs du Congo · livraison & retrait
+            </span>
+
+            <h1>LE CONGO DANS VOTRE ASSIETTE.</h1>
+
+            <p>
+                Des recettes d’ici, préparées avec soin, commandées en quelques clics
+                et suivies jusqu’à votre porte.
+            </p>
+
+            <div class="cta">
+                <a class="btn primary" href="#/commander">
+                    Commander maintenant
+                </a>
+
+                <a class="btn dark" href="#/menu">
+                    Découvrir le menu
+                </a>
+            </div>
+        </div>
+
+        <div class="art">
+            <div class="plate"></div>
+
+            <div class="float f1">
+                🌿 Saka-Saka<br>
+                <small>fait maison</small>
+            </div>
+
+            <div class="float f2">
+                🛵 25–35 min<br>
+                <small>suivi en direct</small>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+<div class="container searchbar">
+
+    <input
+        class="field"
+        id="hs"
+        placeholder="🔎 Rechercher saka-saka, poulet, mikate…"
+    >
+
+    <select class="field">
+        <option>Livraison</option>
+        <option>À emporter</option>
+        <option>Sur place</option>
+    </select>
+
+    <select class="field">
+        <option>Maintenant</option>
+        <option>Programmer</option>
+    </select>
+
+    <button
+        class="btn primary"
+        onclick="location.hash='#/menu?q='+encodeURIComponent(hs.value)"
+    >
+        Voir les plats
+    </button>
+
+</div>
+
+
+<section>
+    <div class="container">
+
+        <div class="sectionHead">
+
+            <div>
+                <span class="eyebrow">Explorer</span>
+
+                <h2>
+                    Qu’est-ce qui vous ferait plaisir ?
+                </h2>
+            </div>
+
+            <p>
+                Accédez directement à votre envie du moment.
+            </p>
+
+        </div>
+
+
+        <div class="grid cats">
+
+            <a class="cat" href="#/menu?cat=Grillades">
+                <span>🔥</span>
+                <b>Grillades</b>
+            </a>
+
+            <a class="cat" href="#/menu?cat=Tradition">
+                <span>🍛</span>
+                <b>Tradition</b>
+            </a>
+
+            <a class="cat" href="#/menu?cat=Petit-déjeuner">
+                <span>☀️</span>
+                <b>Petit-déjeuner</b>
+            </a>
+
+            <a class="cat" href="#/menu?cat=Douceurs">
+                <span>🍰</span>
+                <b>Douceurs</b>
+            </a>
+
+            <a class="cat" href="#/menu?cat=Boissons">
+                <span>🥤</span>
+                <b>Boissons</b>
+            </a>
+
+            <a class="cat" href="#/offres">
+                <span>🎁</span>
+                <b>Menus & Offres</b>
+            </a>
+
+        </div>
+    </div>
+</section>
+
+
+<section>
+    <div class="container">
+
+        <div class="sectionHead">
+
+            <div>
+                <span class="eyebrow">
+                    Nos stars
+                </span>
+
+                <h2>
+                    Les incontournables TiopTiop
+                </h2>
+            </div>
+
+            <a href="#/menu">
+                <b>Voir tout le menu →</b>
+            </a>
+
+        </div>
+
+
+        <div class="product-grid">
+             <% products.forEach((product) => { %>
+        <article class="card">
+          <% if (product.image_url) { %>
+            <img src="<%= product.image_url %>" alt="<%= product.name %>">
+          <% } %>
+          <div class="card-body">
+            <span class="badge"><%= product.category_name %></span>
+            <h3><%= product.name %></h3>
+            <p><%= product.short_description || "" %></p>
+            <div class="card-row">
+              <strong><%= formatMoney(product.price) %></strong>
+              <a class="button small" href="/produit/<%= product.id %>">Détails</a>
+            </div>
+          </div>
+        </article>
+      <% }) %>
+        </div>
+
+    </div>
+</section>
+
+
+<section>
+    <div class="container panel two">
+
+        <div>
+
+            <span class="eyebrow">
+                ☀️ 06:00 — 11:00
+            </span>
+
+            <h2 style="font-size:48px">
+                Le matin chez TiopTiop.
+            </h2>
+
+            <p class="muted">
+                Mikate, bouillie de maïs ou de soja,
+                riz au lait et café au lait.
+            </p>
+
+            <div class="cta">
+
+                <a
+                    class="btn dark"
+                    href="#/menu?cat=Petit-déjeuner"
+                >
+                    Voir le petit-déjeuner
+                </a>
+
+                <button
+                    class="btn primary"
+                    onclick="add(9,2);add(13,1)"
+                >
+                    Ajouter une formule
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div
+            style="
+                font-size:120px;
+                display:grid;
+                place-items:center;
+                background:#fff0df;
+                border-radius:24px
+            "
+        >
+            ☕🍩
+        </div>
+
+    </div>
+</section>
+
+
+<section>
+    <div class="container two">
+
+        <div class="map">
+
+            <div class="road"></div>
+
+            <div class="bike">
+                🛵
+            </div>
+
+        </div>
+
+
+        <div>
+
+            <span class="eyebrow">
+                Temps réel
+            </span>
+
+            <h2 style="font-size:48px">
+                Suivez votre commande
+            </h2>
+
+            <p class="muted">
+                L’accueil montre un aperçu.
+                La page dédiée affiche toutes les étapes
+                et évolue en temps réel.
+            </p>
+
+            <a
+                class="btn primary"
+                href="#/suivi"
+            >
+                Voir le suivi
+            </a>
+
+        </div>
+
+    </div>
+</section>
+
+
+<section>
+    <div class="container panel two">
+
+        <div>
+
+            <span class="eyebrow">
+                TIOP+
+            </span>
+
+            <h2 style="font-size:48px">
+                Des points, des offres et des surprises.
+            </h2>
+
+            <p class="muted">
+                Cumulez des points à chaque commande
+                et débloquez des récompenses.
+            </p>
+
+        </div>
+
+
+        <div>
+
+            <button
+                class="btn primary"
+                onclick="subscribe()"
+            >
+                Je m’abonne à Tiop+
+            </button>
+
+            <a
+                class="btn soft"
+                href="#/tiopplus"
+            >
+                Voir Tiop+
+            </a>
+
+        </div>
+
+    </div>
+</section>

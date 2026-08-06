@@ -1,0 +1,21 @@
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">💼 Recrutement</span>
+    <h1>Carrières</h1>
+    <p>Consultez les offres TiopTiop.</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container list">
+    <% jobs.forEach((job) => { %>
+      <article class="panel job-row">
+        <div>
+          <span class="badge"><%= job.contract_type %></span>
+          <h2><%= job.title %></h2>
+          <p><%= job.department %> · <%= job.location %></p>
+        </div>
+        <a class="button primary" href="/emploi/<%= job.id %>">Voir et postuler</a>
+      </article>
+    <% }) %>
+  </div>
+</section>

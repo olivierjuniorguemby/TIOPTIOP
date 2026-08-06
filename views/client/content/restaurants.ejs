@@ -1,0 +1,293 @@
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">📍 Restaurants</span>
+    <h1>📍 Restaurants</h1>
+    <p>Points de vente et zones de livraison</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <!-- =========================================================
+     TIOPTIOP - BLOC RESTAURANTS
+========================================================= -->
+
+<style>
+  .tiop-restaurants {
+    --orange: #ff7900;
+    --orange-hover: #e96e00;
+    --text: #1d1a17;
+    --muted: #77716c;
+    --border: #f0e6dc;
+
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+  }
+
+  /* =========================
+     GRILLE
+  ========================== */
+
+  .restaurants-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+
+  /* =========================
+     CARTE RESTAURANT
+  ========================== */
+
+  .restaurant-card {
+    min-height: 255px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+
+    padding: 28px;
+
+    box-sizing: border-box;
+
+    background: #ffffff;
+
+    border: 1px solid var(--border);
+    border-radius: 28px;
+
+    transition:
+      transform .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .restaurant-card:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+      0 10px 30px rgba(0, 0, 0, .04);
+  }
+
+  /* =========================
+     TITRE
+  ========================== */
+
+  .restaurant-title {
+    margin: 0 0 20px;
+
+    color: var(--text);
+
+    font-size: 24px;
+    line-height: 1.2;
+    font-weight: 900;
+
+    letter-spacing: -.3px;
+  }
+
+  /* =========================
+     STATUT
+  ========================== */
+
+  .restaurant-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 28px;
+
+    padding: 0 11px;
+
+    margin-bottom: 19px;
+
+    border-radius: 999px;
+
+    font-size: 11px;
+    font-weight: 900;
+  }
+
+  .restaurant-status.open {
+    background: #e9f5ed;
+    color: #31724c;
+  }
+
+  .restaurant-status.soon {
+    background: #fff0df;
+    color: #a85b00;
+  }
+
+  /* =========================
+     DESCRIPTION
+  ========================== */
+
+  .restaurant-description {
+    margin: 0 0 16px;
+
+    color: var(--muted);
+
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* =========================
+     BOUTON
+  ========================== */
+
+  .restaurant-select-btn {
+    min-height: 46px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 17px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: var(--orange);
+    color: #ffffff;
+
+    font-size: 15px;
+    font-weight: 900;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+      background .2s ease,
+      transform .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .restaurant-select-btn:hover {
+    background: var(--orange-hover);
+
+    transform: translateY(-1px);
+
+    box-shadow:
+      0 7px 18px rgba(255, 121, 0, .18);
+  }
+
+  /* =========================
+     RESPONSIVE
+  ========================== */
+
+  @media (max-width: 950px) {
+
+    .restaurants-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 650px) {
+
+    .restaurants-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .restaurant-card {
+      min-height: 220px;
+
+      padding: 24px 20px;
+
+      border-radius: 22px;
+    }
+
+    .restaurant-title {
+      font-size: 22px;
+    }
+  }
+
+</style>
+
+
+<!-- =========================================================
+     RESTAURANTS
+========================================================= -->
+
+<section class="tiop-restaurants">
+
+  <div class="restaurants-grid">
+
+
+    <!-- ==============================================
+         CENTRE-VILLE
+    =============================================== -->
+
+    <article class="restaurant-card">
+
+      <h2 class="restaurant-title">
+        TiopTiop Centre-ville
+      </h2>
+
+      <span class="restaurant-status open">
+        Ouvert
+      </span>
+
+      <p class="restaurant-description">
+        Brazzaville · Livraison · Retrait · Sur place
+      </p>
+
+      <a
+        href="/menu?restaurant=centre-ville"
+        class="restaurant-select-btn"
+      >
+        Choisir
+      </a>
+
+    </article>
+
+
+    <!-- ==============================================
+         POTO-POTO
+    =============================================== -->
+
+    <article class="restaurant-card">
+
+      <h2 class="restaurant-title">
+        TiopTiop Poto-Poto
+      </h2>
+
+      <span class="restaurant-status open">
+        Ouvert
+      </span>
+
+      <p class="restaurant-description">
+        Brazzaville · Livraison · Retrait
+      </p>
+
+      <a
+        href="/menu?restaurant=poto-poto"
+        class="restaurant-select-btn"
+      >
+        Choisir
+      </a>
+
+    </article>
+
+
+    <!-- ==============================================
+         BACONGO
+    =============================================== -->
+
+    <article class="restaurant-card">
+
+      <h2 class="restaurant-title">
+        TiopTiop Bacongo
+      </h2>
+
+      <span class="restaurant-status soon">
+        Bientôt
+      </span>
+
+      <p class="restaurant-description">
+        Ouverture prochaine.
+      </p>
+
+    </article>
+
+  </div>
+
+</section>
+  </div>
+</section>

@@ -1,0 +1,28 @@
+<section class="admin-heading">
+  <div>
+    <span class="eyebrow">Pilotage</span>
+    <h1>📊 Tableau de bord</h1>
+  </div>
+</section>
+
+<div class="kpi-grid">
+  <article class="kpi">💰 Chiffre d’affaires<strong><%= formatMoney(stats.revenue) %></strong></article>
+  <article class="kpi">👥 Clients<strong><%= stats.clients %></strong></article>
+  <article class="kpi">🧾 Statuts commande<strong><%= stats.orders.length %></strong></article>
+  <article class="kpi">📨 Statuts candidature<strong><%= stats.applications.length %></strong></article>
+</div>
+
+<div class="admin-grid">
+  <section class="panel">
+    <h2>Commandes par statut</h2>
+    <% stats.orders.forEach((row) => { %>
+      <div class="data-row"><span><%= row.status %></span><strong><%= row.total %></strong></div>
+    <% }) %>
+  </section>
+  <section class="panel">
+    <h2>Candidatures par statut</h2>
+    <% stats.applications.forEach((row) => { %>
+      <div class="data-row"><span><%= row.status %></span><strong><%= row.total %></strong></div>
+    <% }) %>
+  </section>
+</div>

@@ -1,0 +1,39 @@
+<section class="admin-heading">
+  <div>
+    <span class="eyebrow">Recrutement</span>
+    <h1>📨 Candidatures</h1>
+  </div>
+</section>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Référence</th>
+        <th>Candidat</th>
+        <th>Poste</th>
+        <th>Email</th>
+        <th>Statut</th>
+        <th>CV</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% applications.forEach((application) => { %>
+        <tr>
+          <td><%= application.reference %></td>
+          <td><%= application.first_name %> <%= application.last_name %></td>
+          <td><%= application.job_title %></td>
+          <td><%= application.email %></td>
+          <td><span class="badge"><%= application.status %></span></td>
+          <td>
+            <% if (application.cv_url) { %>
+              <a class="button small" target="_blank" href="<%= application.cv_url %>">📄 Voir</a>
+            <% } else { %>
+              —
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>

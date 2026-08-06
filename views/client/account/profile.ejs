@@ -1,0 +1,354 @@
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">Espace client</span>
+    <h1>👤 Profil</h1>
+    <p>Informations personnelles et photo</p>
+  </div>
+</section>
+
+<section>
+
+    <div class="container profileGrid">
+
+        <aside class="panel profileNav">
+
+            <a href="/compte">
+                ← Vue d’ensemble
+            </a>
+
+            <a href="/profil">
+                👤 Profil
+            </a>
+            <a href="/tiopplus">⭐ Tiop+</a>
+            <a href="/commandes">🧾 Commandes & factures</a>
+            <a href="/parametres">
+                ⚙️ Paramètres
+            </a>
+
+            <a href="/paiements-client">
+                💳 Paiements
+            </a>
+
+        </aside>
+
+<!-- ==========================================
+     BLOC PROFIL CLIENT - TIOPTIOP
+=========================================== -->
+
+<style>
+  .tiop-profile-block {
+    --tiop-orange: #ff7900;
+    --tiop-orange-hover: #eb7000;
+    --tiop-text: #1b1917;
+    --tiop-border: #dedede;
+
+    background: #fff;
+    border-radius: 27px;
+    padding: 28px 23px;
+    color: var(--tiop-text);
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  /* ==========================
+     PHOTO DE PROFIL
+  ========================== */
+
+  .profile-photo-section {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 12px;
+  }
+
+  .profile-avatar {
+    width: 82px;
+    height: 82px;
+    min-width: 82px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background:
+      linear-gradient(
+        135deg,
+        #ff7900,
+        #ffb52b
+      );
+
+    color: #fff;
+
+    font-size: 30px;
+    font-weight: 900;
+  }
+
+  .profile-upload {
+    flex: 1;
+    max-width: 438px;
+  }
+
+  .profile-upload label {
+    display: block;
+    margin-bottom: 0;
+
+    font-size: 16px;
+    font-weight: 800;
+  }
+
+  .profile-file-box {
+    min-height: 52px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 14px;
+
+    border: 1px solid var(--tiop-border);
+    border-radius: 17px;
+
+    background: #fff;
+  }
+
+  .profile-file-box input[type="file"] {
+    width: 100%;
+    font-size: 14px;
+  }
+
+  /* ==========================
+     FORMULAIRE
+  ========================== */
+
+  .profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .profile-field {
+    width: 100%;
+    min-height: 49px;
+
+    padding: 0 14px;
+
+    border: 1px solid var(--tiop-border);
+    border-radius: 17px;
+
+    background: #fff;
+
+    color: var(--tiop-text);
+    font-size: 15px;
+
+    outline: none;
+
+    box-sizing: border-box;
+
+    transition:
+      border-color .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .profile-field:focus {
+    border-color: var(--tiop-orange);
+
+    box-shadow:
+      0 0 0 3px rgba(255, 121, 0, .10);
+  }
+
+  /* ==========================
+     BOUTON
+  ========================== */
+
+  .profile-save-btn {
+    width: 100%;
+    min-height: 45px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    margin-top: 1px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: var(--tiop-orange);
+    color: #fff;
+
+    font-size: 15px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+      background .2s ease,
+      transform .2s ease;
+  }
+
+  .profile-save-btn:hover {
+    background: var(--tiop-orange-hover);
+    transform: translateY(-1px);
+  }
+
+  /* ==========================
+     RESPONSIVE
+  ========================== */
+
+  @media (max-width: 600px) {
+
+    .tiop-profile-block {
+      padding: 20px 16px;
+      border-radius: 22px;
+    }
+
+    .profile-photo-section {
+      align-items: flex-start;
+    }
+
+    .profile-avatar {
+      width: 70px;
+      height: 70px;
+      min-width: 70px;
+      font-size: 25px;
+    }
+
+    .profile-upload {
+      width: 100%;
+    }
+
+    .profile-file-box {
+      min-height: 48px;
+    }
+
+    .profile-field {
+      min-height: 48px;
+    }
+  }
+
+  @media (max-width: 430px) {
+
+    .profile-photo-section {
+      flex-direction: column;
+    }
+
+    .profile-upload {
+      max-width: 100%;
+    }
+  }
+</style>
+
+
+<!-- ==========================================
+     PROFIL
+=========================================== -->
+
+<section class="tiop-profile-block">
+
+  <form
+    class="profile-form"
+    action="/profil"
+    method="POST"
+    enctype="multipart/form-data"
+  >
+
+    <!-- PHOTO DE PROFIL -->
+    <div class="profile-photo-section">
+
+      <div class="profile-avatar">
+        C
+      </div>
+
+      <div class="profile-upload">
+
+        <label for="profilePhoto">
+          Photo de profil
+        </label>
+
+        <div class="profile-file-box">
+
+          <input
+            type="file"
+            id="profilePhoto"
+            name="profilePhoto"
+            accept="image/png,image/jpeg,image/webp"
+          >
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- NOM -->
+    <input
+      class="profile-field"
+      type="text"
+      name="name"
+      value="Client Démo"
+      placeholder="Nom complet"
+      required
+    >
+
+
+    <!-- EMAIL -->
+    <input
+      class="profile-field"
+      type="email"
+      name="email"
+      value="client@tioptiop.cg"
+      placeholder="Adresse e-mail"
+      required
+    >
+
+
+    <!-- TÉLÉPHONE -->
+    <input
+      class="profile-field"
+      type="tel"
+      name="phone"
+      value="+242 06 000 00 00"
+      placeholder="Téléphone"
+    >
+
+
+    <!-- VILLE -->
+    <input
+      class="profile-field"
+      type="text"
+      name="city"
+      value="Brazzaville"
+      placeholder="Ville"
+    >
+
+
+    <!-- QUARTIER / ADRESSE -->
+    <input
+      class="profile-field"
+      type="text"
+      name="address"
+      value="Centre-ville"
+      placeholder="Quartier / Adresse"
+    >
+
+
+    <!-- ENREGISTRER -->
+    <button
+      type="submit"
+      class="profile-save-btn"
+    >
+      💾
+      <span>Enregistrer mes informations</span>
+    </button>
+
+  </form>
+
+</section>
+        
+
+    </div>
+
+</section>

@@ -1,0 +1,655 @@
+
+<section class="section">
+  <div class="container">
+    <!-- =========================================================
+     TIOPTIOP - BLOC TIOP+
+     views/client/content/tiopplus.ejs
+========================================================= -->
+
+<style>
+  .tiopplus-page {
+    --orange: #ff7900;
+    --orange-hover: #eb7000;
+    --ink: #1c1713;
+    --cream: #fff8ef;
+    --text: #181512;
+    --muted: #6f6861;
+    --border: #eadfd3;
+
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+  }
+
+  /* =====================================================
+     HERO
+  ===================================================== */
+
+  .tiopplus-hero {
+    padding: 38px 38px 54px;
+
+    background:
+      linear-gradient(
+        120deg,
+        #fffaf4 0%,
+        #fffaf4 63%,
+        #fff0dd 100%
+      );
+
+    border-radius: 0;
+  }
+
+  .tiopplus-hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 55px;
+
+    align-items: center;
+
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  /* =====================================================
+     COLONNE GAUCHE
+  ===================================================== */
+
+  .tiopplus-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+
+    padding: 5px 10px;
+
+    margin-bottom: 52px;
+
+    background: #fff0dc;
+    color: #b76500;
+
+    border-radius: 999px;
+
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .tiopplus-title {
+    margin: 0 0 48px;
+
+    font-size: 64px;
+    line-height: .95;
+    font-weight: 900;
+    letter-spacing: -2px;
+  }
+
+  .tiopplus-intro {
+    margin: 0 0 12px;
+
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .tiopplus-subscribe-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 38px;
+
+    padding: 0 15px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: var(--orange);
+    color: #fff;
+
+    font-size: 13px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+      background .2s ease,
+      transform .2s ease;
+  }
+
+  .tiopplus-subscribe-btn:hover {
+    background: var(--orange-hover);
+    transform: translateY(-1px);
+  }
+
+  /* =====================================================
+     SOLDE
+  ===================================================== */
+
+  .tiopplus-balance-card {
+    min-height: 216px;
+
+    padding: 32px 28px;
+
+    background: var(--ink);
+    color: #fff;
+
+    border-radius: 26px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .balance-label {
+    display: block;
+
+    margin-bottom: 10px;
+
+    font-size: 10px;
+    text-transform: uppercase;
+  }
+
+  .balance-value {
+    display: block;
+
+    margin-bottom: 4px;
+
+    font-size: 58px;
+    line-height: 1;
+    font-weight: 900;
+
+    letter-spacing: 1px;
+  }
+
+  .balance-points-label {
+    display: block;
+
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* PROGRESSION */
+
+  .balance-progress {
+    width: 100%;
+    height: 8px;
+
+    margin: 0 0 16px;
+
+    overflow: hidden;
+
+    background: #51453d;
+
+    border-radius: 999px;
+  }
+
+  .balance-progress-bar {
+    width: 60%;
+    height: 100%;
+
+    display: block;
+
+    background: var(--orange);
+  }
+
+  .balance-next-level {
+    margin: 0;
+
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* =====================================================
+     CONTENU BAS
+  ===================================================== */
+
+  .tiopplus-content {
+    padding: 48px 38px 32px;
+
+    background:
+      repeating-linear-gradient(
+        45deg,
+        rgba(255,121,0,.018) 0,
+        rgba(255,121,0,.018) 2px,
+        transparent 2px,
+        transparent 22px
+      );
+
+    max-width: 100%;
+  }
+
+  .tiopplus-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  /* =====================================================
+     AVANTAGES
+  ===================================================== */
+
+  .tiopplus-benefits {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+
+    margin-bottom: 18px;
+  }
+
+  .tiopplus-benefit {
+    min-height: 154px;
+
+    padding: 22px 19px;
+
+    background: #fff;
+
+    border: 1px solid var(--border);
+    border-radius: 20px;
+
+    box-shadow:
+      0 8px 24px rgba(0,0,0,.025);
+  }
+
+  .benefit-icon {
+    display: block;
+
+    margin-bottom: 18px;
+
+    font-size: 15px;
+  }
+
+  .tiopplus-benefit h3 {
+    margin: 0 0 17px;
+
+    font-size: 16px;
+    font-weight: 900;
+  }
+
+  .tiopplus-benefit p {
+    margin: 0;
+
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /* =====================================================
+     COMMENT ÇA MARCHE
+  ===================================================== */
+
+  .tiopplus-how {
+    padding: 28px 20px 25px;
+
+    background: #fff;
+
+    border: 1px solid var(--border);
+    border-radius: 20px;
+  }
+
+  .tiopplus-how h2 {
+    margin: 0 0 18px;
+
+    font-size: 19px;
+    font-weight: 900;
+  }
+
+  .tiopplus-steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 22px;
+  }
+
+  .tiopplus-step {
+    min-width: 0;
+  }
+
+  .step-number {
+    width: 32px;
+    height: 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 17px;
+
+    border-radius: 50%;
+
+    background: var(--orange);
+    color: #fff;
+
+    font-size: 13px;
+    font-weight: 900;
+  }
+
+  .tiopplus-step strong {
+    display: block;
+
+    font-size: 14px;
+    font-weight: 900;
+  }
+
+  /* =====================================================
+     RESPONSIVE
+  ===================================================== */
+
+  @media (max-width: 900px) {
+
+    .tiopplus-hero-grid {
+      grid-template-columns: 1fr;
+      gap: 30px;
+    }
+
+    .tiopplus-badge {
+      margin-bottom: 28px;
+    }
+
+    .tiopplus-title {
+      margin-bottom: 28px;
+    }
+
+    .tiopplus-benefits,
+    .tiopplus-steps {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 560px) {
+
+    .tiopplus-hero {
+      padding:
+        28px 18px
+        38px;
+    }
+
+    .tiopplus-content {
+      padding:
+        30px 18px;
+    }
+
+    .tiopplus-title {
+      font-size: 48px;
+    }
+
+    .balance-value {
+      font-size: 48px;
+    }
+
+    .tiopplus-balance-card {
+      min-height: auto;
+      padding: 28px 22px;
+    }
+
+    .tiopplus-benefits,
+    .tiopplus-steps {
+      grid-template-columns: 1fr;
+    }
+  }
+
+</style>
+
+
+<section class="tiopplus-page">
+
+  <!-- =====================================================
+       HERO
+  ====================================================== -->
+
+  <section class="tiopplus-hero">
+
+    <div class="tiopplus-hero-grid">
+
+
+      <!-- GAUCHE -->
+
+      <div class="tiopplus-introduction">
+
+        <span class="tiopplus-badge">
+          ⭐ Fidélité
+        </span>
+
+
+        <h1 class="tiopplus-title">
+          Tiop+
+        </h1>
+
+
+        <p class="tiopplus-intro">
+          Promotions, points, nouveautés et surprises membres.
+        </p>
+
+
+        <button
+          type="button"
+          class="tiopplus-subscribe-btn"
+          onclick="subscribeTiopPlus()"
+        >
+          Je m’abonne
+        </button>
+
+      </div>
+
+
+      <!-- SOLDE -->
+
+      <aside class="tiopplus-balance-card">
+
+        <span class="balance-label">
+          SOLDE
+        </span>
+
+
+        <strong class="balance-value">
+          1 200
+        </strong>
+
+
+        <span class="balance-points-label">
+          points
+        </span>
+
+
+        <div class="balance-progress">
+
+          <span
+            class="balance-progress-bar">
+          </span>
+
+        </div>
+
+
+        <p class="balance-next-level">
+          800 pts avant Platinum
+        </p>
+
+      </aside>
+
+    </div>
+
+  </section>
+
+
+  <!-- =====================================================
+       AVANTAGES
+  ====================================================== -->
+
+  <section class="tiopplus-content">
+
+    <div class="tiopplus-inner">
+
+      <div class="tiopplus-benefits">
+
+
+        <!-- PROMOTIONS -->
+
+        <article class="tiopplus-benefit">
+
+          <span class="benefit-icon">
+            🎁
+          </span>
+
+          <h3>
+            Promotions
+          </h3>
+
+          <p>
+            Offres membres exclusives.
+          </p>
+
+        </article>
+
+
+        <!-- POINTS -->
+
+        <article class="tiopplus-benefit">
+
+          <span class="benefit-icon">
+            ⭐
+          </span>
+
+          <h3>
+            Points
+          </h3>
+
+          <p>
+            Crédités après commande éligible.
+          </p>
+
+        </article>
+
+
+        <!-- NOUVEAUTÉS -->
+
+        <article class="tiopplus-benefit">
+
+          <span class="benefit-icon">
+            🔔
+          </span>
+
+          <h3>
+            Nouveautés
+          </h3>
+
+          <p>
+            Information prioritaire.
+          </p>
+
+        </article>
+
+
+        <!-- SURPRISES -->
+
+        <article class="tiopplus-benefit">
+
+          <span class="benefit-icon">
+            ✨
+          </span>
+
+          <h3>
+            Surprises
+          </h3>
+
+          <p>
+            Bonus et cadeaux.
+          </p>
+
+        </article>
+
+      </div>
+
+
+      <!-- =================================================
+           COMMENT ÇA MARCHE
+      ================================================== -->
+
+      <section class="tiopplus-how">
+
+        <h2>
+          Comment ça marche ?
+        </h2>
+
+
+        <div class="tiopplus-steps">
+
+
+          <!-- ÉTAPE 1 -->
+
+          <article class="tiopplus-step">
+
+            <span class="step-number">
+              1
+            </span>
+
+            <strong>
+              Je m’abonne
+            </strong>
+
+          </article>
+
+
+          <!-- ÉTAPE 2 -->
+
+          <article class="tiopplus-step">
+
+            <span class="step-number">
+              2
+            </span>
+
+            <strong>
+              Je commande
+            </strong>
+
+          </article>
+
+
+          <!-- ÉTAPE 3 -->
+
+          <article class="tiopplus-step">
+
+            <span class="step-number">
+              3
+            </span>
+
+            <strong>
+              Je gagne
+            </strong>
+
+          </article>
+
+
+          <!-- ÉTAPE 4 -->
+
+          <article class="tiopplus-step">
+
+            <span class="step-number">
+              4
+            </span>
+
+            <strong>
+              Je profite
+            </strong>
+
+          </article>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  </section>
+
+</section>
+
+
+<script>
+  function subscribeTiopPlus() {
+
+    /*
+      Plus tard :
+      appel Express / MySQL
+
+      POST /tiopplus/subscribe
+    */
+
+    console.log(
+      "Souscription Tiop+ demandée"
+    );
+  }
+</script>
+  </div>
+</section>

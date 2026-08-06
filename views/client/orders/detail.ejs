@@ -1,0 +1,570 @@
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">🧾 Commande</span>
+    <h1>🧾 Commande</h1>
+    <p>Détail de la commande</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <!-- =========================================================
+     TIOPTIOP - FACTURE / REÇU
+     views/client/orders/invoice.ejs
+========================================================= -->
+
+<style>
+  .tiop-invoice {
+    --orange: #ff7900;
+    --orange-hover: #e96f00;
+    --text: #211e1b;
+    --muted: #77716c;
+    --border: #e2dfdc;
+
+    max-width: 760px;
+    margin: 0 auto;
+
+    padding: 38px 36px 35px;
+
+    background: #ffffff;
+
+    border-radius: 27px;
+
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+
+    box-sizing: border-box;
+  }
+
+  /* ==============================
+     EN-TÊTE
+  ============================== */
+
+  .invoice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 30px;
+
+    padding-bottom: 20px;
+    margin-bottom: 22px;
+
+    border-bottom: 1px solid var(--border);
+  }
+
+  .invoice-brand h1 {
+    margin: 0 0 18px;
+
+    font-size: 28px;
+    line-height: 1;
+    font-weight: 900;
+
+    letter-spacing: -1.5px;
+  }
+
+  .invoice-brand-black {
+    color: #181614;
+  }
+
+  .invoice-brand-orange {
+    color: var(--orange);
+  }
+
+  .invoice-brand p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 15px;
+  }
+
+  /* FACTURE */
+
+  .invoice-reference {
+    text-align: right;
+  }
+
+  .invoice-reference h2 {
+    margin: 0 0 23px;
+
+    font-size: 23px;
+    font-weight: 900;
+  }
+
+  .invoice-reference strong {
+    display: block;
+
+    margin-bottom: 4px;
+
+    font-size: 15px;
+    font-weight: 900;
+  }
+
+  .invoice-reference span {
+    display: block;
+
+    color: var(--muted);
+
+    font-size: 15px;
+  }
+
+  /* ==============================
+     INFORMATIONS CLIENT / PAIEMENT
+  ============================== */
+
+  .invoice-information {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+
+    margin-bottom: 28px;
+  }
+
+  .invoice-info-column h3 {
+    margin: 0 0 17px;
+
+    font-size: 15px;
+    font-weight: 900;
+  }
+
+  .invoice-info-column p {
+    margin: 0;
+
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  /* ==============================
+     TABLEAU
+  ============================== */
+
+  .invoice-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .invoice-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    font-size: 14px;
+  }
+
+  .invoice-table th {
+    padding: 7px 12px 12px;
+
+    text-align: left;
+
+    font-size: 15px;
+    font-weight: 900;
+
+    border-bottom: 1px solid var(--border);
+  }
+
+  .invoice-table td {
+    padding: 14px 12px;
+
+    border-bottom: 1px solid var(--border);
+
+    vertical-align: middle;
+  }
+
+  .invoice-table th:first-child,
+  .invoice-table td:first-child {
+    width: 52%;
+  }
+
+  .invoice-table th:nth-child(2),
+  .invoice-table td:nth-child(2) {
+    width: 18%;
+  }
+
+  .invoice-table th:nth-child(3),
+  .invoice-table td:nth-child(3) {
+    width: 30%;
+  }
+
+  /* TOTAL */
+
+  .invoice-total td {
+    font-weight: 900;
+  }
+
+  .invoice-total td:first-child {
+    text-transform: uppercase;
+  }
+
+  /* ==============================
+     MESSAGE
+  ============================== */
+
+  .invoice-message {
+    margin: 18px 0 24px;
+
+    color: var(--muted);
+
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* ==============================
+     ACTIONS
+  ============================== */
+
+  .invoice-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .invoice-print-button,
+  .invoice-back-button {
+    min-height: 44px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 18px;
+
+    border: 0;
+    border-radius: 999px;
+
+    font-size: 15px;
+    font-weight: 900;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+      transform .2s ease,
+      background .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .invoice-print-button {
+    gap: 7px;
+
+    background: var(--orange);
+    color: #ffffff;
+  }
+
+  .invoice-print-button:hover {
+    background: var(--orange-hover);
+    transform: translateY(-1px);
+  }
+
+  .invoice-back-button {
+    background: #ffffff;
+    color: var(--text);
+
+    box-shadow:
+      0 5px 20px rgba(0,0,0,.05);
+  }
+
+  .invoice-back-button:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+      0 7px 23px rgba(0,0,0,.08);
+  }
+
+  /* ==============================
+     RESPONSIVE
+  ============================== */
+
+  @media (max-width: 650px) {
+
+    .tiop-invoice {
+      padding: 28px 20px;
+      border-radius: 22px;
+    }
+
+    .invoice-header {
+      flex-direction: column;
+    }
+
+    .invoice-reference {
+      width: 100%;
+      text-align: left;
+    }
+
+    .invoice-reference h2 {
+      margin-bottom: 12px;
+    }
+
+    .invoice-information {
+      grid-template-columns: 1fr;
+      gap: 22px;
+    }
+
+    .invoice-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .invoice-print-button,
+    .invoice-back-button {
+      width: 100%;
+      box-sizing: border-box;
+    }
+  }
+
+  /* ==============================
+     VERSION IMPRESSION / PDF
+  ============================== */
+
+  @media print {
+
+    body {
+      background: #ffffff !important;
+    }
+
+    /* Cache le reste du site */
+    body * {
+      visibility: hidden;
+    }
+
+    .tiop-invoice,
+    .tiop-invoice * {
+      visibility: visible;
+    }
+
+    .tiop-invoice {
+      position: absolute;
+
+      left: 0;
+      top: 0;
+
+      width: 100%;
+      max-width: none;
+
+      margin: 0;
+
+      padding: 20px;
+
+      border-radius: 0;
+
+      box-shadow: none;
+    }
+
+    /* Les boutons ne doivent pas apparaître */
+    .invoice-actions {
+      display: none !important;
+    }
+  }
+
+</style>
+
+
+<!-- =========================================================
+     FACTURE
+========================================================= -->
+
+<section class="tiop-invoice">
+
+  <!-- ============================
+       HEADER
+  ============================= -->
+
+  <header class="invoice-header">
+
+    <!-- LOGO / MARQUE -->
+
+    <div class="invoice-brand">
+
+      <h1>
+        <span class="invoice-brand-black">Tiop</span><span class="invoice-brand-orange">Tiop</span>
+      </h1>
+
+      <p>
+        Cuisine congolaise moderne
+      </p>
+
+    </div>
+
+
+    <!-- RÉFÉRENCE -->
+
+    <div class="invoice-reference">
+
+      <h2>
+        FACTURE / REÇU
+      </h2>
+
+      <strong>
+        TIOP-00124
+      </strong>
+
+      <span>
+        Aujourd’hui 19:42
+      </span>
+
+    </div>
+
+  </header>
+
+
+  <!-- ============================
+       CLIENT / PAIEMENT
+  ============================= -->
+
+  <section class="invoice-information">
+
+    <!-- CLIENT -->
+
+    <div class="invoice-info-column">
+
+      <h3>Client</h3>
+
+      <p>
+        Client Démo
+        <br>
+
+        client@tioptiop.cg
+        <br>
+
+        +242 06 000 00 00
+      </p>
+
+    </div>
+
+
+    <!-- PAIEMENT -->
+
+    <div class="invoice-info-column">
+
+      <h3>Paiement</h3>
+
+      <p>
+        Espèces · EN_ATTENTE
+        <br>
+
+        TiopTiop Centre-ville
+      </p>
+
+    </div>
+
+  </section>
+
+
+  <!-- ============================
+       ARTICLES
+  ============================= -->
+
+  <div class="invoice-table-wrapper">
+
+    <table class="invoice-table">
+
+      <thead>
+
+        <tr>
+          <th>Article</th>
+          <th>Qté</th>
+          <th>Montant</th>
+        </tr>
+
+      </thead>
+
+
+      <tbody>
+
+        <!-- PRODUIT 1 -->
+
+        <tr>
+
+          <td>
+            Poulet Braisé Tiop
+          </td>
+
+          <td>
+            1
+          </td>
+
+          <td>
+            27,30 €
+          </td>
+
+        </tr>
+
+
+        <!-- PRODUIT 2 -->
+
+        <tr>
+
+          <td>
+            Jus de Bissap
+          </td>
+
+          <td>
+            1
+          </td>
+
+          <td>
+            Inclus
+          </td>
+
+        </tr>
+
+
+        <!-- TOTAL -->
+
+        <tr class="invoice-total">
+
+          <td>
+            TOTAL
+          </td>
+
+          <td></td>
+
+          <td>
+            27,30 €
+          </td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+
+  <!-- ============================
+       MESSAGE
+  ============================= -->
+
+  <p class="invoice-message">
+    Merci pour votre confiance. Ce document est généré par TiopTiop.
+  </p>
+
+
+  <!-- ============================
+       BOUTONS
+  ============================= -->
+
+  <div class="invoice-actions">
+
+    <button
+      type="button"
+      class="invoice-print-button"
+      onclick="window.print()"
+    >
+      🖨️
+      Imprimer / PDF
+    </button>
+
+
+    <a
+      href="/commandes"
+      class="invoice-back-button"
+    >
+      ← Mes commandes
+    </a>
+
+  </div>
+
+</section>
+  </div>
+</section>

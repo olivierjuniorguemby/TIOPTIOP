@@ -1,0 +1,302 @@
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">⚖️ Conditions</span>
+    <h1>⚖️ Conditions</h1>
+    <p>Commande, paiement, livraison et confidentialité</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <!-- =========================================================
+     TIOPTIOP - CONDITIONS D'UTILISATION
+     views/client/content/conditions.ejs
+========================================================= -->
+
+<style>
+  .tiop-conditions {
+    --text: #1d1a17;
+    --muted: #77716c;
+    --border: #eee5dc;
+    --orange: #ff7900;
+
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+  }
+
+  /* ================================================
+     LISTE
+  ================================================= */
+
+  .conditions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* ================================================
+     CARTE
+  ================================================= */
+
+  .condition-card {
+    width: 100%;
+    min-height: 100px;
+
+    padding: 24px 26px;
+
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    background: #ffffff;
+
+    border: 1px solid var(--border);
+    border-radius: 20px;
+
+    transition:
+      transform .2s ease,
+      border-color .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .condition-card:hover {
+    transform: translateY(-1px);
+
+    border-color: #e5d8cb;
+
+    box-shadow:
+      0 7px 24px rgba(0, 0, 0, .025);
+  }
+
+  /* ================================================
+     TITRE
+  ================================================= */
+
+  .condition-card h2 {
+    margin: 0 0 13px;
+
+    font-size: 14px;
+    line-height: 1.3;
+
+    font-weight: 900;
+  }
+
+  /* ================================================
+     TEXTE
+  ================================================= */
+
+  .condition-card p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 11px;
+    line-height: 1.6;
+  }
+
+  /* ================================================
+     RESPONSIVE
+  ================================================= */
+
+  @media (max-width: 650px) {
+
+    .conditions-list {
+      gap: 7px;
+    }
+
+    .condition-card {
+      min-height: auto;
+
+      padding: 20px;
+
+      border-radius: 17px;
+    }
+
+    .condition-card h2 {
+      margin-bottom: 10px;
+
+      font-size: 13px;
+    }
+
+    .condition-card p {
+      font-size: 11px;
+    }
+  }
+</style>
+
+
+<!-- =========================================================
+     CONDITIONS TIOPTIOP
+========================================================= -->
+
+<section class="tiop-conditions">
+
+  <div class="conditions-list">
+
+
+    <!-- 1 -->
+
+    <article class="condition-card">
+
+      <h2>
+        1. Objet du service
+      </h2>
+
+      <p>
+        Consultation du menu, commande à distance ou sur place,
+        livraison, retrait, paiement, fidélité, promotions et suivi.
+      </p>
+
+    </article>
+
+
+    <!-- 2 -->
+
+    <article class="condition-card">
+
+      <h2>
+        2. Commandes
+      </h2>
+
+      <p>
+        Le client vérifie produits, quantité, options, adresse,
+        mode de retrait et prix avant validation.
+      </p>
+
+    </article>
+
+
+    <!-- 3 -->
+
+    <article class="condition-card">
+
+      <h2>
+        3. Prix et promotions
+      </h2>
+
+      <p>
+        Les prix applicables sont ceux affichés au moment de la
+        commande. Les promotions peuvent être limitées dans le
+        temps ou à certains restaurants.
+      </p>
+
+    </article>
+
+
+    <!-- 4 -->
+
+    <article class="condition-card">
+
+      <h2>
+        4. Paiements
+      </h2>
+
+      <p>
+        Carte, Mobile Money et espèces. Pour l'espèce, le paiement
+        reste EN ATTENTE jusqu'à confirmation de l'encaissement.
+      </p>
+
+    </article>
+
+
+    <!-- 5 -->
+
+    <article class="condition-card">
+
+      <h2>
+        5. Livraison
+      </h2>
+
+      <p>
+        Les délais sont estimatifs. La zone peut combiner statut
+        opérationnel et position GPS du livreur.
+      </p>
+
+    </article>
+
+
+    <!-- 6 -->
+
+    <article class="condition-card">
+
+      <h2>
+        6. Annulation et remboursement
+      </h2>
+
+      <p>
+        Les possibilités dépendent du niveau de préparation.
+        Les remboursements doivent être tracés.
+      </p>
+
+    </article>
+
+
+    <!-- 7 -->
+
+    <article class="condition-card">
+
+      <h2>
+        7. Tiop+
+      </h2>
+
+      <p>
+        Points, récompenses et avantages peuvent être soumis à
+        expiration et conditions d'utilisation.
+      </p>
+
+    </article>
+
+
+    <!-- 8 -->
+
+    <article class="condition-card">
+
+      <h2>
+        8. Données personnelles
+      </h2>
+
+      <p>
+        Compte, adresses, commandes, support et fidélité doivent
+        être protégés selon les obligations applicables.
+      </p>
+
+    </article>
+
+
+    <!-- 9 -->
+
+    <article class="condition-card">
+
+      <h2>
+        9. Cookies
+      </h2>
+
+      <p>
+        Cookies strictement nécessaires et outils de mesure avec
+        consentement lorsque requis.
+      </p>
+
+    </article>
+
+
+    <!-- 10 -->
+
+    <article class="condition-card">
+
+      <h2>
+        10. Allergènes
+      </h2>
+
+      <p>
+        Les informations allergènes doivent être maintenues et
+        les clients à risque doivent pouvoir contacter le restaurant.
+      </p>
+
+    </article>
+
+  </div>
+
+</section>
+  </div>
+</section>

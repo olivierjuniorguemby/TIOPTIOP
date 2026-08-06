@@ -1,0 +1,443 @@
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">📖 Notre histoire</span>
+    <h1>📖 Notre histoire</h1>
+    <p>Le Congo, servi autrement</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <!-- =========================================================
+     TIOPTIOP - BLOC NOTRE HISTOIRE
+========================================================= -->
+
+<style>
+  .tiop-story {
+    --orange: #ff7900;
+    --brown: #2b1b12;
+    --text: #1b1815;
+    --muted: #746e68;
+    --border: #eee4da;
+
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+  }
+
+  /* =====================================================
+     HERO
+  ===================================================== */
+
+  .story-hero {
+    position: relative;
+    overflow: hidden;
+
+    min-height: 128px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    padding: 22px 28px;
+
+    margin-bottom: 48px;
+
+    box-sizing: border-box;
+
+    background:
+      linear-gradient(
+        135deg,
+        #1e1510 0%,
+        #342116 100%
+      );
+
+    border-radius: 20px;
+
+    color: #ffffff;
+  }
+
+  /* Petit badge */
+
+  .story-badge {
+    position: relative;
+    z-index: 2;
+
+    display: inline-flex;
+    align-items: center;
+
+    width: fit-content;
+
+    padding: 4px 8px;
+
+    margin-bottom: 12px;
+
+    border-radius: 999px;
+
+    background: #ffffff;
+    color: #b65d00;
+
+    font-size: 8px;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  /* Titre */
+
+  .story-hero h1 {
+    position: relative;
+    z-index: 2;
+
+    max-width: 520px;
+
+    margin: 0 0 9px;
+
+    font-size: 26px;
+    line-height: 1.35;
+    font-weight: 900;
+
+    letter-spacing: -.7px;
+  }
+
+  /* Description */
+
+  .story-hero p {
+    position: relative;
+    z-index: 2;
+
+    max-width: 550px;
+
+    margin: 0;
+
+    color: rgba(255,255,255,.82);
+
+    font-size: 10px;
+    line-height: 1.55;
+  }
+
+  /* Motifs géométriques discrets */
+
+  .story-pattern {
+    position: absolute;
+
+    right: 25px;
+    bottom: 13px;
+
+    display: flex;
+    gap: 25px;
+
+    opacity: .08;
+  }
+
+  .story-pattern span {
+    width: 17px;
+    height: 17px;
+
+    display: block;
+
+    border: 3px solid #ffffff;
+
+    transform: rotate(45deg);
+  }
+
+
+  /* =====================================================
+     VALEURS / HISTOIRE
+  ===================================================== */
+
+  .story-values {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 13px;
+
+    margin-bottom: 47px;
+  }
+
+
+  .story-card {
+    min-height: 78px;
+
+    padding: 19px 20px;
+
+    box-sizing: border-box;
+
+    background: #ffffff;
+
+    border: 1px solid var(--border);
+    border-radius: 17px;
+
+    box-shadow:
+      0 5px 20px rgba(0,0,0,.025);
+
+    transition:
+      transform .2s ease,
+      box-shadow .2s ease;
+  }
+
+
+  .story-card:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+      0 9px 25px rgba(0,0,0,.05);
+  }
+
+
+  /* TITRE DES CARTES */
+
+  .story-card h2 {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    margin: 0 0 10px;
+
+    font-size: 11px;
+    font-weight: 900;
+  }
+
+
+  /* DESCRIPTION */
+
+  .story-card p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 9px;
+    line-height: 1.55;
+  }
+
+
+  /* =====================================================
+     CITATION
+  ===================================================== */
+
+  .story-quote {
+    padding: 22px 20px;
+
+    background: #ffffff;
+
+    border: 1px solid var(--border);
+    border-radius: 16px;
+
+    box-shadow:
+      0 5px 20px rgba(0,0,0,.025);
+  }
+
+
+  .story-quote p {
+    margin: 0;
+
+    font-size: 14px;
+    line-height: 1.5;
+    font-weight: 900;
+  }
+
+
+  /* =====================================================
+     RESPONSIVE
+  ===================================================== */
+
+  @media (max-width: 700px) {
+
+    .story-hero {
+      min-height: 180px;
+
+      padding: 25px 22px;
+
+      margin-bottom: 30px;
+    }
+
+    .story-hero h1 {
+      font-size: 24px;
+    }
+
+    .story-hero p {
+      font-size: 11px;
+    }
+
+    .story-values {
+      grid-template-columns: 1fr;
+
+      margin-bottom: 30px;
+    }
+
+    .story-card {
+      min-height: auto;
+    }
+
+    .story-pattern {
+      opacity: .04;
+    }
+  }
+
+
+  @media (max-width: 430px) {
+
+    .story-hero {
+      border-radius: 17px;
+    }
+
+    .story-hero h1 {
+      font-size: 21px;
+    }
+
+    .story-quote p {
+      font-size: 13px;
+    }
+  }
+
+</style>
+
+
+<!-- =========================================================
+     NOTRE HISTOIRE
+========================================================= -->
+
+<section class="tiop-story">
+
+
+  <!-- =====================================================
+       HERO
+  ====================================================== -->
+
+  <section class="story-hero">
+
+
+    <span class="story-badge">
+      NOTRE HISTOIRE
+    </span>
+
+
+    <h1>
+      Faire rayonner la cuisine
+      <br>
+      congolaise sans la dénaturer.
+    </h1>
+
+
+    <p>
+      TiopTiop est pensé comme un pont entre héritage culinaire,
+      exigence moderne, technologie et ambition entrepreneuriale.
+    </p>
+
+
+    <!-- Motif africain géométrique discret -->
+
+    <div
+      class="story-pattern"
+      aria-hidden="true"
+    >
+
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- =====================================================
+       LES 4 PILIERS
+  ====================================================== -->
+
+  <section class="story-values">
+
+
+    <!-- LES RACINES -->
+
+    <article class="story-card">
+
+      <h2>
+        🌿 Les racines
+      </h2>
+
+      <p>
+        Le projet part d’un attachement à la cuisine du
+        Congo-Brazzaville : saka-saka, maboké, makayabu,
+        grillades, foufou, plantain, mikaté et boissons locales.
+      </p>
+
+    </article>
+
+
+
+    <!-- AMBITION -->
+
+    <article class="story-card">
+
+      <h2>
+        🚀 L’ambition
+      </h2>
+
+      <p>
+        TiopTiop ne veut pas être seulement un restaurant.
+        À long terme, l’ambition est de bâtir une marque forte,
+        capable de proposer commande web et mobile, livraison,
+        fidélité, plusieurs points de vente et emplois locaux.
+      </p>
+
+    </article>
+
+
+
+    <!-- EXPÉRIENCE -->
+
+    <article class="story-card">
+
+      <h2>
+        ✨ L’expérience
+      </h2>
+
+      <p>
+        Emballage propre, navigation simple, suivi,
+        paiement moderne, identité africaine subtile
+        et qualité visuelle doivent donner au client
+        une impression premium.
+      </p>
+
+    </article>
+
+
+
+    <!-- MATIN AU SOIR -->
+
+    <article class="story-card">
+
+      <h2>
+        🟠 Du matin au soir
+      </h2>
+
+      <p>
+        Le petit-déjeuner fait partie intégrante de la vision :
+        mikaté, bouillies de maïs et de soja, riz au lait,
+        café au lait, gâteaux et formules accessibles.
+      </p>
+
+    </article>
+
+  </section>
+
+
+
+  <!-- =====================================================
+       CITATION / VISION
+  ====================================================== -->
+
+  <section class="story-quote">
+
+    <p>
+      « Une cuisine locale peut rester profondément congolaise
+      tout en adoptant les meilleurs standards de design,
+      de service et de technologie. »
+    </p>
+
+  </section>
+
+
+</section>
+  </div>
+</section>

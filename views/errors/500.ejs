@@ -1,0 +1,10 @@
+<section class="section">
+  <div class="container narrow panel">
+    <h1>Erreur serveur</h1>
+    <p>Une erreur est survenue.</p>
+    <% if (error) { %>
+      <pre><%= error.stack %></pre>
+    <% } %>
+    <a class="button primary" href="/">Retour</a>
+  </div>
+</section>

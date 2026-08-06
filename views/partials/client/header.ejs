@@ -1,0 +1,32 @@
+<header class="site-header">
+  <div class="container header-row">
+    <a class="brand" href="/">Tiop<span>Tiop</span></a>
+
+    <nav class="main-nav" aria-label="Navigation principale">
+      <a href="/menu">🍽️ Menu</a>
+      <a href="/offres">🎁 Offres</a>
+      <a href="/tiopplus">⭐ Tiop+</a>
+      <a href="/restaurants">📍 Restaurants</a>
+      <a href="/carrieres">💼 Carrières</a>
+    </nav>
+
+    <div class="header-actions">
+      <a class="icon-button" href="/panier" aria-label="Panier">🛒</a>
+
+      <% if (currentUser) { %>
+        <a class="profile-chip" href="/compte">
+          <span class="avatar">
+            <% if (currentUser.avatarUrl) { %>
+              <img src="<%= currentUser.avatarUrl %>" alt="">
+            <% } else { %>
+              <%= (currentUser.firstName || "C").charAt(0) %>
+            <% } %>
+          </span>
+          <span><%= currentUser.displayName || currentUser.firstName || "Mon compte" %></span>
+        </a>
+      <% } else { %>
+        <a class="button primary" href="/connexion">🔐 Connexion</a>
+      <% } %>
+    </div>
+  </div>
+</header>

@@ -1,0 +1,420 @@
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">💬 Contact</span>
+    <h1>💬 Contact</h1>
+    <p>Écrivez au support TiopTiop</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    
+    <!-- =========================================================
+     TIOPTIOP - BLOC CONTACT / SUPPORT
+========================================================= -->
+
+<style>
+  .tiop-contact {
+    --orange: #ff7900;
+    --orange-hover: #e96e00;
+    --dark: #1d1814;
+    --text: #211e1b;
+    --muted: #77716c;
+    --border: #e2dfdc;
+
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+  }
+
+  /* =========================
+     GRILLE
+  ========================== */
+
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  /* =========================
+     CARTES
+  ========================== */
+
+  .contact-card {
+    min-height: 435px;
+
+    padding: 24px;
+
+    box-sizing: border-box;
+
+    background: #ffffff;
+
+    border: 1px solid #f0e7df;
+    border-radius: 28px;
+  }
+
+  /* =========================
+     FORMULAIRE
+  ========================== */
+
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .contact-field {
+    width: 100%;
+    min-height: 46px;
+
+    padding: 0 13px;
+
+    box-sizing: border-box;
+
+    border: 1px solid var(--border);
+    border-radius: 14px;
+
+    background: #ffffff;
+
+    color: var(--text);
+
+    font-family: inherit;
+    font-size: 13px;
+
+    outline: none;
+
+    transition:
+      border-color .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .contact-field::placeholder {
+    color: #777;
+  }
+
+  .contact-field:focus {
+    border-color: var(--orange);
+
+    box-shadow:
+      0 0 0 3px rgba(255,121,0,.08);
+  }
+
+  /* SELECT */
+
+  select.contact-field {
+    cursor: pointer;
+  }
+
+  /* MESSAGE */
+
+  .contact-message {
+    min-height: 108px;
+
+    padding: 14px 13px;
+
+    resize: vertical;
+
+    line-height: 1.5;
+  }
+
+  /* =========================
+     BOUTON ENVOYER
+  ========================== */
+
+  .contact-submit {
+    width: 100%;
+    min-height: 43px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 18px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: var(--orange);
+    color: #ffffff;
+
+    font-size: 13px;
+    font-weight: 900;
+
+    cursor: pointer;
+
+    transition:
+      background .2s ease,
+      transform .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .contact-submit:hover {
+    background: var(--orange-hover);
+
+    transform: translateY(-1px);
+
+    box-shadow:
+      0 7px 18px rgba(255,121,0,.17);
+  }
+
+  /* =========================
+     SUPPORT
+  ========================== */
+
+  .support-card {
+    padding-top: 42px;
+  }
+
+  .support-card h2 {
+    margin: 0 0 18px;
+
+    font-size: 23px;
+    line-height: 1.2;
+    font-weight: 900;
+
+    letter-spacing: -.4px;
+  }
+
+  .support-card p {
+    max-width: 470px;
+
+    margin: 0 0 4px;
+
+    color: var(--muted);
+
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+
+  /* =========================
+     BOUTON ADMIN SUPPORT
+  ========================== */
+
+  .support-admin-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 42px;
+
+    padding: 0 15px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: var(--dark);
+    color: #ffffff;
+
+    font-size: 13px;
+    font-weight: 900;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+      transform .2s ease,
+      background .2s ease;
+  }
+
+  .support-admin-btn:hover {
+    background: #30261f;
+    transform: translateY(-1px);
+  }
+
+  /* =========================
+     RESPONSIVE
+  ========================== */
+
+  @media (max-width: 800px) {
+
+    .contact-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .contact-card {
+      min-height: auto;
+    }
+
+    .support-card {
+      padding-top: 28px;
+      padding-bottom: 35px;
+    }
+  }
+
+  @media (max-width: 500px) {
+
+    .contact-grid {
+      gap: 12px;
+    }
+
+    .contact-card {
+      padding: 18px;
+
+      border-radius: 22px;
+    }
+
+    .support-card h2 {
+      font-size: 21px;
+    }
+
+    .support-admin-btn {
+      width: 100%;
+
+      box-sizing: border-box;
+    }
+  }
+</style>
+
+
+<!-- =========================================================
+     CONTACT / SUPPORT
+========================================================= -->
+
+<section class="tiop-contact">
+
+  <div class="contact-grid">
+
+
+    <!-- =====================================================
+         FORMULAIRE CONTACT
+    ====================================================== -->
+
+    <section class="contact-card">
+
+      <form
+        class="contact-form"
+        action="/contact"
+        method="POST"
+      >
+
+        <!-- NOM -->
+
+        <input
+          type="text"
+          name="name"
+          class="contact-field"
+          placeholder="Nom"
+          required
+        >
+
+
+        <!-- EMAIL -->
+
+        <input
+          type="email"
+          name="email"
+          class="contact-field"
+          placeholder="Email"
+          required
+        >
+
+
+        <!-- SUJET -->
+
+        <select
+          name="subject"
+          class="contact-field"
+          required
+        >
+
+          <option value="commande">
+            Commande
+          </option>
+
+          <option value="livraison">
+            Livraison
+          </option>
+
+          <option value="paiement">
+            Paiement
+          </option>
+
+          <option value="remboursement">
+            Remboursement
+          </option>
+
+          <option value="tiopplus">
+            Tiop+
+          </option>
+
+          <option value="compte">
+            Mon compte
+          </option>
+
+          <option value="restaurant">
+            Restaurant
+          </option>
+
+          <option value="autre">
+            Autre demande
+          </option>
+
+        </select>
+
+
+        <!-- NUMÉRO DE COMMANDE -->
+
+        <input
+          type="text"
+          name="orderReference"
+          class="contact-field"
+          placeholder="Numéro de commande"
+        >
+
+
+        <!-- MESSAGE -->
+
+        <textarea
+          name="message"
+          class="contact-field contact-message"
+          placeholder="Votre message"
+          required
+        ></textarea>
+
+
+        <!-- ENVOYER -->
+
+        <button
+          type="submit"
+          class="contact-submit"
+        >
+          Envoyer
+        </button>
+
+      </form>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         SUPPORT TIOPTIOP
+    ====================================================== -->
+
+    <aside class="contact-card support-card">
+
+      <h2>
+        Support TiopTiop
+      </h2>
+
+
+      <p>
+        Le ticket peut ensuite être relié à une commande,
+        affecté à un agent et suivi jusqu’à résolution.
+      </p>
+
+
+      <a
+        href="/admin/support"
+        class="support-admin-btn"
+      >
+        Voir la démo Admin Support
+      </a>
+
+    </aside>
+
+  </div>
+
+</section>
+  </div>
+</section>
