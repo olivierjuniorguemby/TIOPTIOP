@@ -19,6 +19,8 @@ router.get("/conditions", page.staticPage("client/content/conditions", "Conditio
 router.get("/panier", page.staticPage("client/orders/cart", "Panier"));
 router.get("/commandes", page.staticPage("client/orders/list", "Mes commandes"));
 router.get("/commande/:reference", page.staticPage("client/orders/detail", "Commande"));
+router.get("/checkout", page.staticPage("client/orders/checkout", "Checkout"));
+router.get("/confirmation", page.staticPage("client/orders/confirmation", "Confirmation"));
 router.get("/facture/:reference", page.staticPage("client/orders/invoice", "Facture"));
 router.get("/suivi", page.staticPage("client/orders/tracking", "Suivi de commande"));
 

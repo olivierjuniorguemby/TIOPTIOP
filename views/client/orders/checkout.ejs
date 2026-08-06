@@ -1,0 +1,646 @@
+<section class="section">
+  <div class="container">
+    <!-- =========================================================
+     TIOPTIOP - CHECKOUT
+     views/client/cart/checkout.ejs
+========================================================= -->
+
+<style>
+  .tiop-checkout {
+    --orange: #ff7900;
+    --orange-hover: #e96e00;
+    --text: #1d1916;
+    --muted: #77716c;
+    --border: #ebe4dd;
+    --success-bg: #eaf7ee;
+    --success-text: #397052;
+
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+  }
+
+  /* =========================================================
+     TITRE
+  ========================================================= */
+
+  .checkout-title {
+    margin: 0 0 105px;
+
+    font-size: clamp(46px, 5.5vw, 76px);
+    line-height: .95;
+
+    font-weight: 900;
+    letter-spacing: -4px;
+  }
+
+  /* =========================================================
+     LAYOUT
+  ========================================================= */
+
+  .checkout-layout {
+    display: grid;
+
+    grid-template-columns:
+      minmax(0, 1.7fr)
+      minmax(340px, 1fr);
+
+    gap: 26px;
+
+    align-items: start;
+  }
+
+  .checkout-card {
+    background: #fff;
+
+    border: 1px solid var(--border);
+    border-radius: 32px;
+
+    box-sizing: border-box;
+  }
+
+  /* =========================================================
+     FORMULAIRE
+  ========================================================= */
+
+  .checkout-form-card {
+    padding: 56px 32px 32px;
+  }
+
+  .checkout-section-title {
+    margin: 0 0 37px;
+
+    font-size: 26px;
+    font-weight: 900;
+  }
+
+  /* =========================================================
+     CHAMPS
+  ========================================================= */
+
+  .checkout-fields {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+  }
+
+  .checkout-field {
+    width: 100%;
+    min-height: 57px;
+
+    padding: 0 16px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #ddd9d5;
+    border-radius: 14px;
+
+    background: #fff;
+    color: var(--text);
+
+    font-family: inherit;
+    font-size: 16px;
+
+    outline: none;
+
+    transition:
+      border-color .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .checkout-field::placeholder {
+    color: #8a8581;
+  }
+
+  .checkout-field:focus {
+    border-color: var(--orange);
+
+    box-shadow:
+      0 0 0 3px rgba(255,121,0,.08);
+  }
+
+  select.checkout-field {
+    cursor: pointer;
+  }
+
+  .checkout-textarea {
+    min-height: 135px;
+
+    padding: 18px 16px;
+
+    resize: vertical;
+
+    line-height: 1.5;
+  }
+
+  /* =========================================================
+     PAIEMENT
+  ========================================================= */
+
+  .checkout-payment {
+    margin-top: 40px;
+  }
+
+  .checkout-payment .checkout-section-title {
+    margin-bottom: 30px;
+  }
+
+  .payment-options {
+    display: flex;
+    flex-direction: column;
+
+    gap: 17px;
+  }
+
+  .payment-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    width: fit-content;
+
+    font-size: 16px;
+
+    cursor: pointer;
+  }
+
+  .payment-option input {
+    width: 15px;
+    height: 15px;
+
+    margin: 0;
+
+    accent-color: #007aff;
+
+    cursor: pointer;
+  }
+
+  /* =========================================================
+     INFORMATION PROTOTYPE
+  ========================================================= */
+
+  .checkout-information {
+    margin-top: 16px;
+
+    padding: 18px;
+
+    border-radius: 15px;
+
+    background: var(--success-bg);
+    color: var(--success-text);
+
+    font-size: 15px;
+  }
+
+  /* =========================================================
+     TOTAL
+  ========================================================= */
+
+  .checkout-summary {
+    min-height: 835px;
+
+    padding: 57px 31px;
+
+    position: sticky;
+    top: 20px;
+  }
+
+  .checkout-summary-title {
+    margin: 0 0 27px;
+
+    font-size: 26px;
+    font-weight: 900;
+  }
+
+  .checkout-summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 25px;
+
+    margin-bottom: 5px;
+
+    font-size: 16px;
+  }
+
+  .checkout-summary-row strong {
+    font-weight: 900;
+  }
+
+  /* =========================================================
+     SÉPARATEUR
+  ========================================================= */
+
+  .checkout-summary-separator {
+    height: 1px;
+
+    margin: 25px 0 43px;
+
+    background: #ddd9d5;
+  }
+
+  /* =========================================================
+     TOTAL À PAYER
+  ========================================================= */
+
+  .checkout-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 23px;
+
+    font-size: 20px;
+    font-weight: 900;
+  }
+
+  .checkout-total strong {
+    font-size: 20px;
+  }
+
+  /* =========================================================
+     BOUTON
+  ========================================================= */
+
+  .checkout-submit {
+    width: 100%;
+    min-height: 51px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 20px;
+
+    box-sizing: border-box;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: var(--orange);
+    color: #fff;
+
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 900;
+
+    cursor: pointer;
+
+    transition:
+      background .2s ease,
+      transform .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .checkout-submit:hover {
+    background: var(--orange-hover);
+
+    transform: translateY(-1px);
+
+    box-shadow:
+      0 8px 22px rgba(255,121,0,.20);
+  }
+
+  /* =========================================================
+     RESPONSIVE TABLETTE
+  ========================================================= */
+
+  @media (max-width: 900px) {
+
+    .checkout-title {
+      margin-bottom: 55px;
+    }
+
+    .checkout-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .checkout-summary {
+      min-height: auto;
+
+      position: static;
+    }
+  }
+
+  /* =========================================================
+     RESPONSIVE MOBILE
+  ========================================================= */
+
+  @media (max-width: 600px) {
+
+    .checkout-title {
+      margin-bottom: 35px;
+
+      font-size: 44px;
+
+      letter-spacing: -2px;
+    }
+
+    .checkout-form-card,
+    .checkout-summary {
+      padding: 25px 18px;
+
+      border-radius: 23px;
+    }
+
+    .checkout-section-title,
+    .checkout-summary-title {
+      font-size: 22px;
+    }
+
+    .checkout-field {
+      min-height: 52px;
+
+      font-size: 14px;
+    }
+
+    .checkout-textarea {
+      min-height: 120px;
+    }
+
+    .payment-option {
+      font-size: 15px;
+    }
+  }
+
+</style>
+
+
+<!-- =========================================================
+     CHECKOUT
+========================================================= -->
+
+<section class="tiop-checkout">
+
+
+  <!-- TITRE -->
+
+  <h1 class="checkout-title">
+    Finaliser la commande
+  </h1>
+
+
+  <div class="checkout-layout">
+
+
+    <!-- =====================================================
+         FORMULAIRE
+    ====================================================== -->
+
+    <section class="checkout-card checkout-form-card">
+
+      <form
+        id="checkoutForm"
+        action="/checkout"
+        method="POST"
+      >
+
+
+        <!-- =================================================
+             LIVRAISON
+        ================================================== -->
+
+        <h2 class="checkout-section-title">
+          Livraison
+        </h2>
+
+
+        <div class="checkout-fields">
+
+
+          <!-- TYPE DE COMMANDE -->
+
+          <select
+            name="delivery_type"
+            id="deliveryType"
+            class="checkout-field"
+            required
+          >
+
+            <option value="DELIVERY">
+              Livraison à domicile
+            </option>
+
+            <option value="TAKEAWAY">
+              À emporter
+            </option>
+
+            <option value="ON_SITE">
+              Sur place
+            </option>
+
+          </select>
+
+
+          <!-- NOM -->
+
+          <input
+            type="text"
+            name="customer_name"
+            class="checkout-field"
+            placeholder="Nom complet"
+            required
+          >
+
+
+          <!-- TÉLÉPHONE -->
+
+          <input
+            type="tel"
+            name="customer_phone"
+            class="checkout-field"
+            placeholder="Téléphone"
+            required
+          >
+
+
+          <!-- ADRESSE -->
+
+          <input
+            type="text"
+            name="delivery_address"
+            id="deliveryAddress"
+            class="checkout-field"
+            placeholder="Adresse"
+            required
+          >
+
+
+          <!-- INSTRUCTIONS -->
+
+          <textarea
+            name="delivery_instructions"
+            id="deliveryInstructions"
+            class="checkout-field checkout-textarea"
+            placeholder="Instructions livreur"
+          ></textarea>
+
+        </div>
+
+
+        <!-- =================================================
+             PAIEMENT
+        ================================================== -->
+
+        <div class="checkout-payment">
+
+          <h2 class="checkout-section-title">
+            Paiement
+          </h2>
+
+
+          <div class="payment-options">
+
+
+            <!-- CARTE -->
+
+            <label class="payment-option">
+
+              <input
+                type="radio"
+                name="payment_method"
+                value="CARD"
+                checked
+                required
+              >
+
+              <span>
+                Carte bancaire
+              </span>
+
+            </label>
+
+
+            <!-- MOBILE MONEY -->
+
+            <label class="payment-option">
+
+              <input
+                type="radio"
+                name="payment_method"
+                value="MOBILE_MONEY"
+              >
+
+              <span>
+                Mobile Money
+              </span>
+
+            </label>
+
+
+            <!-- PAIEMENT LIVRAISON -->
+
+            <label class="payment-option">
+
+              <input
+                type="radio"
+                name="payment_method"
+                value="CASH_ON_DELIVERY"
+              >
+
+              <span>
+                Paiement à la livraison
+              </span>
+
+            </label>
+
+          </div>
+
+
+          <!-- INFORMATION -->
+
+          <div class="checkout-information">
+            Prototype : aucun paiement réel n’est effectué.
+          </div>
+
+        </div>
+
+      </form>
+
+    </section>
+
+
+    <!-- =====================================================
+         RÉCAPITULATIF
+    ====================================================== -->
+
+    <aside class="checkout-card checkout-summary">
+
+      <h2 class="checkout-summary-title">
+        Total
+      </h2>
+
+
+      <!-- SOUS-TOTAL -->
+
+      <div class="checkout-summary-row">
+
+        <span>
+          Sous-total
+        </span>
+
+        <strong>
+          29,70 €
+        </strong>
+
+      </div>
+
+
+      <!-- LIVRAISON -->
+
+      <div class="checkout-summary-row">
+
+        <span>
+          Livraison
+        </span>
+
+        <strong>
+          Offerte
+        </strong>
+
+      </div>
+
+
+      <!-- SEPARATEUR -->
+
+      <div class="checkout-summary-separator"></div>
+
+
+      <!-- TOTAL -->
+
+      <div class="checkout-total">
+
+        <span>
+          À payer
+        </span>
+
+        <strong>
+          29,70 €
+        </strong>
+
+      </div>
+
+
+      <!-- IMPORTANT :
+           Le bouton appartient au formulaire situé à gauche
+           grâce à form="checkoutForm"
+      -->
+
+      <button
+        type="submit"
+        form="checkoutForm"
+        class="checkout-submit"
+      >
+        Payer et commander
+      </button>
+
+    </aside>
+
+  </div>
+
+</section>
+  </div>
+</section>

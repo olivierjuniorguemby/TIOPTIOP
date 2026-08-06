@@ -1,0 +1,354 @@
+<section class="section">
+    <div class="container">
+        <!-- =========================================================
+     TIOPTIOP - PAGE CONFIRMATION COMMANDE
+     views/client/orders/confirmation.ejs
+========================================================= -->
+
+<style>
+  .tiop-confirmation {
+    --orange: #ff7900;
+    --orange-hover: #e96e00;
+    --text: #181512;
+    --muted: #7a746e;
+    --border: #f1e7dc;
+    --success-bg: #e6f7ed;
+    --success: #2f8c59;
+
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+  }
+
+  .confirmation-card {
+    width: 100%;
+    min-height: 770px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    padding: 70px 40px;
+
+    box-sizing: border-box;
+
+    background: #ffffff;
+
+    border: 1px solid var(--border);
+    border-radius: 42px;
+
+    text-align: center;
+  }
+
+  /* =====================================================
+     ICÔNE SUCCÈS
+  ===================================================== */
+
+  .confirmation-icon {
+    width: 146px;
+    height: 146px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 18px;
+
+    border-radius: 18px;
+
+    background:
+      linear-gradient(
+        145deg,
+        #6ee6a0 0%,
+        #4fcf84 70%,
+        #3caa6d 100%
+      );
+
+    box-shadow:
+      inset 0 0 15px rgba(255,255,255,.3),
+      0 8px 18px rgba(42,143,88,.15);
+  }
+
+  .confirmation-icon::before {
+    content: "";
+
+    width: 66px;
+    height: 36px;
+
+    border-left: 11px solid #ffffff;
+    border-bottom: 11px solid #ffffff;
+
+    transform: rotate(-45deg) translateY(-4px);
+
+    border-radius: 4px;
+  }
+
+  /* =====================================================
+     BADGE
+  ===================================================== */
+
+  .confirmation-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 64px;
+
+    padding: 0 26px;
+
+    margin-bottom: 90px;
+
+    border-radius: 999px;
+
+    background: #fff0df;
+    color: var(--orange);
+
+    font-size: 24px;
+    font-weight: 900;
+  }
+
+  /* =====================================================
+     TITRE
+  ===================================================== */
+
+  .confirmation-title {
+    margin: 0 0 90px;
+
+    font-size: clamp(64px, 7vw, 110px);
+    line-height: .9;
+
+    font-weight: 900;
+    letter-spacing: -4px;
+  }
+
+  /* =====================================================
+     TEXTE
+  ===================================================== */
+
+  .confirmation-text {
+    max-width: 1100px;
+
+    margin: 0 0 50px;
+
+    color: var(--muted);
+
+    font-size: clamp(22px, 2.1vw, 32px);
+    line-height: 1.4;
+  }
+
+  /* =====================================================
+     ACTIONS
+  ===================================================== */
+
+  .confirmation-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 20px;
+
+    flex-wrap: wrap;
+  }
+
+  .confirmation-primary,
+  .confirmation-secondary {
+    min-height: 90px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 34px;
+
+    border: 0;
+    border-radius: 999px;
+
+    font-size: 28px;
+    font-weight: 900;
+
+    text-decoration: none;
+
+    transition:
+      transform .2s ease,
+      background .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .confirmation-primary {
+    background: var(--orange);
+    color: #ffffff;
+  }
+
+  .confirmation-primary:hover {
+    background: var(--orange-hover);
+
+    transform: translateY(-2px);
+
+    box-shadow:
+      0 10px 24px rgba(255,121,0,.2);
+  }
+
+  .confirmation-secondary {
+    background: #ffffff;
+    color: var(--text);
+
+    box-shadow:
+      0 10px 30px rgba(0,0,0,.04);
+  }
+
+  .confirmation-secondary:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+      0 12px 34px rgba(0,0,0,.07);
+  }
+
+  /* =====================================================
+     RESPONSIVE
+  ===================================================== */
+
+  @media (max-width: 900px) {
+
+    .confirmation-card {
+      min-height: 650px;
+
+      padding: 55px 24px;
+
+      border-radius: 34px;
+    }
+
+    .confirmation-badge {
+      margin-bottom: 60px;
+    }
+
+    .confirmation-title {
+      margin-bottom: 60px;
+    }
+
+    .confirmation-primary,
+    .confirmation-secondary {
+      min-height: 66px;
+
+      padding: 0 25px;
+
+      font-size: 20px;
+    }
+  }
+
+  @media (max-width: 560px) {
+
+    .confirmation-card {
+      min-height: auto;
+
+      padding: 45px 18px;
+
+      border-radius: 26px;
+    }
+
+    .confirmation-icon {
+      width: 110px;
+      height: 110px;
+    }
+
+    .confirmation-icon::before {
+      width: 50px;
+      height: 28px;
+
+      border-left-width: 9px;
+      border-bottom-width: 9px;
+    }
+
+    .confirmation-badge {
+      min-height: 48px;
+
+      margin-bottom: 45px;
+
+      padding: 0 18px;
+
+      font-size: 17px;
+    }
+
+    .confirmation-title {
+      margin-bottom: 45px;
+
+      font-size: 58px;
+    }
+
+    .confirmation-text {
+      margin-bottom: 35px;
+
+      font-size: 18px;
+    }
+
+    .confirmation-actions {
+      width: 100%;
+
+      flex-direction: column;
+    }
+
+    .confirmation-primary,
+    .confirmation-secondary {
+      width: 100%;
+
+      min-height: 58px;
+
+      box-sizing: border-box;
+
+      font-size: 17px;
+    }
+  }
+</style>
+
+
+<section class="tiop-confirmation">
+
+  <div class="confirmation-card">
+
+
+    <!-- ICÔNE -->
+    <div class="confirmation-icon"></div>
+
+
+    <!-- BADGE -->
+    <div class="confirmation-badge">
+      Commande confirmée
+    </div>
+
+
+    <!-- MERCI -->
+    <h1 class="confirmation-title">
+      Merci !
+    </h1>
+
+
+    <!-- MESSAGE -->
+    <p class="confirmation-text">
+      Votre commande est créée.
+      Vous pouvez suivre sa préparation et sa livraison.
+    </p>
+
+
+    <!-- ACTIONS -->
+    <div class="confirmation-actions">
+
+      <a
+        href="/suivi"
+        class="confirmation-primary"
+      >
+        Suivre ma commande
+      </a>
+
+      <a
+        href="/commandes"
+        class="confirmation-secondary"
+      >
+        Mes commandes
+      </a>
+
+    </div>
+
+  </div>
+
+</section>
+    </div>
+</section>

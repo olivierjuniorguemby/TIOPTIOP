@@ -7,15 +7,711 @@
 </section>
 <section class="section">
   <div class="container list">
-    <% jobs.forEach((job) => { %>
-      <article class="panel job-row">
-        <div>
-          <span class="badge"><%= job.contract_type %></span>
-          <h2><%= job.title %></h2>
-          <p><%= job.department %> · <%= job.location %></p>
+   <!-- =========================================================
+     TIOPTIOP - CARRIÈRES / EMPLOIS
+     views/client/content/carrieres.ejs
+========================================================= -->
+
+<style>
+  .tiop-careers {
+    --orange: #ff7900;
+    --orange-hover: #e96e00;
+    --text: #1d1a17;
+    --muted: #77716c;
+    --border: #eee4da;
+    --soft: #f8f4ef;
+
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+  }
+
+  /* =====================================================
+     FILTRES
+  ===================================================== */
+
+  .career-filters {
+    display: grid;
+    grid-template-columns:
+      minmax(180px, 1.6fr)
+      minmax(130px, 1fr)
+      minmax(130px, 1fr)
+      minmax(120px, 1fr)
+      minmax(130px, 1fr)
+      auto;
+
+    gap: 8px;
+
+    padding: 10px;
+
+    margin-bottom: 14px;
+
+    background: #ffffff;
+
+    border: 1px solid var(--border);
+    border-radius: 20px;
+  }
+
+  /* =========================
+     CHAMPS
+  ========================== */
+
+  .career-field {
+    width: 100%;
+    min-height: 44px;
+
+    padding: 0 14px;
+
+    box-sizing: border-box;
+
+    background: #ffffff;
+
+    border: 1px solid #dedbd8;
+    border-radius: 12px;
+
+    color: var(--text);
+
+    font-family: inherit;
+    font-size: 13px;
+
+    outline: none;
+
+    transition:
+      border-color .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .career-field:focus {
+    border-color: var(--orange);
+
+    box-shadow:
+      0 0 0 3px rgba(255,121,0,.08);
+  }
+
+  .career-search {
+    position: relative;
+  }
+
+  .career-search span {
+    position: absolute;
+
+    left: 14px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    font-size: 12px;
+
+    pointer-events: none;
+  }
+
+  .career-search .career-field {
+    padding-left: 34px;
+  }
+
+  /* =========================
+     SELECT
+  ========================== */
+
+  select.career-field {
+    cursor: pointer;
+  }
+
+  /* =========================
+     BOUTON FILTRE
+  ========================== */
+
+  .career-filter-btn {
+    min-height: 44px;
+
+    padding: 0 18px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: var(--orange);
+    color: #ffffff;
+
+    font-size: 13px;
+    font-weight: 900;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+
+    transition:
+      background .2s ease,
+      transform .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .career-filter-btn:hover {
+    background: var(--orange-hover);
+
+    transform: translateY(-1px);
+
+    box-shadow:
+      0 7px 18px rgba(255,121,0,.18);
+  }
+
+  /* =====================================================
+     LISTE DES EMPLOIS
+  ===================================================== */
+
+  .career-jobs {
+    display: flex;
+    flex-direction: column;
+
+    gap: 9px;
+  }
+
+  /* =====================================================
+     CARTE EMPLOI
+  ===================================================== */
+
+  .career-job {
+    display: grid;
+
+    grid-template-columns:
+      108px
+      minmax(0, 1fr)
+      auto;
+
+    gap: 18px;
+
+    align-items: center;
+
+    min-height: 180px;
+
+    padding: 20px 18px;
+
+    box-sizing: border-box;
+
+    background: #ffffff;
+
+    border: 1px solid var(--border);
+    border-radius: 24px;
+
+    transition:
+      transform .2s ease,
+      box-shadow .2s ease,
+      border-color .2s ease;
+  }
+
+  .career-job:hover {
+    transform: translateY(-2px);
+
+    border-color: #e5d8cb;
+
+    box-shadow:
+      0 10px 30px rgba(0,0,0,.035);
+  }
+
+  /* =====================================================
+     IMAGE / ICÔNE EMPLOI
+  ===================================================== */
+
+  .career-job-image {
+    width: 108px;
+    height: 86px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    border-radius: 15px;
+
+    background:
+      linear-gradient(
+        135deg,
+        #3b2114 0%,
+        #9a4700 55%,
+        #ff7900 100%
+      );
+  }
+
+  .career-job-image span {
+    font-size: 30px;
+  }
+
+  .career-job-image img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+  }
+
+  /* =====================================================
+     INFORMATIONS
+  ===================================================== */
+
+  .career-job-content {
+    min-width: 0;
+  }
+
+  /* CATÉGORIE */
+
+  .career-category {
+    display: inline-flex;
+    align-items: center;
+
+    min-height: 25px;
+
+    padding: 0 10px;
+
+    margin-bottom: 13px;
+
+    border-radius: 999px;
+
+    background: #fff0df;
+    color: var(--orange);
+
+    font-size: 9px;
+    font-weight: 900;
+  }
+
+  /* TITRE */
+
+  .career-job-title {
+    margin: 0 0 13px;
+
+    font-size: 19px;
+    line-height: 1.2;
+    font-weight: 900;
+  }
+
+  /* =====================================================
+     BADGES
+  ===================================================== */
+
+  .career-job-meta {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 6px;
+
+    margin-bottom: 14px;
+  }
+
+  .career-meta-badge {
+    display: inline-flex;
+    align-items: center;
+
+    min-height: 23px;
+
+    padding: 0 9px;
+
+    border-radius: 999px;
+
+    background: var(--soft);
+    color: var(--text);
+
+    font-size: 9px;
+    font-weight: 800;
+  }
+
+  /* =====================================================
+     DESCRIPTION
+  ===================================================== */
+
+  .career-job-description {
+    margin: 0 0 13px;
+
+    color: #403b37;
+
+    font-size: 11px;
+    line-height: 1.55;
+  }
+
+  /* DATE */
+
+  .career-job-date {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 10px;
+  }
+
+  /* =====================================================
+     BOUTON
+  ===================================================== */
+
+  .career-job-action {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .career-view-btn {
+    min-height: 40px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 17px;
+
+    border-radius: 999px;
+
+    background: var(--orange);
+    color: #ffffff;
+
+    font-size: 12px;
+    font-weight: 900;
+
+    text-decoration: none;
+
+    white-space: nowrap;
+
+    transition:
+      background .2s ease,
+      transform .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .career-view-btn:hover {
+    background: var(--orange-hover);
+
+    transform: translateY(-1px);
+
+    box-shadow:
+      0 7px 18px rgba(255,121,0,.18);
+  }
+
+  /* =====================================================
+     RESPONSIVE
+  ===================================================== */
+
+  @media (max-width: 1050px) {
+
+    .career-filters {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .career-filter-btn {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 750px) {
+
+    .career-filters {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .career-search {
+      grid-column: 1 / -1;
+    }
+
+    .career-job {
+      grid-template-columns: 85px 1fr;
+
+      gap: 14px;
+
+      padding: 18px;
+    }
+
+    .career-job-image {
+      width: 85px;
+      height: 85px;
+    }
+
+    .career-job-action {
+      grid-column: 2;
+
+      justify-content: flex-start;
+    }
+  }
+
+  @media (max-width: 500px) {
+
+    .career-filters {
+      grid-template-columns: 1fr;
+
+      padding: 8px;
+
+      border-radius: 17px;
+    }
+
+    .career-search {
+      grid-column: auto;
+    }
+
+    .career-job {
+      grid-template-columns: 1fr;
+
+      border-radius: 20px;
+    }
+
+    .career-job-image {
+      width: 100%;
+      height: 120px;
+    }
+
+    .career-job-action {
+      grid-column: auto;
+    }
+
+    .career-view-btn {
+      width: 100%;
+
+      box-sizing: border-box;
+    }
+  }
+
+</style>
+
+
+<!-- =========================================================
+     CARRIÈRES
+========================================================= -->
+
+<section class="tiop-careers">
+
+
+  <!-- =====================================================
+       FILTRES
+  ====================================================== -->
+
+  <form
+    class="career-filters"
+    method="GET"
+    action="/carrieres"
+  >
+
+    <!-- RECHERCHE -->
+
+    <div class="career-search">
+
+      <span>🔎</span>
+
+      <input
+        type="search"
+        name="q"
+        class="career-field"
+        placeholder="Poste, mot-clé..."
+      >
+
+    </div>
+
+
+    <!-- DÉPARTEMENT -->
+
+    <select
+      name="department"
+      class="career-field"
+    >
+      <option value="">
+        Tous départements
+      </option>
+
+      <option value="operations">
+        Opérations
+      </option>
+
+      <option value="cuisine">
+        Cuisine
+      </option>
+
+      <option value="livraison">
+        Livraison
+      </option>
+
+      <option value="service">
+        Service client
+      </option>
+
+      <option value="management">
+        Management
+      </option>
+
+      <option value="digital">
+        Digital / IT
+      </option>
+    </select>
+
+
+    <!-- CONTRAT -->
+
+    <select
+      name="contract"
+      class="career-field"
+    >
+      <option value="">
+        Tous contrats
+      </option>
+
+      <option value="cdi">
+        CDI
+      </option>
+
+      <option value="cdd">
+        CDD
+      </option>
+
+      <option value="temps-partiel">
+        Temps partiel
+      </option>
+
+      <option value="stage">
+        Stage
+      </option>
+    </select>
+
+
+    <!-- LIEU -->
+
+    <select
+      name="location"
+      class="career-field"
+    >
+      <option value="">
+        Tous lieux
+      </option>
+
+      <option value="brazzaville">
+        Brazzaville
+      </option>
+
+      <option value="pointe-noire">
+        Pointe-Noire
+      </option>
+    </select>
+
+
+    <!-- EXPÉRIENCE -->
+
+    <select
+      name="experience"
+      class="career-field"
+    >
+      <option value="">
+        Toute expérience
+      </option>
+
+      <option value="debutant">
+        Débutant accepté
+      </option>
+
+      <option value="1-2">
+        1 à 2 ans
+      </option>
+
+      <option value="3-5">
+        3 à 5 ans
+      </option>
+
+      <option value="5-plus">
+        5 ans et +
+      </option>
+    </select>
+
+
+    <button
+      type="submit"
+      class="career-filter-btn"
+    >
+      🔎 Filtrer
+    </button>
+
+  </form>
+
+
+
+  <!-- =====================================================
+       OFFRES
+  ====================================================== -->
+
+  <div class="career-jobs">
+
+
+    <!-- =================================================
+         OFFRE 1
+    ================================================== -->
+ <% jobs.forEach((job) => { %>
+    <article class="career-job">
+
+
+      <!-- IMAGE -->
+
+      <div class="career-job-image">
+        <span>💼</span>
+      </div>
+
+
+      <!-- INFORMATIONS -->
+
+      <div class="career-job-content">
+
+        <span class="career-category">
+          Opérations
+        </span>
+
+
+        <h2 class="career-job-title">
+          <%= job.title %>
+        </h2>
+
+
+        <div class="career-job-meta">
+
+          <span class="career-meta-badge">
+            <%= job.department %> · <%= job.location %>
+          </span>
+
+          <span class="career-meta-badge">
+            🕘 <%= job.contract_type %>
+          </span>
+
+          <span class="career-meta-badge">
+            🎓 1 à 2 ans
+          </span>
+
+          <span class="career-meta-badge">
+            💰 Selon profil
+          </span>
+
         </div>
-        <a class="button primary" href="/emploi/<%= job.id %>">Voir et postuler</a>
-      </article>
-    <% }) %>
+
+
+        <p class="career-job-description">
+          Rejoignez une équipe ambitieuse qui construit
+          une nouvelle expérience de restauration congolaise.
+        </p>
+
+
+        <p class="career-job-date">
+          Publié récemment
+        </p>
+
+      </div>
+
+
+      <!-- ACTION -->
+
+      <div class="career-job-action">
+
+        <a
+          href="/emploi/<%= job.id %>"
+          class="career-view-btn"
+        >
+          Voir l’offre
+        </a>
+
+      </div>
+
+    </article>
+<% }) %>
+
+
+
+
+  </div>
+
+</section>
   </div>
 </section>
+
+

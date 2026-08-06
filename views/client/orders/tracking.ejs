@@ -1,12 +1,902 @@
-<section class="page-hero">
-  <div class="container">
-    <span class="eyebrow">🛵 Suivi</span>
-    <h1>🛵 Suivi</h1>
-    <p>Carte Leaflet et statuts en temps réel</p>
-  </div>
-</section>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+
+    const mapElement = document.getElementById("trackingMap");
+
+    if (!mapElement) return;
+
+
+    /* ==========================================
+       COORDONNÉES DE DÉMONSTRATION BRAZZAVILLE
+    ========================================== */
+
+    const restaurant = {
+        lat: -4.2634,
+        lng: 15.2429
+    };
+
+    const client = {
+        lat: -4.2505,
+        lng: 15.2650
+    };
+
+    let driverPosition = {
+        lat: -4.2585,
+        lng: 15.2505
+    };
+
+
+    /* ==========================================
+       CRÉATION CARTE
+    ========================================== */
+
+    const map = L.map("trackingMap", {
+        zoomControl: true
+    }).setView(
+        [driverPosition.lat, driverPosition.lng],
+        14
+    );
+
+
+    /* ==========================================
+       OPEN STREET MAP
+    ========================================== */
+
+    L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap"
+        }
+    ).addTo(map);
+
+
+    /* ==========================================
+       RESTAURANT
+    ========================================== */
+
+    const restaurantIcon = L.divIcon({
+        className: "tiop-driver-marker",
+        html: `
+            <div class="tiop-driver-icon">
+                🍽️
+            </div>
+        `,
+        iconSize: [48, 48],
+        iconAnchor: [24, 24]
+    });
+
+    const restaurantMarker = L.marker(
+        [restaurant.lat, restaurant.lng],
+        { icon: restaurantIcon }
+    )
+    .addTo(map)
+    .bindPopup("<strong>TiopTiop</strong><br>Restaurant");
+
+
+    /* ==========================================
+       CLIENT
+    ========================================== */
+
+    const clientIcon = L.divIcon({
+        className: "tiop-driver-marker",
+        html: `
+            <div class="tiop-driver-icon">
+                🏠
+            </div>
+        `,
+        iconSize: [48, 48],
+        iconAnchor: [24, 24]
+    });
+
+    const clientMarker = L.marker(
+        [client.lat, client.lng],
+        { icon: clientIcon }
+    )
+    .addTo(map)
+    .bindPopup("<strong>Destination</strong><br>Adresse client");
+
+
+    /* ==========================================
+       LIVREUR
+    ========================================== */
+
+    const driverIcon = L.divIcon({
+        className: "tiop-driver-marker",
+        html: `
+            <div class="tiop-driver-icon">
+                🛵
+            </div>
+        `,
+        iconSize: [48, 48],
+        iconAnchor: [24, 24]
+    });
+
+    const driverMarker = L.marker(
+        [driverPosition.lat, driverPosition.lng],
+        {
+            icon: driverIcon,
+            zIndexOffset: 1000
+        }
+    )
+    .addTo(map)
+    .bindPopup(
+        "<strong>Junior</strong><br>Votre livreur"
+    );
+
+
+    /* ==========================================
+       TRAJET
+    ========================================== */
+
+    const route = L.polyline(
+        [
+            [restaurant.lat, restaurant.lng],
+            [driverPosition.lat, driverPosition.lng],
+            [client.lat, client.lng]
+        ],
+        {
+            weight: 5,
+            opacity: .8
+        }
+    ).addTo(map);
+
+
+    /* Afficher tout le trajet */
+
+    const group = L.featureGroup([
+        restaurantMarker,
+        clientMarker,
+        driverMarker,
+        route
+    ]);
+
+    map.fitBounds(
+        group.getBounds().pad(0.20)
+    );
+
+
+    /* ==========================================
+       SOCKET.IO
+    ========================================== */
+
+    if (typeof io !== "undefined") {
+
+        const socket = io();
+
+        const orderId = "TIOP-38651";
+
+        socket.emit(
+            "order:join",
+            orderId
+        );
+
+
+        socket.on(
+            "driver:location",
+            function (data) {
+
+                if (!data) return;
+
+                if (
+                    data.orderId !== orderId ||
+                    typeof data.lat !== "number" ||
+                    typeof data.lng !== "number"
+                ) {
+                    return;
+                }
+
+                updateDriverPosition(
+                    data.lat,
+                    data.lng
+                );
+            }
+        );
+    }
+
+
+    /* ==========================================
+       DÉPLACEMENT DU LIVREUR
+    ========================================== */
+
+    function updateDriverPosition(lat, lng) {
+
+        driverPosition.lat = lat;
+        driverPosition.lng = lng;
+
+        driverMarker.setLatLng([
+            lat,
+            lng
+        ]);
+
+        route.setLatLngs([
+            [restaurant.lat, restaurant.lng],
+            [lat, lng],
+            [client.lat, client.lng]
+        ]);
+
+        document.getElementById(
+            "gpsStatus"
+        ).textContent = "Position GPS mise à jour";
+    }
+
+
+    /* ==========================================
+       SIMULATION STATUT COMMANDE
+    ========================================== */
+
+    let currentStep = 1;
+
+    const nextButton =
+        document.getElementById("nextTrackingStep");
+
+    if (nextButton) {
+
+        nextButton.addEventListener(
+            "click",
+            function () {
+
+                if (currentStep >= 6) return;
+
+                currentStep++;
+
+                updateTrackingSteps(currentStep);
+            }
+        );
+    }
+
+
+    function updateTrackingSteps(step) {
+
+        document
+            .querySelectorAll(".tracking-step")
+            .forEach(function (element) {
+
+                const elementStep =
+                    Number(element.dataset.step);
+
+                element.classList.remove(
+                    "active",
+                    "completed"
+                );
+
+                if (elementStep < step) {
+                    element.classList.add("completed");
+                }
+
+                if (elementStep === step) {
+                    element.classList.add("active");
+
+                    const small =
+                        element.querySelector("small");
+
+                    if (small) {
+                        small.textContent =
+                            "Étape actuelle";
+                    }
+                }
+            });
+    }
+
+});
+</script>
 <section class="section">
-  <div class="container panel">
-    <p>Page EJS structurée, prête à recevoir le contenu de TiopTiop Signature 2.4.4.</p>
+  <div class="container">
+    <section class="tracking-page">
+
+  <!-- =========================
+       HEADER
+  ========================== -->
+  <div class="tracking-heading">
+    <span class="eyebrow">🛵 Suivi en temps réel</span>
+
+    <h1>🛵Suivi TIOP-38651</h1>
+
+    <p>
+      Suivez votre commande et la position de votre livreur en temps réel.
+      La position GPS est automatiquement mise à jour pendant la livraison.
+    </p>
+  </div>
+
+
+  <!-- =========================
+       CONTENU
+  ========================== -->
+  <div class="tracking-layout">
+
+    <!-- =========================
+         COLONNE GAUCHE
+    ========================== -->
+    <div class="tracking-left">
+
+      <!-- CARTE LEAFLET -->
+      <div class="tracking-map-card">
+        <div id="trackingMap"></div>
+      </div>
+
+
+      <!-- LIVREUR -->
+      <div class="tracking-driver-card">
+
+        <h3>👤 Junior — votre livreur</h3>
+
+        <p>
+          <span id="gpsStatus">Position GPS active</span>
+          · arrivée estimée
+          <strong id="estimatedTime">20–30 min</strong>
+        </p>
+
+        <div class="tracking-driver-actions">
+          <a href="tel:+242060000000" class="tracking-secondary-btn">
+            📞 Appeler
+          </a>
+
+          <a href="/contact" class="tracking-secondary-btn">
+            💬 Contacter
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         COLONNE DROITE
+    ========================== -->
+    <div class="tracking-right">
+
+      <div class="tracking-step active" data-step="1">
+        <span class="tracking-number">1</span>
+
+        <div>
+          <strong>Commande reçue</strong>
+          <small>Étape actuelle</small>
+        </div>
+      </div>
+
+
+      <div class="tracking-step" data-step="2">
+        <span class="tracking-number">2</span>
+
+        <div>
+          <strong>Confirmée</strong>
+          <small>Suivi TiopTiop</small>
+        </div>
+      </div>
+
+
+      <div class="tracking-step" data-step="3">
+        <span class="tracking-number">3</span>
+
+        <div>
+          <strong>En préparation</strong>
+          <small>Suivi TiopTiop</small>
+        </div>
+      </div>
+
+
+      <div class="tracking-step" data-step="4">
+        <span class="tracking-number">4</span>
+
+        <div>
+          <strong>Prête</strong>
+          <small>Suivi TiopTiop</small>
+        </div>
+      </div>
+
+
+      <div class="tracking-step" data-step="5">
+        <span class="tracking-number">5</span>
+
+        <div>
+          <strong>En route</strong>
+          <small>Suivi TiopTiop</small>
+        </div>
+      </div>
+
+
+      <div class="tracking-step" data-step="6">
+        <span class="tracking-number">6</span>
+
+        <div>
+          <strong>Livrée</strong>
+          <small>Suivi TiopTiop</small>
+        </div>
+      </div>
+
+
+      <!-- PAIEMENT -->
+      <div class="tracking-payment">
+
+        <h3>Paiement : Carte</h3>
+
+        <p>
+          Statut :
+          <span class="tracking-paid">PAYÉ</span>
+        </p>
+
+        <!-- seulement pour prototype -->
+        <button
+          type="button"
+          id="nextTrackingStep"
+          class="tracking-primary-btn"
+        >
+          Simuler l’étape suivante
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
   </div>
 </section>
+
+<style>
+  /* =============================================
+   TRACKING TIOPTIOP
+============================================= */
+
+.tracking-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 35px 20px 80px;
+}
+
+.tracking-heading {
+  margin-bottom: 70px;
+}
+
+.tracking-live {
+  display: inline-flex;
+  padding: 8px 15px;
+  background: #fff0df;
+  color: #ff7900;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tracking-heading h1 {
+  margin: 25px 0 10px;
+  font-size: clamp(42px, 6vw, 72px);
+  line-height: .95;
+  letter-spacing: -4px;
+  color: #17130f;
+}
+
+.tracking-heading p {
+  max-width: 650px;
+  color: #746d66;
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+
+/* =========================
+   LAYOUT
+========================= */
+
+.tracking-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+.tracking-left,
+.tracking-right {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+
+/* =========================
+   MAP
+========================= */
+
+.tracking-map-card {
+  background: #fff;
+  padding: 8px;
+  border-radius: 28px;
+  box-shadow: 0 15px 40px rgba(32, 20, 10, .08);
+  overflow: hidden;
+}
+
+#trackingMap {
+  width: 100%;
+  height: 390px;
+  border-radius: 22px;
+  overflow: hidden;
+  z-index: 1;
+}
+
+
+/* =========================
+   LIVREUR
+========================= */
+
+.tracking-driver-card {
+  background: #fff;
+  padding: 28px;
+  border-radius: 26px;
+  box-shadow: 0 15px 40px rgba(32, 20, 10, .06);
+}
+
+.tracking-driver-card h3 {
+  margin: 0 0 14px;
+  font-size: 17px;
+}
+
+.tracking-driver-card p {
+  color: #77706a;
+  margin-bottom: 20px;
+}
+
+.tracking-driver-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+
+/* =========================
+   ÉTAPES
+========================= */
+
+.tracking-step {
+  min-height: 78px;
+  background: #fff;
+  border: 2px solid transparent;
+  border-radius: 22px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: .25s ease;
+}
+
+.tracking-step.active {
+  border-color: #ffb36f;
+}
+
+.tracking-step.completed {
+  background: #fffaf5;
+}
+
+.tracking-number {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 50%;
+  background: #f1f1f1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 900;
+}
+
+.tracking-step.active .tracking-number {
+  background: #ff7900;
+  color: #fff;
+}
+
+.tracking-step.completed .tracking-number {
+  background: #198754;
+  color: #fff;
+}
+
+.tracking-step strong {
+  display: block;
+  font-size: 16px;
+}
+
+.tracking-step small {
+  display: block;
+  margin-top: 3px;
+  color: #817a73;
+  font-size: 14px;
+}
+
+
+/* =========================
+   PAIEMENT
+========================= */
+
+.tracking-payment {
+  background: #fff;
+  padding: 28px;
+  border-radius: 26px;
+}
+
+.tracking-payment h3 {
+  margin-top: 0;
+}
+
+.tracking-payment p {
+  color: #77706a;
+}
+
+.tracking-paid {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 6px 10px;
+  background: #fff0df;
+  color: #c95f00;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+
+/* =========================
+   BOUTONS
+========================= */
+
+.tracking-primary-btn,
+.tracking-secondary-btn {
+  border: 0;
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: 800;
+  transition: .2s;
+}
+
+.tracking-primary-btn {
+  padding: 15px 20px;
+  background: #ff7900;
+  color: #fff;
+  border-radius: 30px;
+}
+
+.tracking-primary-btn:hover {
+  transform: translateY(-2px);
+  background: #e96e00;
+}
+
+.tracking-secondary-btn {
+  background: #fff;
+  color: #1b1714;
+  padding: 13px 20px;
+  border-radius: 30px;
+  box-shadow: 0 8px 25px rgba(0,0,0,.06);
+}
+
+
+/* =========================
+   MARQUEUR LIVREUR
+========================= */
+
+.tiop-driver-marker {
+  background: none;
+  border: none;
+}
+
+.tiop-driver-icon {
+  width: 48px;
+  height: 48px;
+  background: #ff7900;
+  border: 4px solid #fff;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 25px;
+  box-shadow: 0 5px 20px rgba(0,0,0,.25);
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+
+  .tracking-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .tracking-heading {
+    margin-bottom: 35px;
+  }
+
+  #trackingMap {
+    height: 350px;
+  }
+}
+
+@media (max-width: 600px) {
+
+  .tracking-page {
+    padding: 25px 14px 60px;
+  }
+
+  .tracking-heading h1 {
+    letter-spacing: -2px;
+  }
+
+  #trackingMap {
+    height: 300px;
+  }
+
+  .tracking-step {
+    min-height: 70px;
+  }
+
+  .tracking-driver-card,
+  .tracking-payment {
+    padding: 20px;
+  }
+}
+</style>
+
+
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    console.log("Leaflet chargé :", typeof L);
+
+    const mapContainer =
+        document.getElementById("trackingMap");
+
+    console.log(
+        "Conteneur carte :",
+        mapContainer
+    );
+
+    if (!mapContainer) {
+        console.error(
+            "ERREUR : #trackingMap n'existe pas."
+        );
+        return;
+    }
+
+    if (typeof L === "undefined") {
+        console.error(
+            "ERREUR : Leaflet n'est pas chargé."
+        );
+        return;
+    }
+
+    // Centre de Brazzaville
+    const restaurant = [-4.2634, 15.2429];
+
+    // Client
+    const client = [-4.2505, 15.2650];
+
+    // Livreur
+    const driver = [-4.2575, 15.2520];
+
+
+    /* ==============================
+       CRÉATION DE LA CARTE
+    ============================== */
+
+    const map = L.map("trackingMap").setView(
+        restaurant,
+        14
+    );
+
+
+    /* ==============================
+       OPENSTREETMAP
+    ============================== */
+
+    L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            maxZoom: 19,
+            attribution:
+                '&copy; OpenStreetMap contributors'
+        }
+    ).addTo(map);
+
+
+    /* ==============================
+       RESTAURANT
+    ============================== */
+
+    L.marker(restaurant)
+        .addTo(map)
+        .bindPopup(
+            "<strong>🍽️ TiopTiop</strong><br>Restaurant"
+        );
+
+
+    /* ==============================
+       LIVREUR
+    ============================== */
+
+    const driverIcon = L.divIcon({
+
+        className: "",
+
+        html: `
+            <div style="
+                width:50px;
+                height:50px;
+                background:#ff7900;
+                border:4px solid white;
+                border-radius:50%;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:27px;
+                box-shadow:0 5px 20px rgba(0,0,0,.3);
+            ">
+                🛵
+            </div>
+        `,
+
+        iconSize: [50, 50],
+        iconAnchor: [25, 25]
+
+    });
+
+
+    const driverMarker = L.marker(
+        driver,
+        {
+            icon: driverIcon
+        }
+    )
+    .addTo(map)
+    .bindPopup(
+        "<strong>Junior</strong><br>Votre livreur"
+    );
+
+
+    /* ==============================
+       CLIENT
+    ============================== */
+
+    L.marker(client)
+        .addTo(map)
+        .bindPopup(
+            "<strong>🏠 Vous</strong><br>Adresse de livraison"
+        );
+
+
+    /* ==============================
+       TRAJET
+    ============================== */
+
+    L.polyline(
+        [
+            restaurant,
+            driver,
+            client
+        ],
+        {
+            weight: 6,
+            opacity: 0.8
+        }
+    ).addTo(map);
+
+
+    /* Correction affichage Leaflet */
+
+    setTimeout(function () {
+        map.invalidateSize();
+    }, 300);
+
+
+    console.log(
+        "✅ Carte TiopTiop initialisée"
+    );
+
+});
+</script>

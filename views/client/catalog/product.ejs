@@ -1,13 +1,1266 @@
 <section class="section">
-  <div class="container two-columns">
-    <div class="media-placeholder">🍽️</div>
-    <div class="panel">
-      <span class="badge"><%= product.category_name %></span>
-      <h1><%= product.name %></h1>
-      <p><%= product.description || product.short_description || "" %></p>
-      <p><strong>Préparation :</strong> <%= product.preparation_minutes %> minutes</p>
-      <h2><%= formatMoney(product.price) %></h2>
-      <button class="button primary" type="button">🛒 Ajouter au panier</button>
+  <div class="container">
+    <!-- =========================================================
+     TIOPTIOP - DETAIL PRODUIT
+     Route : /produit/1
+     views/client/catalog/product.ejs
+========================================================= -->
+
+<style>
+  .tiop-product-page {
+    --orange: #ff7900;
+    --orange-dark: #e86e00;
+    --dark: #1b1714;
+    --text: #201c19;
+    --muted: #77716f;
+    --border: #e8e1da;
+    --soft: #faf7f3;
+    --cream: #fff0d8;
+
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* =========================================================
+     PRODUIT PRINCIPAL
+  ========================================================= */
+
+  .product-main {
+    display: grid;
+    grid-template-columns: 58px minmax(300px, .95fr) minmax(360px, 1.15fr);
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  /* =========================================================
+     MINIATURES
+  ========================================================= */
+
+  .product-thumbnails {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .product-thumbnail {
+    width: 58px;
+    height: 58px;
+
+    padding: 0;
+
+    overflow: hidden;
+
+    border: 1px solid transparent;
+    border-radius: 10px;
+
+    background: #fff;
+
+    cursor: pointer;
+  }
+
+  .product-thumbnail.active {
+    border: 2px solid var(--orange);
+  }
+
+  .product-thumbnail img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+
+  /* =========================================================
+     GRANDE IMAGE
+  ========================================================= */
+
+  .product-main-image {
+    min-height: 645px;
+    overflow: hidden;
+
+    border-radius: 22px;
+    background: #eee;
+  }
+
+  .product-main-image img {
+    width: 100%;
+    height: 100%;
+    min-height: 645px;
+
+    display: block;
+    object-fit: cover;
+  }
+
+  /* =========================================================
+     INFORMATIONS PRODUIT
+  ========================================================= */
+
+  .product-information {
+    min-height: 645px;
+
+    padding: 25px;
+
+    background: #fff;
+
+    border: 1px solid var(--border);
+    border-radius: 27px;
+  }
+
+  .product-category {
+    display: inline-flex;
+    align-items: center;
+
+    min-height: 26px;
+
+    padding: 0 12px;
+
+    margin-bottom: 20px;
+
+    border-radius: 999px;
+
+    background: #fff0df;
+    color: var(--orange);
+
+    font-size: 10px;
+    font-weight: 900;
+  }
+
+  .product-title {
+    margin: 0 0 15px;
+
+    font-size: clamp(32px, 4vw, 45px);
+    line-height: 1;
+
+    font-weight: 900;
+    letter-spacing: -2px;
+  }
+
+  /* =========================================================
+     BADGES
+  ========================================================= */
+
+  .product-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+
+    margin-bottom: 26px;
+  }
+
+  .product-badge {
+    min-height: 23px;
+
+    display: inline-flex;
+    align-items: center;
+
+    padding: 0 9px;
+
+    border-radius: 999px;
+
+    background: #f7f3ef;
+
+    font-size: 9px;
+    font-weight: 800;
+  }
+
+  /* =========================================================
+     PRIX + FAVORI
+  ========================================================= */
+
+  .product-price-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 14px;
+  }
+
+  .product-price {
+    font-size: 20px;
+    font-weight: 900;
+  }
+
+  .product-favorite {
+    min-height: 43px;
+
+    padding: 0 16px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: #fff;
+
+    color: var(--text);
+
+    box-shadow: 0 5px 20px rgba(0,0,0,.04);
+
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  .product-favorite.active {
+    color: #e63946;
+  }
+
+  /* =========================================================
+     OPTIONS
+  ========================================================= */
+
+  .product-option-box {
+    margin-top: 10px;
+    padding: 18px;
+
+    border: 1px solid #dedbd7;
+    border-radius: 15px;
+  }
+
+  .product-option-title {
+    margin: 0 0 14px;
+
+    font-size: 14px;
+    font-weight: 900;
+  }
+
+  .product-option-row {
+    min-height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    border-bottom: 1px dashed #ddd8d3;
+
+    font-size: 12px;
+  }
+
+  .product-option-row:last-child {
+    border-bottom: 0;
+  }
+
+  .product-option-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    cursor: pointer;
+  }
+
+  .product-option-label input {
+    margin: 0;
+    accent-color: #087fff;
+  }
+
+  .product-option-price {
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  /* =========================================================
+     INSTRUCTIONS
+  ========================================================= */
+
+  .product-instructions {
+    width: 100%;
+    min-height: 50px;
+
+    margin-top: 10px;
+    padding: 14px;
+
+    border: 1px solid #dedbd7;
+    border-radius: 14px;
+
+    font-family: inherit;
+    font-size: 12px;
+
+    resize: vertical;
+    outline: none;
+  }
+
+  .product-instructions:focus {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(255,121,0,.08);
+  }
+
+  /* =========================================================
+     ACTIONS
+  ========================================================= */
+
+  .product-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    margin-top: 18px;
+  }
+
+  .product-add-cart,
+  .product-view-cart {
+    min-height: 44px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 18px;
+
+    border: 0;
+    border-radius: 999px;
+
+    font-size: 12px;
+    font-weight: 900;
+
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .product-add-cart {
+    background: var(--orange);
+    color: #fff;
+  }
+
+  .product-add-cart:hover {
+    background: var(--orange-dark);
+  }
+
+  .product-view-cart {
+    background: var(--dark);
+    color: #fff;
+  }
+
+  /* =========================================================
+     MOTIF SEPARATEUR
+  ========================================================= */
+
+  .african-separator {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    margin: 95px 0;
+
+    overflow: hidden;
+  }
+
+  .african-separator span {
+    height: 9px;
+    flex: 1 0 17px;
+  }
+
+  .african-separator span:nth-child(5n+1) {
+    background: #3d7653;
+  }
+
+  .african-separator span:nth-child(5n+2) {
+    background: #d69645;
+  }
+
+  .african-separator span:nth-child(5n+3) {
+    background: #81543a;
+  }
+
+  .african-separator span:nth-child(5n+4) {
+    background: #eee1b3;
+  }
+
+  .african-separator span:nth-child(5n+5) {
+    background: #34704e;
+  }
+
+  /* =========================================================
+     SUGGESTIONS
+  ========================================================= */
+
+  .suggestion-label {
+    display: inline-flex;
+    align-items: center;
+
+    min-height: 25px;
+
+    padding: 0 10px;
+
+    margin-bottom: 12px;
+
+    border-radius: 999px;
+
+    background: #fff0df;
+    color: var(--orange);
+
+    font-size: 9px;
+    font-weight: 900;
+  }
+
+  .suggestions-title {
+    margin: 0 0 24px;
+
+    font-size: clamp(32px, 4vw, 45px);
+    line-height: 1;
+
+    font-weight: 900;
+    letter-spacing: -2px;
+  }
+
+  .suggestions-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 13px;
+  }
+
+  /* =========================================================
+     CARTE SUGGESTION
+  ========================================================= */
+
+  .suggestion-card {
+    overflow: hidden;
+
+    background: #fff;
+
+    border: 1px solid var(--border);
+    border-radius: 20px;
+  }
+
+  .suggestion-image {
+    height: 120px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    background: #ffe7bf;
+
+    font-size: 45px;
+  }
+
+  .suggestion-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .suggestion-content {
+    padding: 13px;
+  }
+
+  .suggestion-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+
+    margin-bottom: 12px;
+  }
+
+  .suggestion-name {
+    margin: 0;
+
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .suggestion-price {
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .suggestion-description {
+    min-height: 34px;
+
+    margin: 0 0 12px;
+
+    color: var(--muted);
+
+    font-size: 10px;
+    line-height: 1.5;
+  }
+
+  .suggestion-actions {
+    display: grid;
+    grid-template-columns: 35px 1fr;
+    gap: 7px;
+  }
+
+  .suggestion-favorite {
+    min-height: 35px;
+
+    border: 0;
+    border-radius: 10px;
+
+    background: #f8f5f1;
+
+    cursor: pointer;
+  }
+
+  .suggestion-add {
+    min-height: 35px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 0;
+    border-radius: 10px;
+
+    background: var(--orange);
+    color: #fff;
+
+    font-size: 11px;
+    font-weight: 900;
+
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  /* =========================================================
+     RESPONSIVE
+  ========================================================= */
+
+  @media (max-width: 1000px) {
+    .product-main {
+      grid-template-columns: 55px 1fr 1fr;
+    }
+
+    .suggestions-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 800px) {
+    .product-main {
+      grid-template-columns: 1fr;
+    }
+
+    .product-thumbnails {
+      flex-direction: row;
+      order: 2;
+    }
+
+    .product-main-image {
+      order: 1;
+      min-height: 450px;
+    }
+
+    .product-main-image img {
+      min-height: 450px;
+    }
+
+    .product-information {
+      order: 3;
+      min-height: auto;
+    }
+
+    .african-separator {
+      margin: 55px 0;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .product-main-image,
+    .product-main-image img {
+      min-height: 350px;
+    }
+
+    .product-information {
+      padding: 19px;
+      border-radius: 22px;
+    }
+
+    .product-title {
+      font-size: 35px;
+    }
+
+    .product-actions {
+      flex-direction: column;
+    }
+
+    .product-add-cart,
+    .product-view-cart {
+      width: 100%;
+    }
+
+    .suggestions-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+
+<section class="tiop-product-page">
+
+  <!-- =====================================================
+       PRODUIT PRINCIPAL
+  ====================================================== -->
+
+  <div class="product-main">
+
+    <!-- MINIATURES -->
+    <div class="product-thumbnails">
+
+      <button
+        type="button"
+        class="product-thumbnail active"
+        onclick="changeProductImage(this, '/media/products/pain-1.jpg')"
+      >
+        <img src="/media/products/pain-1.jpg" alt="Pain céréale">
+      </button>
+
+      <button
+        type="button"
+        class="product-thumbnail"
+        onclick="changeProductImage(this, '/media/products/pain-2.jpg')"
+      >
+        <img src="/media/products/pain-2.jpg" alt="Pain céréale">
+      </button>
+
+      <button
+        type="button"
+        class="product-thumbnail"
+        onclick="changeProductImage(this, '/media/products/pain-3.jpg')"
+      >
+        <img src="/media/products/pain-3.jpg" alt="Pain céréale">
+      </button>
+
     </div>
+
+
+    <!-- IMAGE PRINCIPALE -->
+    <div class="product-main-image">
+
+      <img
+        id="mainProductImage"
+        src="/media/products/pain-1.jpg"
+        alt="Pain céréale"
+      >
+
+    </div>
+
+
+    <!-- =================================================
+         INFORMATIONS
+    ================================================== -->
+
+    <article class="product-information">
+
+      <span class="product-category">
+        🍽️ Tradition
+      </span>
+
+      <h1 class="product-title">
+        Pain céréale
+      </h1>
+
+
+      <div class="product-badges">
+
+        <span class="product-badge">
+          ⭐ 4.8
+        </span>
+
+        <span class="product-badge">
+          ⏱ 15 min
+        </span>
+
+        <span class="product-badge">
+          📦 Disponible
+        </span>
+
+        <span class="product-badge">
+          ⚠ À préciser
+        </span>
+
+      </div>
+
+
+      <!-- PRIX -->
+
+      <div class="product-price-row">
+
+        <strong
+          class="product-price"
+          id="productPrice"
+          data-base-price="12"
+        >
+          12,00 €
+        </strong>
+
+        <button
+          type="button"
+          class="product-favorite"
+          onclick="toggleProductFavorite(this)"
+        >
+          ♡ Favori
+        </button>
+
+      </div>
+
+
+      <!-- =================================================
+           FORMULAIRE PERSONNALISATION
+      ================================================== -->
+
+      <form
+        id="productForm"
+        action="/panier/ajouter"
+        method="POST"
+      >
+
+        <input
+          type="hidden"
+          name="product_id"
+          value="1"
+        >
+
+
+        <!-- ===============================================
+             ACCOMPAGNEMENT
+        ================================================ -->
+
+        <div class="product-option-box">
+
+          <h2 class="product-option-title">
+            🍚 Accompagnement
+          </h2>
+
+
+          <div class="product-option-row">
+
+            <label class="product-option-label">
+
+              <input
+                type="radio"
+                name="accompaniment"
+                value="riz-parfume"
+                data-price="0"
+                checked
+                onchange="updateProductPrice()"
+              >
+
+              Riz parfumé
+
+            </label>
+
+            <strong class="product-option-price">
+              Inclus
+            </strong>
+
+          </div>
+
+
+          <div class="product-option-row">
+
+            <label class="product-option-label">
+
+              <input
+                type="radio"
+                name="accompaniment"
+                value="foufou"
+                data-price="0"
+                onchange="updateProductPrice()"
+              >
+
+              Foufou
+
+            </label>
+
+            <strong class="product-option-price">
+              Inclus
+            </strong>
+
+          </div>
+
+
+          <div class="product-option-row">
+
+            <label class="product-option-label">
+
+              <input
+                type="radio"
+                name="accompaniment"
+                value="plantain"
+                data-price="1.50"
+                onchange="updateProductPrice()"
+              >
+
+              Plantain
+
+            </label>
+
+            <strong class="product-option-price">
+              +1,50 €
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- ===============================================
+             PERSONNALISATION
+        ================================================ -->
+
+        <div class="product-option-box">
+
+          <h2 class="product-option-title">
+            ✨ Personnalisation
+          </h2>
+
+
+          <div class="product-option-row">
+
+            <label class="product-option-label">
+
+              <input
+                type="checkbox"
+                name="extras"
+                value="extra-plantain"
+                data-price="2"
+                onchange="updateProductPrice()"
+              >
+
+              Extra plantain
+
+            </label>
+
+            <strong class="product-option-price">
+              +2,00 €
+            </strong>
+
+          </div>
+
+
+          <div class="product-option-row">
+
+            <label class="product-option-label">
+
+              <input
+                type="checkbox"
+                name="extras"
+                value="sauce-maison"
+                data-price=".50"
+                onchange="updateProductPrice()"
+              >
+
+              Sauce maison
+
+            </label>
+
+            <strong class="product-option-price">
+              +0,50 €
+            </strong>
+
+          </div>
+
+
+          <div class="product-option-row">
+
+            <label class="product-option-label">
+
+              <input
+                type="checkbox"
+                name="extras"
+                value="sans-piment"
+                data-price="0"
+                onchange="updateProductPrice()"
+              >
+
+              Sans piment
+
+            </label>
+
+            <strong class="product-option-price">
+              0 €
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- INSTRUCTIONS -->
+
+        <textarea
+          name="instructions"
+          class="product-instructions"
+          placeholder="📝 Instructions pour la cuisine..."
+        ></textarea>
+
+
+        <!-- ===============================================
+             ACTIONS
+        ================================================ -->
+
+        <div class="product-actions">
+
+          <button
+            type="submit"
+            class="product-add-cart"
+            id="addToCartButton"
+          >
+            🛒 Ajouter · 12,00 €
+          </button>
+
+          <a
+            href="/panier"
+            class="product-view-cart"
+          >
+            🧺 Voir le panier
+          </a>
+
+        </div>
+
+      </form>
+
+    </article>
+
+  </div>
+
+
+  <!-- =====================================================
+       MOTIF AFRICAIN DISCRET
+  ====================================================== -->
+
+  <div class="african-separator" aria-hidden="true">
+
+    <% for(let i = 0; i < 35; i++) { %>
+      <span></span>
+    <% } %>
+
+  </div>
+
+
+  <!-- =====================================================
+       SUGGESTIONS
+  ====================================================== -->
+
+  <section class="product-suggestions">
+
+    <span class="suggestion-label">
+      ✨ Suggestions
+    </span>
+
+    <h2 class="suggestions-title">
+      Vous aimerez aussi
+    </h2>
+
+
+    <div class="suggestions-grid">
+
+
+      <!-- SAKA-SAKA -->
+
+      <article class="suggestion-card">
+
+        <a href="/produit/2" class="suggestion-image">
+          🌿
+        </a>
+
+        <div class="suggestion-content">
+
+          <div class="suggestion-header">
+
+            <h3 class="suggestion-name">
+              Saka-Saka Royal
+            </h3>
+
+            <strong class="suggestion-price">
+              8,90 €
+            </strong>
+
+          </div>
+
+          <p class="suggestion-description">
+            Feuilles de manioc, pâte d'arachide,
+            riz parfumé.
+          </p>
+
+          <div class="suggestion-actions">
+
+            <button
+              type="button"
+              class="suggestion-favorite"
+            >
+              ♡
+            </button>
+
+            <button
+              type="button"
+              class="suggestion-add"
+            >
+              Ajouter +
+            </button>
+
+          </div>
+
+        </div>
+
+      </article>
+
+
+      <!-- POULET -->
+
+      <article class="suggestion-card">
+
+        <a href="/produit/3" class="suggestion-image">
+          🔥
+        </a>
+
+        <div class="suggestion-content">
+
+          <div class="suggestion-header">
+
+            <h3 class="suggestion-name">
+              Poulet Braisé Tiop
+            </h3>
+
+            <strong class="suggestion-price">
+              12,90 €
+            </strong>
+
+          </div>
+
+          <p class="suggestion-description">
+            Poulet mariné, braisé au feu,
+            plantain.
+          </p>
+
+          <div class="suggestion-actions">
+
+            <button
+              type="button"
+              class="suggestion-favorite"
+            >
+              ♡
+            </button>
+
+            <button
+              type="button"
+              class="suggestion-add"
+            >
+              Ajouter +
+            </button>
+
+          </div>
+
+        </div>
+
+      </article>
+
+
+      <!-- HARICOTS -->
+
+      <article class="suggestion-card">
+
+        <a href="/produit/4" class="suggestion-image">
+          🍲
+        </a>
+
+        <div class="suggestion-content">
+
+          <div class="suggestion-header">
+
+            <h3 class="suggestion-name">
+              Haricots Madesu
+            </h3>
+
+            <strong class="suggestion-price">
+              7,90 €
+            </strong>
+
+          </div>
+
+          <p class="suggestion-description">
+            Haricots mijotés, épices maison,
+            riz.
+          </p>
+
+          <div class="suggestion-actions">
+
+            <button
+              type="button"
+              class="suggestion-favorite"
+            >
+              ♡
+            </button>
+
+            <button
+              type="button"
+              class="suggestion-add"
+            >
+              Ajouter +
+            </button>
+
+          </div>
+
+        </div>
+
+      </article>
+
+
+      <!-- POISSON -->
+
+      <article class="suggestion-card">
+
+        <a href="/produit/5" class="suggestion-image">
+          🐟
+        </a>
+
+        <div class="suggestion-content">
+
+          <div class="suggestion-header">
+
+            <h3 class="suggestion-name">
+              Maboké de Poisson
+            </h3>
+
+            <strong class="suggestion-price">
+              13,50 €
+            </strong>
+
+          </div>
+
+          <p class="suggestion-description">
+            Poisson en papillote,
+            citron, aromates.
+          </p>
+
+          <div class="suggestion-actions">
+
+            <button
+              type="button"
+              class="suggestion-favorite"
+            >
+              ♡
+            </button>
+
+            <button
+              type="button"
+              class="suggestion-add"
+            >
+              Ajouter +
+            </button>
+
+          </div>
+
+        </div>
+
+      </article>
+
+    </div>
+
+  </section>
+
+</section>
   </div>
 </section>
+
+
+
+
+<script>
+  /* =========================================================
+     GALERIE
+  ========================================================= */
+
+  function changeProductImage(button, imageUrl) {
+
+    const mainImage =
+      document.getElementById("mainProductImage");
+
+    mainImage.src = imageUrl;
+
+    document
+      .querySelectorAll(".product-thumbnail")
+      .forEach(item => {
+        item.classList.remove("active");
+      });
+
+    button.classList.add("active");
+  }
+
+
+  /* =========================================================
+     FAVORI
+  ========================================================= */
+
+  function toggleProductFavorite(button) {
+
+    button.classList.toggle("active");
+
+    if (button.classList.contains("active")) {
+      button.innerHTML = "♥ Favori";
+    }
+    else {
+      button.innerHTML = "♡ Favori";
+    }
+  }
+
+
+  /* =========================================================
+     CALCUL AUTOMATIQUE DU PRIX
+  ========================================================= */
+
+  function updateProductPrice() {
+
+    const priceElement =
+      document.getElementById("productPrice");
+
+    const button =
+      document.getElementById("addToCartButton");
+
+    let total =
+      parseFloat(priceElement.dataset.basePrice);
+
+
+    /* ACCOMPAGNEMENT */
+
+    const accompaniment =
+      document.querySelector(
+        'input[name="accompaniment"]:checked'
+      );
+
+    if (accompaniment) {
+      total += parseFloat(
+        accompaniment.dataset.price || 0
+      );
+    }
+
+
+    /* EXTRAS */
+
+    document
+      .querySelectorAll(
+        'input[name="extras"]:checked'
+      )
+      .forEach(extra => {
+
+        total += parseFloat(
+          extra.dataset.price || 0
+        );
+
+      });
+
+
+    const formatted =
+      total.toLocaleString(
+        "fr-FR",
+        {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }
+      );
+
+
+    priceElement.textContent =
+      formatted + " €";
+
+    button.innerHTML =
+      "🛒 Ajouter · " + formatted + " €";
+  }
+</script>
