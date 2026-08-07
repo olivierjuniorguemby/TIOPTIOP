@@ -1,10 +1,815 @@
 <section class="admin-heading">
   <div>
-    <span class="eyebrow">Administration</span>
+    <span class="admin-badge">Administration</span>
     <h1>🏪 Restaurants</h1>
   </div>
-  <button class="button primary">➕ Nouvelle opération</button>
+  <button
+      type="button"
+      class="btn-admin-primary"
+      onclick="openAddRestaurantModal()">
+      + Ajouter un restaurant
+    </button>
 </section>
-<div class="panel">
-  <p>Page EJS stable, sans include relatif. Ajoutez progressivement le CRUD de TiopTiop Signature 2.4.4 ici.</p>
+
+<section class="admin-restaurants">
+
+
+
+
+  <!-- TABLEAU -->
+  <div class="admin-table-card">
+
+    <div class="restaurant-table">
+
+      <!-- HEADER -->
+      <div class="restaurant-row restaurant-head">
+        <div>Restaurant</div>
+        <div>Ville</div>
+        <div>Statut</div>
+        <div>Horaires</div>
+        <div>Actions</div>
+      </div>
+
+
+      <!-- RESTAURANT 1 -->
+      <div class="restaurant-row">
+
+        <div class="restaurant-name-cell">
+
+          <img
+            src="/media/restaurants/centre-ville.jpg"
+            alt="TiopTiop Centre-ville"
+            class="restaurant-thumb"
+            onerror="this.style.display='none'">
+
+          <span>TiopTiop Centre-ville</span>
+
+        </div>
+
+        <div>Brazzaville</div>
+
+        <div>
+          <span class="restaurant-status open">
+            Ouvert
+          </span>
+        </div>
+
+        <div>06:00–23:00</div>
+
+        <div class="restaurant-actions">
+
+          <button
+            type="button"
+            class="btn-admin-edit"
+            onclick="openEditRestaurantModal({
+              id: 1,
+              name: 'TiopTiop Centre-ville',
+              city: 'Brazzaville',
+              status: 'Ouvert',
+              hours: '06:00–23:00',
+              image: '/media/restaurants/centre-ville.jpg'
+            })">
+            Modifier
+          </button>
+
+          <button
+            type="button"
+            class="btn-admin-delete">
+            Supprimer
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- RESTAURANT 2 -->
+      <div class="restaurant-row">
+
+        <div class="restaurant-name-cell">
+
+          <img
+            src="/media/restaurants/poto-poto.jpg"
+            alt="TiopTiop Poto-Poto"
+            class="restaurant-thumb"
+            onerror="this.style.display='none'">
+
+          <span>TiopTiop Poto-Poto</span>
+
+        </div>
+
+        <div>Brazzaville</div>
+
+        <div>
+          <span class="restaurant-status open">
+            Ouvert
+          </span>
+        </div>
+
+        <div>07:00–22:30</div>
+
+        <div class="restaurant-actions">
+
+          <button
+            type="button"
+            class="btn-admin-edit"
+            onclick="openEditRestaurantModal({
+              id: 2,
+              name: 'TiopTiop Poto-Poto',
+              city: 'Brazzaville',
+              status: 'Ouvert',
+              hours: '07:00–22:30',
+              image: '/media/restaurants/poto-poto.jpg'
+            })">
+            Modifier
+          </button>
+
+          <button
+            type="button"
+            class="btn-admin-delete">
+            Supprimer
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     MODAL AJOUT
+===================================================== -->
+
+<div
+  id="addRestaurantModal"
+  class="admin-modal-overlay">
+
+  <div class="admin-restaurant-modal">
+
+    <div class="modal-header">
+
+      <h2>✚ Ajouter un restaurant</h2>
+
+      <button
+        type="button"
+        class="modal-close"
+        onclick="closeAddRestaurantModal()">
+        ×
+      </button>
+
+    </div>
+
+
+    <form
+      action="/admin/restaurants"
+      method="POST"
+      enctype="multipart/form-data">
+
+
+      <!-- NOM -->
+      <input
+        type="text"
+        name="name"
+        class="restaurant-input"
+        placeholder="Nom / titre"
+        required>
+
+
+      <!-- VILLE -->
+      <input
+        type="text"
+        name="city"
+        class="restaurant-input"
+        placeholder="Ville"
+        required>
+
+
+      <!-- STATUT -->
+      <select
+        name="status"
+        class="restaurant-input">
+
+        <option value="Ouvert">
+          Ouvert
+        </option>
+
+        <option value="Fermé">
+          Fermé
+        </option>
+
+        <option value="Bientôt">
+          Bientôt
+        </option>
+
+      </select>
+
+
+      <!-- HORAIRES -->
+      <input
+        type="text"
+        name="hours"
+        class="restaurant-input"
+        placeholder="Horaires : 06:00–23:00">
+
+
+      <!-- IMAGE -->
+
+      <label class="restaurant-upload-label">
+        🖼️ Image du restaurant
+      </label>
+
+      <div class="restaurant-file-field">
+
+        <input
+          type="file"
+          name="image"
+          id="addRestaurantImage"
+          accept="image/png,image/jpeg,image/webp"
+          onchange="previewRestaurantImage(
+            this,
+            'addRestaurantPreview'
+          )">
+
+      </div>
+
+
+      <!-- PREVIEW -->
+
+      <div
+        id="addRestaurantPreview"
+        class="restaurant-preview">
+      </div>
+
+
+      <button
+        type="submit"
+        class="restaurant-save">
+        💾 Enregistrer
+      </button>
+
+    </form>
+
+  </div>
+
 </div>
+
+
+
+<!-- =====================================================
+     MODAL MODIFICATION
+===================================================== -->
+
+<div
+  id="editRestaurantModal"
+  class="admin-modal-overlay">
+
+  <div class="admin-restaurant-modal">
+
+    <div class="modal-header">
+
+      <h2>✏️ Modifier le restaurant</h2>
+
+      <button
+        type="button"
+        class="modal-close"
+        onclick="closeEditRestaurantModal()">
+        ×
+      </button>
+
+    </div>
+
+
+    <form
+      id="editRestaurantForm"
+      method="POST"
+      enctype="multipart/form-data">
+
+
+      <input
+        type="hidden"
+        name="id"
+        id="editRestaurantId">
+
+
+      <!-- NOM -->
+
+      <input
+        type="text"
+        name="name"
+        id="editRestaurantName"
+        class="restaurant-input"
+        required>
+
+
+      <!-- VILLE -->
+
+      <input
+        type="text"
+        name="city"
+        id="editRestaurantCity"
+        class="restaurant-input"
+        required>
+
+
+      <!-- STATUT -->
+
+      <select
+        name="status"
+        id="editRestaurantStatus"
+        class="restaurant-input">
+
+        <option value="Ouvert">
+          Ouvert
+        </option>
+
+        <option value="Fermé">
+          Fermé
+        </option>
+
+        <option value="Bientôt">
+          Bientôt
+        </option>
+
+      </select>
+
+
+      <!-- HORAIRES -->
+
+      <input
+        type="text"
+        name="hours"
+        id="editRestaurantHours"
+        class="restaurant-input"
+        placeholder="Horaires">
+
+
+      <!-- IMAGE -->
+
+      <label class="restaurant-upload-label">
+        🖼️ Image du restaurant
+      </label>
+
+      <div class="restaurant-file-field">
+
+        <input
+          type="file"
+          name="image"
+          id="editRestaurantImage"
+          accept="image/png,image/jpeg,image/webp"
+          onchange="previewRestaurantImage(
+            this,
+            'editRestaurantPreview'
+          )">
+
+      </div>
+
+
+      <!-- IMAGE ACTUELLE / PREVIEW -->
+
+      <div
+        id="editRestaurantPreview"
+        class="restaurant-preview">
+      </div>
+
+
+      <button
+        type="submit"
+        class="restaurant-save">
+        💾 Enregistrer
+      </button>
+
+    </form>
+
+  </div>
+
+</div>
+
+<style>
+  /* =========================================================
+   RESTAURANTS ADMIN
+========================================================= */
+
+.admin-restaurants {
+    padding: 14px;
+}
+
+.admin-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+
+    margin-bottom: 26px;
+}
+
+.admin-page-header h1 {
+    margin: 7px 0 0;
+
+    font-size: 34px;
+    line-height: 1;
+    font-weight: 800;
+}
+
+.admin-badge {
+    display: inline-flex;
+
+    padding: 5px 10px;
+
+    border-radius: 999px;
+
+    background: #fff0df;
+    color: #ff7900;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+
+/* BOUTON AJOUT */
+
+.btn-admin-primary {
+    border: 0;
+
+    padding: 13px 19px;
+
+    border-radius: 999px;
+
+    background: #ff7900;
+    color: white;
+
+    font-weight: 800;
+    font-size: 14px;
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   TABLEAU
+========================================================= */
+
+.admin-table-card {
+    overflow: hidden;
+
+    border-radius: 18px;
+
+    background: #fff;
+}
+
+.restaurant-table {
+    width: 100%;
+}
+
+.restaurant-row {
+    display: grid;
+
+    grid-template-columns:
+        1.7fr
+        1fr
+        .75fr
+        1.1fr
+        2.4fr;
+
+    align-items: center;
+
+    min-height: 64px;
+
+    border-bottom: 1px solid #ddd;
+}
+
+.restaurant-row:last-child {
+    border-bottom: none;
+}
+
+.restaurant-row > div {
+    padding: 13px 14px;
+}
+
+.restaurant-head {
+    min-height: 42px;
+
+    background: #faf7f4;
+
+    font-weight: 800;
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   IMAGE TABLEAU
+========================================================= */
+
+.restaurant-name-cell {
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+}
+
+.restaurant-thumb {
+    width: 48px;
+    height: 48px;
+
+    flex: 0 0 48px;
+
+    border-radius: 11px;
+
+    object-fit: cover;
+
+    background: #f1f1f1;
+}
+
+
+/* =========================================================
+   STATUT
+========================================================= */
+
+.restaurant-status {
+    display: inline-flex;
+
+    padding: 6px 10px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.restaurant-status.open {
+    background: #e9f7ee;
+    color: #287747;
+}
+
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.restaurant-actions {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+.btn-admin-edit,
+.btn-admin-delete {
+    border: 0;
+
+    padding: 11px 16px;
+
+    border-radius: 999px;
+
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.btn-admin-edit {
+    background: #fff;
+    color: #111;
+
+    box-shadow:
+        0 5px 18px rgba(0,0,0,.05);
+}
+
+.btn-admin-delete {
+    background: #fde8e7;
+    color: #c33b2d;
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.admin-modal-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 99999;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(0,0,0,.52);
+}
+
+.admin-modal-overlay.show {
+    display: flex;
+}
+
+.admin-restaurant-modal {
+    width: 100%;
+    max-width: 760px;
+
+    padding: 22px;
+
+    border-radius: 24px;
+
+    background: #fff;
+
+    box-shadow:
+        0 30px 80px rgba(0,0,0,.30);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 17px;
+}
+
+.modal-header h2 {
+    margin: 0;
+
+    font-size: 25px;
+    font-weight: 800;
+}
+
+.modal-close {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 0;
+    border-radius: 50%;
+
+    background: #f1f1f1;
+
+    font-size: 18px;
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   FORMULAIRE
+========================================================= */
+
+.admin-restaurant-modal form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+.restaurant-input {
+    width: 100%;
+    min-height: 46px;
+
+    box-sizing: border-box;
+
+    padding: 11px 13px;
+
+    border: 1px solid #ddd;
+    border-radius: 12px;
+
+    background: #fff;
+
+    font-family: inherit;
+    font-size: 15px;
+
+    outline: none;
+}
+
+.restaurant-input:focus {
+    border-color: #ff7900;
+
+    box-shadow:
+        0 0 0 3px rgba(255,121,0,.08);
+}
+
+
+/* =========================================================
+   UPLOAD
+========================================================= */
+
+.restaurant-upload-label {
+    margin-top: 3px;
+
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.restaurant-file-field {
+    width: 100%;
+
+    padding: 10px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #ddd;
+    border-radius: 12px;
+}
+
+.restaurant-file-field input {
+    width: 100%;
+}
+
+
+/* =========================================================
+   PREVIEW IMAGE
+========================================================= */
+
+.restaurant-preview {
+    display: none;
+
+    margin-top: 3px;
+}
+
+.restaurant-preview.has-image {
+    display: block;
+}
+
+.restaurant-preview img {
+    width: 100px;
+    height: 80px;
+
+    border-radius: 12px;
+
+    object-fit: cover;
+
+    border: 1px solid #eee;
+}
+
+
+/* =========================================================
+   ENREGISTRER
+========================================================= */
+
+.restaurant-save {
+    width: 100%;
+    min-height: 44px;
+
+    margin-top: 4px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: #ff7900;
+    color: #fff;
+
+    font-size: 15px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.restaurant-save:hover,
+.btn-admin-primary:hover {
+    background: #e96f00;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .admin-table-card {
+        overflow-x: auto;
+    }
+
+    .restaurant-table {
+        min-width: 850px;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .admin-page-header {
+        flex-direction: column;
+    }
+
+    .btn-admin-primary {
+        width: 100%;
+    }
+
+    .admin-restaurant-modal {
+        max-height: calc(100vh - 30px);
+
+        overflow-y: auto;
+    }
+
+}
+</style>
+
+<script src="/js/restaurants.js" defer></script>
