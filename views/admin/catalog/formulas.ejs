@@ -1,10 +1,751 @@
 <section class="admin-heading">
   <div>
-    <span class="eyebrow">Administration</span>
+    <span class="admin-badge">Administration</span>
     <h1>🍱 Formules</h1>
   </div>
-  <button class="button primary">➕ Nouvelle opération</button>
+  <button
+      type="button"
+      class="btn-formula-add"
+      onclick="openAddFormulaModal()">
+      + Ajouter une formule
+    </button>
 </section>
-<div class="panel">
-  <p>Page EJS stable, sans include relatif. Ajoutez progressivement le CRUD de TiopTiop Signature 2.4.4 ici.</p>
+
+<section class="admin-formulas-page">
+
+
+
+
+  <!-- TABLEAU -->
+  <div class="formulas-table-wrapper">
+
+    <table class="formulas-table">
+
+      <thead>
+        <tr>
+          <th>Formule</th>
+          <th>Prix</th>
+          <th>Description</th>
+          <th></th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        <tr>
+
+          <td>
+            <div class="formula-product">
+              <img
+                src="/media/products/pain-1.jpg"
+                alt="PAIN CHOCOLAT"
+                class="formula-thumbnail">
+
+              <span>PAIN CHOCOLAT</span>
+            </div>
+          </td>
+
+          <td>
+            1 000,00 €
+          </td>
+
+          <td>
+            BON PAIN CHOCO
+          </td>
+
+          <td>
+            1 image(s)
+          </td>
+
+          <td>
+
+            <div class="formula-actions">
+
+              <button
+                type="button"
+                class="btn-formula-edit"
+                onclick="openEditFormulaModal(
+                  1,
+                  'PAIN CHOCOLAT',
+                  '1000',
+                  'BON PAIN CHOCO',
+                  '/media/products/pain-1.jpg'
+                )">
+                Modifier
+              </button>
+
+              <button
+                type="button"
+                class="btn-formula-delete"
+                onclick="deleteFormula(1, 'PAIN CHOCOLAT')">
+                Supprimer
+              </button>
+
+            </div>
+
+          </td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     MODAL AJOUTER UNE FORMULE
+===================================================== -->
+
+<div
+  id="addFormulaModal"
+  class="formula-modal-overlay">
+
+  <div class="formula-modal">
+
+    <div class="formula-modal-header">
+
+      <h2>
+        <span>➕</span>
+        Ajouter une formule
+      </h2>
+
+      <button
+        type="button"
+        class="formula-modal-close"
+        onclick="closeAddFormulaModal()">
+        ×
+      </button>
+
+    </div>
+
+
+    <form
+      method="POST"
+      action="/admin/formules"
+      enctype="multipart/form-data">
+
+      <input
+        type="text"
+        name="name"
+        class="formula-field"
+        placeholder="Nom"
+        required>
+
+
+      <input
+        type="number"
+        name="price"
+        class="formula-field"
+        placeholder="Prix"
+        min="0"
+        step="0.01"
+        required>
+
+
+      <textarea
+        name="description"
+        class="formula-field formula-textarea"
+        placeholder="Composition / description"></textarea>
+
+
+      <div class="formula-upload-group">
+
+        <label>
+          🖼️ Images (jusqu'à 6)
+        </label>
+
+        <div class="formula-file-box">
+
+          <input
+            type="file"
+            name="images"
+            accept="image/*"
+            multiple
+            onchange="previewAddFormulaImages(event)">
+
+        </div>
+
+      </div>
+
+
+      <!-- aperçu images -->
+      <div
+        id="addFormulaPreview"
+        class="formula-images-preview">
+      </div>
+
+
+      <button
+        type="submit"
+        class="btn-formula-save">
+        💾 Enregistrer
+      </button>
+
+    </form>
+
+  </div>
+
 </div>
+
+
+
+<!-- =====================================================
+     MODAL MODIFIER LA FORMULE
+===================================================== -->
+
+<div
+  id="editFormulaModal"
+  class="formula-modal-overlay">
+
+  <div class="formula-modal">
+
+    <div class="formula-modal-header">
+
+      <h2>
+        <span>📝</span>
+        Modifier la formule
+      </h2>
+
+      <button
+        type="button"
+        class="formula-modal-close"
+        onclick="closeEditFormulaModal()">
+        ×
+      </button>
+
+    </div>
+
+
+    <form
+      id="editFormulaForm"
+      method="POST"
+      enctype="multipart/form-data">
+
+      <input
+        type="text"
+        id="editFormulaName"
+        name="name"
+        class="formula-field"
+        required>
+
+
+      <input
+        type="number"
+        id="editFormulaPrice"
+        name="price"
+        class="formula-field"
+        min="0"
+        step="0.01"
+        required>
+
+
+      <textarea
+        id="editFormulaDescription"
+        name="description"
+        class="formula-field formula-textarea"
+        placeholder="Composition / description"></textarea>
+
+
+      <div class="formula-upload-group">
+
+        <label>
+          🖼️ Images (jusqu'à 6)
+        </label>
+
+        <div class="formula-file-box">
+
+          <input
+            type="file"
+            name="images"
+            accept="image/*"
+            multiple
+            onchange="previewEditFormulaImages(event)">
+
+        </div>
+
+      </div>
+
+
+      <!-- images déjà enregistrées -->
+      <div
+        id="currentFormulaImages"
+        class="formula-images-preview">
+      </div>
+
+
+      <!-- nouvelles images -->
+      <div
+        id="editFormulaPreview"
+        class="formula-images-preview">
+      </div>
+
+
+      <button
+        type="submit"
+        class="btn-formula-save">
+        💾 Enregistrer
+      </button>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- suppression -->
+<form
+  id="deleteFormulaForm"
+  method="POST"
+  style="display:none;">
+</form>
+
+<style>
+  /* =====================================================
+   MENUS & FORMULES
+===================================================== */
+
+.admin-formulas-page {
+    padding: 15px;
+}
+
+
+/* HEADER */
+
+.formulas-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    gap: 20px;
+
+    margin-bottom: 25px;
+}
+
+.formulas-header h1 {
+    margin: 8px 0 0;
+
+    font-size: 34px;
+    line-height: 1.1;
+
+    color: #171310;
+}
+
+.admin-badge {
+    display: inline-flex;
+
+    padding: 5px 10px;
+
+    border-radius: 999px;
+
+    background: #fff0df;
+    color: #ff7900;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+
+/* AJOUTER */
+
+.btn-formula-add {
+    border: none;
+
+    padding: 13px 19px;
+
+    border-radius: 999px;
+
+    background: #ff7900;
+    color: white;
+
+    font-size: 14px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.btn-formula-add:hover {
+    background: #e96f00;
+}
+
+
+/* =====================================================
+   TABLEAU
+===================================================== */
+
+.formulas-table-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
+
+    background: #fff;
+
+    border-radius: 18px;
+}
+
+.formulas-table {
+    width: 100%;
+
+    border-collapse: collapse;
+}
+
+.formulas-table th {
+    padding: 15px;
+
+    background: #faf8f5;
+
+    border-bottom: 1px solid #ddd;
+
+    text-align: left;
+
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.formulas-table td {
+    padding: 13px 15px;
+
+    border-bottom: 1px solid #eee;
+
+    vertical-align: middle;
+
+    font-size: 14px;
+}
+
+.formulas-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+
+/* FORMULE + IMAGE */
+
+.formula-product {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+}
+
+.formula-thumbnail {
+    width: 42px;
+    height: 42px;
+
+    border-radius: 8px;
+
+    object-fit: cover;
+
+    background: #f2f2f2;
+}
+
+
+/* ACTIONS */
+
+.formula-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+}
+
+.btn-formula-edit,
+.btn-formula-delete {
+    border: 0;
+
+    padding: 10px 15px;
+
+    border-radius: 999px;
+
+    font-size: 13px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.btn-formula-edit {
+    background: #fff;
+    color: #171310;
+
+    box-shadow:
+        0 4px 20px rgba(0,0,0,.05);
+}
+
+.btn-formula-delete {
+    background: #ffe5e2;
+    color: #c63a2c;
+}
+
+
+/* =====================================================
+   MODAL
+===================================================== */
+
+.formula-modal-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 99999;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(0,0,0,.55);
+}
+
+.formula-modal-overlay.show {
+    display: flex;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+
+.formula-modal {
+    width: 100%;
+    max-width: 760px;
+
+    max-height: 90vh;
+
+    overflow-y: auto;
+
+    padding: 22px;
+
+    background: #fff;
+
+    border-radius: 24px;
+
+    box-shadow:
+        0 25px 80px rgba(0,0,0,.30);
+}
+
+
+/* HEADER MODAL */
+
+.formula-modal-header {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 18px;
+}
+
+.formula-modal-header h2 {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin: 0;
+
+    font-size: 25px;
+    font-weight: 800;
+
+    color: #171310;
+}
+
+.formula-modal-close {
+    width: 38px;
+    height: 38px;
+
+    flex: 0 0 38px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+
+    border-radius: 50%;
+
+    background: #f1f1f1;
+
+    font-size: 18px;
+
+    cursor: pointer;
+}
+
+
+/* =====================================================
+   FORMULAIRE
+===================================================== */
+
+.formula-modal form {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+.formula-field {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    min-height: 46px;
+
+    padding: 12px;
+
+    border: 1px solid #ddd;
+
+    border-radius: 12px;
+
+    background: white;
+
+    font-family: inherit;
+    font-size: 15px;
+
+    outline: none;
+}
+
+.formula-field:focus {
+    border-color: #ff7900;
+
+    box-shadow:
+        0 0 0 3px rgba(255,121,0,.08);
+}
+
+.formula-textarea {
+    min-height: 65px;
+
+    resize: vertical;
+}
+
+
+/* =====================================================
+   UPLOAD
+===================================================== */
+
+.formula-upload-group {
+    margin-top: 2px;
+}
+
+.formula-upload-group label {
+    display: block;
+
+    margin-bottom: 6px;
+
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.formula-file-box {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 10px 12px;
+
+    border: 1px solid #ddd;
+
+    border-radius: 12px;
+
+    background: white;
+}
+
+.formula-file-box input {
+    max-width: 100%;
+}
+
+
+/* =====================================================
+   PREVIEW IMAGES
+===================================================== */
+
+.formula-images-preview {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+}
+
+.formula-images-preview:empty {
+    display: none;
+}
+
+.formula-preview-image {
+    width: 74px;
+    height: 74px;
+
+    object-fit: cover;
+
+    border-radius: 10px;
+
+    border: 1px solid #eee;
+}
+
+
+/* =====================================================
+   ENREGISTRER
+===================================================== */
+
+.btn-formula-save {
+    width: 100%;
+
+    min-height: 45px;
+
+    margin-top: 4px;
+
+    border: none;
+
+    border-radius: 999px;
+
+    background: #ff7900;
+    color: white;
+
+    font-size: 15px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.btn-formula-save:hover {
+    background: #e96f00;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 768px) {
+
+    .formulas-header {
+        flex-direction: column;
+    }
+
+    .btn-formula-add {
+        width: 100%;
+    }
+
+    .formulas-table {
+        min-width: 800px;
+    }
+
+    .formula-modal {
+        max-width: 100%;
+
+        padding: 18px;
+    }
+}
+</style>
+<script src="/js/formulas.js" defer></script>

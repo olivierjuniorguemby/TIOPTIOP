@@ -1,10 +1,641 @@
 <section class="admin-heading">
   <div>
-    <span class="eyebrow">Administration</span>
+    <span class="admin-badge">Administration</span>
     <h1>🎁 Promotions</h1>
   </div>
-  <button class="button primary">➕ Nouvelle opération</button>
+  <button
+      type="button"
+      class="btn-promotion-add"
+      onclick="openAddPromotionModal()">
+      + Nouvelle promotion
+    </button>
 </section>
-<div class="panel">
-  <p>Page EJS stable, sans include relatif. Ajoutez progressivement le CRUD de TiopTiop Signature 2.4.4 ici.</p>
+
+<section class="admin-promotions-page">
+
+
+
+
+  <!-- TABLEAU -->
+  <div class="promotions-table-wrapper">
+
+    <table class="promotions-table">
+
+      <thead>
+        <tr>
+          <th>Promotion</th>
+          <th>Code</th>
+          <th>Audience</th>
+          <th></th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        <!-- PROMOTION 1 -->
+        <tr>
+
+          <td>-20% Poulet Braisé</td>
+
+          <td>BRAISE20</td>
+
+          <td>Tous</td>
+
+          <td>Oui</td>
+
+          <td>
+            <div class="promotion-actions">
+
+              <button
+                type="button"
+                class="btn-promotion-edit"
+                onclick="openEditPromotionModal(
+                  1,
+                  '-20% Poulet Braisé',
+                  'BRAISE20',
+                  'Tous'
+                )">
+                Modifier
+              </button>
+
+              <button
+                type="button"
+                class="btn-promotion-delete"
+                onclick="deletePromotion(
+                  1,
+                  '-20% Poulet Braisé'
+                )">
+                Supprimer
+              </button>
+
+            </div>
+          </td>
+
+        </tr>
+
+
+        <!-- PROMOTION 2 -->
+        <tr>
+
+          <td>Livraison offerte dès 20 €</td>
+
+          <td>TIOPFREE</td>
+
+          <td>Tous</td>
+
+          <td>Oui</td>
+
+          <td>
+
+            <div class="promotion-actions">
+
+              <button
+                type="button"
+                class="btn-promotion-edit"
+                onclick="openEditPromotionModal(
+                  2,
+                  'Livraison offerte dès 20 €',
+                  'TIOPFREE',
+                  'Tous'
+                )">
+                Modifier
+              </button>
+
+              <button
+                type="button"
+                class="btn-promotion-delete"
+                onclick="deletePromotion(
+                  2,
+                  'Livraison offerte dès 20 €'
+                )">
+                Supprimer
+              </button>
+
+            </div>
+
+          </td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     MODAL AJOUTER
+===================================================== -->
+
+<div
+  id="addPromotionModal"
+  class="promotion-modal-overlay">
+
+  <div class="promotion-modal">
+
+    <div class="promotion-modal-header">
+
+      <h2>Ajouter</h2>
+
+      <button
+        type="button"
+        class="promotion-modal-close"
+        onclick="closeAddPromotionModal()">
+        ×
+      </button>
+
+    </div>
+
+
+    <form
+      method="POST"
+      action="/admin/promotions">
+
+      <input
+        type="text"
+        name="title"
+        class="promotion-field"
+        placeholder="Titre"
+        required>
+
+
+      <input
+        type="text"
+        name="code"
+        class="promotion-field"
+        placeholder="Code"
+        required>
+
+
+      <select
+        name="audience"
+        class="promotion-field">
+
+        <option value="Tous">Tous</option>
+        <option value="Clients">Clients</option>
+        <option value="Membres Tiop+">Membres Tiop+</option>
+        <option value="Nouveaux clients">Nouveaux clients</option>
+
+      </select>
+
+
+      <button
+        type="submit"
+        class="btn-promotion-save">
+        Enregistrer
+      </button>
+
+    </form>
+
+  </div>
+
 </div>
+
+
+<!-- =====================================================
+     MODAL MODIFIER
+===================================================== -->
+
+<div
+  id="editPromotionModal"
+  class="promotion-modal-overlay">
+
+  <div class="promotion-modal">
+
+    <div class="promotion-modal-header">
+
+      <h2>Modifier</h2>
+
+      <button
+        type="button"
+        class="promotion-modal-close"
+        onclick="closeEditPromotionModal()">
+        ×
+      </button>
+
+    </div>
+
+
+    <form
+      id="editPromotionForm"
+      method="POST">
+
+      <input
+        type="text"
+        id="editPromotionTitle"
+        name="title"
+        class="promotion-field"
+        required>
+
+
+      <input
+        type="text"
+        id="editPromotionCode"
+        name="code"
+        class="promotion-field"
+        required>
+
+
+      <select
+        id="editPromotionAudience"
+        name="audience"
+        class="promotion-field">
+
+        <option value="Tous">Tous</option>
+        <option value="Clients">Clients</option>
+        <option value="Membres Tiop+">Membres Tiop+</option>
+        <option value="Nouveaux clients">Nouveaux clients</option>
+
+      </select>
+
+
+      <button
+        type="submit"
+        class="btn-promotion-save">
+        Enregistrer
+      </button>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- FORMULAIRE SUPPRESSION -->
+<form
+  id="deletePromotionForm"
+  method="POST"
+  style="display:none;">
+</form>
+
+<style>
+  /* =====================================================
+   PROMOTIONS ADMIN
+===================================================== */
+
+.admin-promotions-page {
+    padding: 15px;
+}
+
+
+/* HEADER */
+
+.promotions-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 25px;
+}
+
+.promotions-header h1 {
+    margin: 8px 0 0;
+
+    font-size: 34px;
+    line-height: 1.1;
+
+    color: #171310;
+}
+
+.admin-badge {
+    display: inline-flex;
+
+    padding: 5px 10px;
+
+    border-radius: 999px;
+
+    background: #fff0df;
+    color: #ff7900;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+
+/* BOUTON NOUVELLE PROMOTION */
+
+.btn-promotion-add {
+    border: 0;
+
+    padding: 13px 20px;
+
+    border-radius: 999px;
+
+    background: #ff7900;
+    color: #fff;
+
+    font-size: 14px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition: .2s;
+}
+
+.btn-promotion-add:hover {
+    background: #e96f00;
+
+    transform: translateY(-1px);
+}
+
+
+/* =====================================================
+   TABLEAU
+===================================================== */
+
+.promotions-table-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
+
+    background: #fff;
+
+    border-radius: 18px;
+}
+
+.promotions-table {
+    width: 100%;
+
+    border-collapse: collapse;
+}
+
+.promotions-table th {
+    padding: 15px;
+
+    background: #faf8f5;
+
+    border-bottom: 1px solid #ddd;
+
+    text-align: left;
+
+    font-size: 14px;
+    font-weight: 800;
+
+    color: #171310;
+}
+
+.promotions-table td {
+    padding: 14px 15px;
+
+    border-bottom: 1px solid #eee;
+
+    vertical-align: middle;
+
+    font-size: 14px;
+
+    color: #171310;
+}
+
+.promotions-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+
+/* =====================================================
+   ACTIONS
+===================================================== */
+
+.promotion-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+}
+
+.btn-promotion-edit,
+.btn-promotion-delete {
+    border: 0;
+
+    padding: 10px 16px;
+
+    border-radius: 999px;
+
+    font-size: 13px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.btn-promotion-edit {
+    background: #fff;
+
+    color: #171310;
+
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, .05);
+}
+
+.btn-promotion-edit:hover {
+    background: #f7f7f7;
+}
+
+.btn-promotion-delete {
+    background: #ffe5e2;
+
+    color: #c63a2c;
+}
+
+.btn-promotion-delete:hover {
+    background: #ffd8d4;
+}
+
+
+/* =====================================================
+   MODAL
+===================================================== */
+
+.promotion-modal-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 99999;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(0, 0, 0, .55);
+}
+
+.promotion-modal-overlay.show {
+    display: flex;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+
+.promotion-modal {
+    width: 100%;
+
+    max-width: 760px;
+
+    padding: 22px;
+
+    background: #fff;
+
+    border-radius: 24px;
+
+    box-shadow:
+        0 25px 80px rgba(0, 0, 0, .30);
+}
+
+
+/* HEADER MODAL */
+
+.promotion-modal-header {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 18px;
+}
+
+.promotion-modal-header h2 {
+    margin: 0;
+
+    font-size: 25px;
+    font-weight: 800;
+
+    color: #171310;
+}
+
+.promotion-modal-close {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 38px;
+
+    border: 0;
+
+    border-radius: 50%;
+
+    background: #f1f1f1;
+
+    color: #171310;
+
+    font-size: 18px;
+
+    cursor: pointer;
+}
+
+
+/* =====================================================
+   FORMULAIRE
+===================================================== */
+
+.promotion-modal form {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+.promotion-field {
+    width: 100%;
+
+    min-height: 46px;
+
+    box-sizing: border-box;
+
+    padding: 12px;
+
+    border: 1px solid #ddd;
+
+    border-radius: 12px;
+
+    background: #fff;
+
+    color: #171310;
+
+    font-family: inherit;
+    font-size: 15px;
+
+    outline: none;
+}
+
+.promotion-field:focus {
+    border-color: #ff7900;
+
+    box-shadow:
+        0 0 0 3px rgba(255, 121, 0, .08);
+}
+
+
+/* ENREGISTRER */
+
+.btn-promotion-save {
+    width: 100%;
+
+    min-height: 45px;
+
+    margin-top: 2px;
+
+    border: 0;
+
+    border-radius: 999px;
+
+    background: #ff7900;
+
+    color: #fff;
+
+    font-size: 15px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.btn-promotion-save:hover {
+    background: #e96f00;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 768px) {
+
+    .promotions-header {
+        flex-direction: column;
+    }
+
+    .btn-promotion-add {
+        width: 100%;
+    }
+
+    .promotions-table {
+        min-width: 750px;
+    }
+
+    .promotion-modal {
+        max-width: 100%;
+
+        padding: 18px;
+    }
+}
+</style>
+
+<script src="/js/promotions.js" defer></script>

@@ -1,10 +1,314 @@
 <section class="admin-heading">
-  <div>
-    <span class="eyebrow">Administration</span>
+  <div class="deliveries-header">
+    <span class="admin-section-badge">Administration</span>
     <h1>🛵 Livraisons</h1>
   </div>
-  <button class="button primary">➕ Nouvelle opération</button>
 </section>
-<div class="panel">
-  <p>Page EJS stable, sans include relatif. Ajoutez progressivement le CRUD de TiopTiop Signature 2.4.4 ici.</p>
-</div>
+<section class="admin-deliveries-page">
+
+  <!-- EN-TÊTE -->
+  
+
+
+  <!-- =====================================================
+       STATISTIQUES
+  ====================================================== -->
+  <div class="delivery-stats">
+
+    <!-- EN ROUTE -->
+    <article class="delivery-stat-card">
+
+      <div class="delivery-stat-title">
+        <span class="delivery-stat-icon">🛵</span>
+        <h2>En route</h2>
+      </div>
+
+      <strong class="delivery-stat-value">
+        1
+      </strong>
+
+    </article>
+
+
+    <!-- ZONES -->
+    <article class="delivery-stat-card">
+
+      <div class="delivery-stat-title">
+        <span class="delivery-stat-icon">📍</span>
+        <h2>Zones</h2>
+      </div>
+
+      <p class="delivery-zones">
+        Centre-ville · Poto-Poto · Bacongo
+      </p>
+
+    </article>
+
+
+    <!-- TEMPS MOYEN -->
+    <article class="delivery-stat-card">
+
+      <div class="delivery-stat-title">
+        <span class="delivery-stat-icon">⏱</span>
+        <h2>Temps moyen</h2>
+      </div>
+
+      <strong class="delivery-stat-value">
+        27 min
+      </strong>
+
+    </article>
+
+  </div>
+
+
+  <!-- =====================================================
+       PRINCIPE PRODUCTION
+  ====================================================== -->
+  <article class="delivery-production-card">
+
+    <h2>Principe production</h2>
+
+    <p>
+      L’application livreur transmettra sa position GPS au backend Node.js.
+      Socket.IO/WebSocket poussera les nouvelles coordonnées au navigateur
+      client, qui déplacera le marqueur sur Leaflet/MapLibre/Mapbox.
+    </p>
+
+  </article>
+
+</section>
+
+<style>
+  /* =========================================================
+   ADMIN - LIVRAISONS
+========================================================= */
+
+.admin-deliveries-page {
+    padding: 18px;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.deliveries-header {
+    margin-bottom: 28px;
+}
+
+.admin-section-badge {
+    display: inline-flex;
+    align-items: center;
+
+    background: #fff0df;
+    color: #ff7900;
+
+    padding: 6px 12px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.deliveries-header h1 {
+    margin: 10px 0 0;
+
+    font-size: 38px;
+    line-height: 1;
+
+    font-weight: 800;
+    color: #171310;
+}
+
+
+/* =========================================================
+   STATISTIQUES
+========================================================= */
+
+.delivery-stats {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 18px;
+
+    margin-bottom: 18px;
+}
+
+
+/* CARTE */
+
+.delivery-stat-card {
+    background: #ffffff;
+
+    min-height: 168px;
+
+    border-radius: 22px;
+
+    padding: 32px 24px;
+
+    box-sizing: border-box;
+}
+
+
+/* TITRE */
+
+.delivery-stat-title {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    margin-bottom: 28px;
+}
+
+.delivery-stat-title h2 {
+    margin: 0;
+
+    font-size: 25px;
+    line-height: 1.2;
+
+    color: #171310;
+
+    font-weight: 800;
+}
+
+.delivery-stat-icon {
+    font-size: 22px;
+}
+
+
+/* VALEUR */
+
+.delivery-stat-value {
+    display: block;
+
+    font-size: 45px;
+    line-height: 1;
+
+    font-weight: 800;
+
+    color: #171310;
+}
+
+
+/* ZONES */
+
+.delivery-zones {
+    margin: 0;
+
+    font-size: 16px;
+    line-height: 1.6;
+
+    color: #171310;
+}
+
+
+/* =========================================================
+   PRINCIPE PRODUCTION
+========================================================= */
+
+.delivery-production-card {
+    background: #ffffff;
+
+    border-radius: 22px;
+
+    padding: 38px 22px;
+
+    min-height: 145px;
+
+    box-sizing: border-box;
+}
+
+.delivery-production-card h2 {
+    margin: 0 0 25px;
+
+    font-size: 25px;
+
+    color: #171310;
+
+    font-weight: 800;
+}
+
+.delivery-production-card p {
+    margin: 0;
+
+    color: #776f6a;
+
+    font-size: 16px;
+
+    line-height: 1.7;
+}
+
+
+/* =========================================================
+   TABLETTE
+========================================================= */
+
+@media (max-width: 1000px) {
+
+    .delivery-stats {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .delivery-stat-card:last-child {
+        grid-column: 1 / -1;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 650px) {
+
+    .admin-deliveries-page {
+        padding: 12px;
+    }
+
+    .deliveries-header h1 {
+        font-size: 30px;
+    }
+
+    .delivery-stats {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .delivery-stat-card:last-child {
+        grid-column: auto;
+    }
+
+    .delivery-stat-card {
+        min-height: auto;
+        padding: 24px 20px;
+    }
+
+    .delivery-stat-title {
+        margin-bottom: 20px;
+    }
+
+    .delivery-stat-title h2 {
+        font-size: 21px;
+    }
+
+    .delivery-stat-value {
+        font-size: 38px;
+    }
+
+    .delivery-production-card {
+        padding: 28px 20px;
+    }
+
+    .delivery-production-card h2 {
+        font-size: 22px;
+    }
+
+}
+</style>

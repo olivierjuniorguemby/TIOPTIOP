@@ -5,24 +5,804 @@
   </div>
 </section>
 
-<div class="kpi-grid">
-  <article class="kpi">💰 Chiffre d’affaires<strong><%= formatMoney(stats.revenue) %></strong></article>
-  <article class="kpi">👥 Clients<strong><%= stats.clients %></strong></article>
-  <article class="kpi">🧾 Statuts commande<strong><%= stats.orders.length %></strong></article>
-  <article class="kpi">📨 Statuts candidature<strong><%= stats.applications.length %></strong></article>
-</div>
+<section class="admin-dashboard">
 
-<div class="admin-grid">
-  <section class="panel">
-    <h2>Commandes par statut</h2>
-    <% stats.orders.forEach((row) => { %>
-      <div class="data-row"><span><%= row.status %></span><strong><%= row.total %></strong></div>
-    <% }) %>
-  </section>
-  <section class="panel">
-    <h2>Candidatures par statut</h2>
-    <% stats.applications.forEach((row) => { %>
-      <div class="data-row"><span><%= row.status %></span><strong><%= row.total %></strong></div>
-    <% }) %>
-  </section>
-</div>
+  <!-- =====================================================
+       TITRE
+  ====================================================== -->
+  <div class="admin-page-heading">
+    <span class="admin-page-badge">Administration</span>
+    <h1>📊 Tableau de bord</h1>
+  </div>
+
+
+  <!-- =====================================================
+       KPI
+  ====================================================== -->
+  <div class="admin-kpi-grid">
+
+    <article class="admin-kpi-card">
+      <span>💰 CA aujourd'hui</span>
+      <strong>0,00 €</strong>
+      <small class="positive">▲ 14,8%</small>
+    </article>
+
+    <article class="admin-kpi-card">
+      <span>🧾 Commandes</span>
+      <strong>2</strong>
+      <small class="positive">▲ 3,7%</small>
+    </article>
+
+    <article class="admin-kpi-card">
+      <span>👥 Clients</span>
+      <strong>3</strong>
+      <small class="positive">▲ Nouveaux</small>
+    </article>
+
+    <article class="admin-kpi-card">
+      <span>💵 Paiements en attente</span>
+      <strong>39,70 €</strong>
+      <small>À surveiller</small>
+    </article>
+
+    <article class="admin-kpi-card">
+      <span>🛒 Total ventes</span>
+      <strong>2</strong>
+    </article>
+
+    <article class="admin-kpi-card">
+      <span>🚚 Livraisons</span>
+      <strong>0</strong>
+    </article>
+
+    <article class="admin-kpi-card">
+      <span>❌ Annulées</span>
+      <strong>0</strong>
+    </article>
+
+    <article class="admin-kpi-card">
+      <span>🏆 Membres Tiop+</span>
+      <strong>1</strong>
+    </article>
+
+  </div>
+
+
+  <!-- =====================================================
+       GRAPHIQUES DU HAUT
+  ====================================================== -->
+
+  <div class="admin-dashboard-grid-top">
+
+    <article class="admin-dashboard-card admin-week-card">
+
+      <div class="admin-card-title">
+        <h3>📈 Évolution du chiffre d'affaires — semaine</h3>
+      </div>
+
+      <div class="admin-chart-container">
+        <canvas id="weeklyRevenueChart"></canvas>
+      </div>
+
+    </article>
+
+
+    <article class="admin-dashboard-card admin-channel-card">
+
+      <div class="admin-card-title">
+        <h3>🎯 Canaux de commande</h3>
+      </div>
+
+      <div class="admin-donut-wrapper">
+        <canvas id="orderChannelChart"></canvas>
+      </div>
+
+    </article>
+
+  </div>
+
+
+  <!-- =====================================================
+       CA PAR MOIS
+  ====================================================== -->
+
+  <article class="admin-dashboard-card admin-month-card">
+
+    <div class="admin-card-title">
+      <h3>📊 Chiffre d'affaires par mois</h3>
+    </div>
+
+    <div class="admin-month-chart-container">
+      <canvas id="monthlyRevenueChart"></canvas>
+    </div>
+
+  </article>
+
+
+  <!-- =====================================================
+       COMMANDES + TOP PRODUITS
+  ====================================================== -->
+
+  <div class="admin-dashboard-bottom">
+
+    <!-- COMMANDES -->
+
+    <article class="admin-dashboard-card">
+
+      <div class="admin-card-title">
+        <h3>🧾 Commandes récentes</h3>
+
+        <a href="/admin/commandes">
+          Voir tout
+        </a>
+      </div>
+
+
+      <div class="admin-recent-orders">
+
+        <a
+          href="/admin/commandes/TIOP-41958"
+          class="admin-order-row"
+        >
+
+          <span class="admin-row-icon">🧾</span>
+
+          <div class="admin-row-content">
+            <strong>TIOP-41958</strong>
+            <small>Client Démo · Web</small>
+          </div>
+
+          <span class="admin-status delivered">
+            Payée
+          </span>
+
+        </a>
+
+
+        <a
+          href="/admin/commandes/TIOP-00124"
+          class="admin-order-row"
+        >
+
+          <span class="admin-row-icon">🧾</span>
+
+          <div class="admin-row-content">
+            <strong>TIOP-00124</strong>
+            <small>Client Démo · Web</small>
+          </div>
+
+          <span class="admin-status preparation">
+            Préparation
+          </span>
+
+        </a>
+
+      </div>
+
+    </article>
+
+
+    <!-- TOP PRODUITS -->
+
+    <article class="admin-dashboard-card">
+
+      <div class="admin-card-title">
+        <h3>🔥 Top produits</h3>
+
+        <a href="/admin/produits">
+          Produits
+        </a>
+      </div>
+
+
+      <div class="admin-top-products">
+
+        <a href="/admin/produits/1" class="admin-product-row">
+          <span>🌿</span>
+          <div>
+            <strong>Saka-Saka Royal</strong>
+            <small>184 ventes</small>
+          </div>
+        </a>
+
+        <a href="/admin/produits/2" class="admin-product-row">
+          <span>🔥</span>
+          <div>
+            <strong>Poulet Braisé Tiop</strong>
+            <small>141 ventes</small>
+          </div>
+        </a>
+
+        <a href="/admin/produits/3" class="admin-product-row">
+          <span>🍲</span>
+          <div>
+            <strong>Haricots Madesu</strong>
+            <small>126 ventes</small>
+          </div>
+        </a>
+
+        <a href="/admin/produits/4" class="admin-product-row">
+          <span>🐟</span>
+          <div>
+            <strong>Maboké de Poisson</strong>
+            <small>102 ventes</small>
+          </div>
+        </a>
+
+        <a href="/admin/produits/5" class="admin-product-row">
+          <span>🍰</span>
+          <div>
+            <strong>Beignets Congo</strong>
+            <small>94 ventes</small>
+          </div>
+        </a>
+
+      </div>
+
+    </article>
+
+  </div>
+
+</section>
+
+<style>
+  /* =========================================================
+   TIOPTIOP ADMIN DASHBOARD
+========================================================= */
+
+.admin-dashboard {
+    padding: 24px;
+    background: #f6f3ef;
+    min-height: 100vh;
+}
+
+.admin-page-heading {
+    margin-bottom: 20px;
+}
+
+.admin-page-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 30px;
+    background: #fff0df;
+    color: #ff7900;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.admin-page-heading h1 {
+    margin: 8px 0 0;
+    font-size: 28px;
+}
+
+
+/* ==============================
+   KPI
+============================== */
+
+.admin-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.admin-kpi-card {
+    background: white;
+    border-radius: 14px;
+    padding: 18px;
+    min-height: 100px;
+    box-shadow: 0 3px 15px rgba(0,0,0,.035);
+}
+
+.admin-kpi-card span {
+    display: block;
+    color: #77716c;
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+
+.admin-kpi-card strong {
+    display: block;
+    font-size: 27px;
+    color: #181512;
+    margin-bottom: 6px;
+}
+
+.admin-kpi-card small {
+    color: #827c77;
+    font-weight: 700;
+}
+
+.admin-kpi-card .positive {
+    color: #16804a;
+}
+
+
+/* ==============================
+   CARTES
+============================== */
+
+.admin-dashboard-card {
+    background: #fff;
+    border-radius: 15px;
+    padding: 18px;
+    box-shadow: 0 3px 15px rgba(0,0,0,.035);
+}
+
+.admin-card-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.admin-card-title h3 {
+    margin: 0;
+    font-size: 14px;
+}
+
+.admin-card-title a {
+    color: #ff7900;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+
+/* ==============================
+   PREMIÈRE LIGNE
+============================== */
+
+.admin-dashboard-grid-top {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.admin-chart-container {
+    position: relative;
+    height: 250px;
+}
+
+.admin-donut-wrapper {
+    position: relative;
+    max-width: 310px;
+    height: 250px;
+    margin: auto;
+}
+
+
+/* ==============================
+   MOIS
+============================== */
+
+.admin-month-card {
+    margin-bottom: 12px;
+}
+
+.admin-month-chart-container {
+    position: relative;
+    width: 100%;
+    height: 280px;
+}
+
+
+/* ==============================
+   BOTTOM
+============================== */
+
+.admin-dashboard-bottom {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 12px;
+}
+
+
+/* ==============================
+   COMMANDES
+============================== */
+
+.admin-recent-orders {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.admin-order-row {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid #e9e5e1;
+    border-radius: 11px;
+    text-decoration: none;
+    color: inherit;
+    transition: .2s;
+}
+
+.admin-order-row:hover {
+    border-color: #ff7900;
+    transform: translateY(-1px);
+}
+
+.admin-row-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #fff0df;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+}
+
+.admin-row-content {
+    flex: 1;
+}
+
+.admin-row-content strong,
+.admin-row-content small {
+    display: block;
+}
+
+.admin-row-content strong {
+    font-size: 13px;
+}
+
+.admin-row-content small {
+    color: #817b76;
+    margin-top: 3px;
+    font-size: 11px;
+}
+
+
+/* ==============================
+   STATUS
+============================== */
+
+.admin-status {
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.admin-status.delivered {
+    background: #e9f7ef;
+    color: #167544;
+}
+
+.admin-status.preparation {
+    background: #fff0df;
+    color: #b75b00;
+}
+
+
+/* ==============================
+   TOP PRODUITS
+============================== */
+
+.admin-top-products {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-product-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #e8e4df;
+    padding: 10px 12px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: inherit;
+    transition: .2s;
+}
+
+.admin-product-row:hover {
+    border-color: #ff7900;
+    transform: translateX(2px);
+}
+
+.admin-product-row > span {
+    font-size: 20px;
+}
+
+.admin-product-row strong,
+.admin-product-row small {
+    display: block;
+}
+
+.admin-product-row strong {
+    font-size: 12px;
+}
+
+.admin-product-row small {
+    color: #847d77;
+    margin-top: 3px;
+    font-size: 10px;
+}
+
+
+/* ==============================
+   RESPONSIVE
+============================== */
+
+@media (max-width: 1100px) {
+
+    .admin-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .admin-dashboard-grid-top,
+    .admin-dashboard-bottom {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .admin-dashboard {
+        padding: 14px;
+    }
+
+    .admin-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-page-heading h1 {
+        font-size: 24px;
+    }
+
+    .admin-chart-container,
+    .admin-month-chart-container {
+        height: 220px;
+    }
+
+    .admin-order-row {
+        align-items: flex-start;
+    }
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/js/admin-dashboard.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+
+    if (typeof Chart === "undefined") {
+        console.error("Chart.js n'est pas chargé.");
+        return;
+    }
+
+
+    /* =====================================================
+       CA SEMAINE
+    ====================================================== */
+
+    const weeklyCanvas =
+        document.getElementById("weeklyRevenueChart");
+
+    if (weeklyCanvas) {
+
+        new Chart(weeklyCanvas, {
+            type: "bar",
+
+            data: {
+                labels: [
+                    "Lun",
+                    "Mar",
+                    "Mer",
+                    "Jeu",
+                    "Ven",
+                    "Sam",
+                    "Dim"
+                ],
+
+                datasets: [{
+                    label: "CA",
+                    data: [
+                        420,
+                        680,
+                        590,
+                        840,
+                        730,
+                        1100,
+                        950
+                    ],
+                    backgroundColor: "#ff7900",
+                    borderRadius: 7,
+                    borderSkipped: false
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: "#f0ece8"
+                        }
+                    },
+
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+    }
+
+
+    /* =====================================================
+       CANAUX DE COMMANDES
+    ====================================================== */
+
+    const channelCanvas =
+        document.getElementById("orderChannelChart");
+
+    if (channelCanvas) {
+
+        new Chart(channelCanvas, {
+
+            type: "doughnut",
+
+            data: {
+
+                labels: [
+                    "Web",
+                    "POS / Restaurant",
+                    "Téléphone",
+                    "Autres"
+                ],
+
+                datasets: [{
+                    data: [
+                        45,
+                        30,
+                        15,
+                        10
+                    ],
+
+                    backgroundColor: [
+                        "#ff7900",
+                        "#216b43",
+                        "#ffc342",
+                        "#d8d2cc"
+                    ],
+
+                    borderWidth: 0
+                }]
+            },
+
+            options: {
+
+                responsive: true,
+                maintainAspectRatio: false,
+
+                cutout: "62%",
+
+                plugins: {
+
+                    legend: {
+                        position: "bottom",
+
+                        labels: {
+                            usePointStyle: true,
+                            boxWidth: 8,
+                            font: {
+                                size: 10
+                            }
+                        }
+                    }
+                }
+            }
+
+        });
+
+    }
+
+
+    /* =====================================================
+       CA MENSUEL
+    ====================================================== */
+
+    const monthlyCanvas =
+        document.getElementById("monthlyRevenueChart");
+
+    if (monthlyCanvas) {
+
+        new Chart(monthlyCanvas, {
+
+            type: "bar",
+
+            data: {
+
+                labels: [
+                    "Jan",
+                    "Fév",
+                    "Mar",
+                    "Avr",
+                    "Mai",
+                    "Juin",
+                    "Juil",
+                    "Août",
+                    "Sep",
+                    "Oct",
+                    "Nov",
+                    "Déc"
+                ],
+
+                datasets: [{
+                    label: "CA mensuel",
+
+                    data: [
+                        8200,
+                        9700,
+                        9100,
+                        11200,
+                        11900,
+                        12800,
+                        12400,
+                        14200,
+                        15100,
+                        15800,
+                        16400,
+                        17700
+                    ],
+
+                    backgroundColor: "#28724a",
+                    borderRadius: 5,
+                    borderSkipped: false
+                }]
+            },
+
+            options: {
+
+                responsive: true,
+                maintainAspectRatio: false,
+
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+
+                scales: {
+
+                    y: {
+                        beginAtZero: true,
+
+                        grid: {
+                            color: "#f0ece8"
+                        }
+                    },
+
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+
+        });
+
+    }
+
+});
+</script>

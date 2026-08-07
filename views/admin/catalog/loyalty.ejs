@@ -1,10 +1,734 @@
 <section class="admin-heading">
   <div>
-    <span class="eyebrow">Administration</span>
+    <span class="admin-badge">Administration</span>
     <h1>⭐ Tiop+</h1>
   </div>
-  <button class="button primary">➕ Nouvelle opération</button>
+  <button
+      type="button"
+      class="btn-tiop-add"
+      onclick="openAddRewardModal()">
+      + Nouvelle récompense
+    </button>
 </section>
-<div class="panel">
-  <p>Page EJS stable, sans include relatif. Ajoutez progressivement le CRUD de TiopTiop Signature 2.4.4 ici.</p>
+
+<section class="admin-tiopplus-page">
+
+
+
+
+  <!-- =========================
+       TABLEAU
+  ========================== -->
+  <div class="tiopplus-table-wrapper">
+
+    <table class="tiopplus-table">
+
+      <thead>
+        <tr>
+          <th>Récompense</th>
+          <th>Points</th>
+          <th>Actif</th>
+          <th></th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        <!-- Exemple -->
+        <tr>
+
+          <td>
+            <div class="reward-name">
+
+              <img
+                src="/media/products/menu-royale.jpg"
+                alt="MENU ROYALE"
+                class="reward-table-image"
+                onerror="this.style.display='none'">
+
+              <span>MENU ROYALE</span>
+
+            </div>
+          </td>
+
+          <td>100</td>
+
+          <td>Oui</td>
+
+          <td>Image</td>
+
+          <td>
+            <div class="reward-actions">
+
+              <button
+                type="button"
+                class="btn-reward-edit"
+                onclick="openEditRewardModal(
+                  1,
+                  'MENU ROYALE',
+                  100,
+                  '/media/rewards/menu-royale.jpg'
+                )">
+                Modifier
+              </button>
+
+              <button
+                type="button"
+                class="btn-reward-delete"
+                onclick="deleteReward(
+                  1,
+                  'MENU ROYALE'
+                )">
+                Supprimer
+              </button>
+
+            </div>
+          </td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================================
+     MODAL : NOUVELLE RÉCOMPENSE
+========================================================= -->
+
+<div
+  id="addRewardModal"
+  class="reward-modal-overlay">
+
+  <div class="reward-modal">
+
+    <div class="reward-modal-header">
+
+      <h2>
+        <span class="modal-icon">➕</span>
+        Nouvelle récompense
+      </h2>
+
+      <button
+        type="button"
+        class="reward-modal-close"
+        onclick="closeAddRewardModal()">
+        ×
+      </button>
+
+    </div>
+
+
+    <form
+      action="/admin/tiopplus"
+      method="POST"
+      enctype="multipart/form-data">
+
+      <!-- NOM -->
+      <input
+        type="text"
+        name="name"
+        class="reward-field"
+        placeholder="Récompense"
+        required>
+
+
+      <!-- POINTS -->
+      <input
+        type="number"
+        name="points"
+        class="reward-field"
+        placeholder="0"
+        value="0"
+        min="0"
+        required>
+
+
+      <!-- IMAGE -->
+      <div class="reward-upload-group">
+
+        <label>
+          🖼️ <strong>Visuel de la récompense</strong>
+        </label>
+
+        <div class="reward-file-box">
+
+          <input
+            type="file"
+            name="image"
+            accept="image/png,image/jpeg,image/jpg,image/webp"
+            onchange="previewAddRewardImage(event)">
+
+        </div>
+
+        <img
+          id="addRewardPreview"
+          class="reward-preview"
+          alt="Aperçu"
+          style="display:none;">
+
+      </div>
+
+
+      <button
+        type="submit"
+        class="btn-reward-save">
+        💾 Enregistrer
+      </button>
+
+    </form>
+
+  </div>
+
 </div>
+
+
+<!-- =========================================================
+     MODAL : MODIFIER
+========================================================= -->
+
+<div
+  id="editRewardModal"
+  class="reward-modal-overlay">
+
+  <div class="reward-modal">
+
+    <div class="reward-modal-header">
+
+      <h2>
+        <span class="modal-icon">📝</span>
+        Modifier la récompense
+      </h2>
+
+      <button
+        type="button"
+        class="reward-modal-close"
+        onclick="closeEditRewardModal()">
+        ×
+      </button>
+
+    </div>
+
+
+    <form
+      id="editRewardForm"
+      method="POST"
+      enctype="multipart/form-data">
+
+      <!-- NOM -->
+      <input
+        type="text"
+        id="editRewardName"
+        name="name"
+        class="reward-field"
+        required>
+
+
+      <!-- POINTS -->
+      <input
+        type="number"
+        id="editRewardPoints"
+        name="points"
+        class="reward-field"
+        min="0"
+        required>
+
+
+      <!-- IMAGE -->
+      <div class="reward-upload-group">
+
+        <label>
+          🖼️ <strong>Visuel de la récompense</strong>
+        </label>
+
+        <div class="reward-file-box">
+
+          <input
+            type="file"
+            name="image"
+            accept="image/png,image/jpeg,image/jpg,image/webp"
+            onchange="previewEditRewardImage(event)">
+
+        </div>
+
+
+        <!-- IMAGE ACTUELLE -->
+        <div
+          id="editRewardPreviewContainer"
+          class="reward-current-image">
+
+          <img
+            id="editRewardPreview"
+            class="reward-preview"
+            alt="Visuel récompense">
+
+        </div>
+
+      </div>
+
+
+      <button
+        type="submit"
+        class="btn-reward-save">
+        💾 Enregistrer
+      </button>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- =========================================================
+     FORMULAIRE SUPPRESSION
+========================================================= -->
+
+<form
+  id="deleteRewardForm"
+  method="POST"
+  style="display:none;">
+</form>
+
+<style>
+  /* ============================================================
+   TIOP+ ADMIN
+============================================================ */
+
+.admin-tiopplus-page {
+    padding: 14px;
+}
+
+
+/* HEADER */
+
+.tiopplus-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+
+    margin-bottom: 25px;
+}
+
+.tiopplus-header h1 {
+    margin: 8px 0 0;
+
+    font-size: 34px;
+    line-height: 1.1;
+
+    color: #171310;
+}
+
+.admin-badge {
+    display: inline-flex;
+
+    padding: 5px 10px;
+
+    border-radius: 999px;
+
+    background: #fff0df;
+    color: #ff7900;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+
+/* AJOUTER */
+
+.btn-tiop-add {
+    padding: 13px 20px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: #ff7900;
+    color: #fff;
+
+    font-size: 14px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition: .2s ease;
+}
+
+.btn-tiop-add:hover {
+    background: #e96f00;
+    transform: translateY(-1px);
+}
+
+
+/* ============================================================
+   TABLEAU
+============================================================ */
+
+.tiopplus-table-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
+
+    background: #fff;
+
+    border-radius: 18px;
+}
+
+.tiopplus-table {
+    width: 100%;
+
+    border-collapse: collapse;
+}
+
+.tiopplus-table th {
+    padding: 15px;
+
+    text-align: left;
+
+    background: #faf8f5;
+
+    border-bottom: 1px solid #ddd;
+
+    color: #171310;
+
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.tiopplus-table td {
+    padding: 13px 15px;
+
+    border-bottom: 1px solid #eee;
+
+    vertical-align: middle;
+
+    font-size: 14px;
+}
+
+.tiopplus-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+
+/* RÉCOMPENSE */
+
+.reward-name {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+}
+
+.reward-table-image {
+    width: 43px;
+    height: 43px;
+
+    flex: 0 0 43px;
+
+    object-fit: cover;
+
+    border-radius: 10px;
+}
+
+
+/* ============================================================
+   ACTIONS
+============================================================ */
+
+.reward-actions {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+.btn-reward-edit,
+.btn-reward-delete {
+    padding: 10px 16px;
+
+    border: 0;
+    border-radius: 999px;
+
+    font-size: 13px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.btn-reward-edit {
+    background: #fff;
+    color: #171310;
+
+    box-shadow:
+        0 5px 20px rgba(0, 0, 0, .05);
+}
+
+.btn-reward-edit:hover {
+    background: #f6f6f6;
+}
+
+.btn-reward-delete {
+    background: #ffe5e2;
+    color: #c63a2c;
+}
+
+.btn-reward-delete:hover {
+    background: #ffd6d2;
+}
+
+
+/* ============================================================
+   MODAL
+============================================================ */
+
+.reward-modal-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 99999;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(0, 0, 0, .55);
+}
+
+.reward-modal-overlay.show {
+    display: flex;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+
+.reward-modal {
+    width: 100%;
+    max-width: 760px;
+
+    padding: 22px;
+
+    background: #fff;
+
+    border-radius: 24px;
+
+    box-shadow:
+        0 25px 80px rgba(0, 0, 0, .30);
+}
+
+
+/* HEADER MODAL */
+
+.reward-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 18px;
+}
+
+.reward-modal-header h2 {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    margin: 0;
+
+    font-size: 26px;
+    font-weight: 800;
+
+    color: #171310;
+}
+
+.modal-icon {
+    font-size: 24px;
+}
+
+.reward-modal-close {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 38px;
+
+    border: 0;
+    border-radius: 50%;
+
+    background: #f1f1f1;
+
+    color: #171310;
+
+    font-size: 18px;
+
+    cursor: pointer;
+}
+
+
+/* ============================================================
+   FORMULAIRE
+============================================================ */
+
+.reward-modal form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+.reward-field {
+    width: 100%;
+
+    min-height: 46px;
+
+    box-sizing: border-box;
+
+    padding: 12px;
+
+    border: 1px solid #ddd;
+    border-radius: 12px;
+
+    background: #fff;
+
+    font-family: inherit;
+    font-size: 15px;
+
+    outline: none;
+}
+
+.reward-field:focus {
+    border-color: #ff7900;
+
+    box-shadow:
+        0 0 0 3px rgba(255, 121, 0, .08);
+}
+
+
+/* ============================================================
+   UPLOAD
+============================================================ */
+
+.reward-upload-group {
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+}
+
+.reward-upload-group label {
+    font-size: 15px;
+
+    color: #171310;
+}
+
+.reward-file-box {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 8px 12px;
+
+    border: 1px solid #ddd;
+    border-radius: 12px;
+
+    background: #fff;
+}
+
+.reward-file-box input[type="file"] {
+    width: 100%;
+}
+
+
+/* APERÇU */
+
+.reward-current-image {
+    margin-top: 2px;
+}
+
+.reward-preview {
+    width: 74px;
+    height: 74px;
+
+    object-fit: cover;
+
+    border-radius: 10px;
+
+    border: 1px solid #eee;
+}
+
+
+/* ============================================================
+   ENREGISTRER
+============================================================ */
+
+.btn-reward-save {
+    width: 100%;
+
+    min-height: 45px;
+
+    margin-top: 2px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: #ff7900;
+    color: #fff;
+
+    font-size: 15px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.btn-reward-save:hover {
+    background: #e96f00;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+
+@media (max-width: 768px) {
+
+    .tiopplus-header {
+        flex-direction: column;
+    }
+
+    .btn-tiop-add {
+        width: 100%;
+    }
+
+    .tiopplus-table {
+        min-width: 700px;
+    }
+
+    .reward-modal {
+        padding: 18px;
+
+        max-height: calc(100vh - 30px);
+
+        overflow-y: auto;
+    }
+
+    .reward-modal-header h2 {
+        font-size: 21px;
+    }
+}
+</style>
+
+<script src="/js/tiopplus.js" defer></script>

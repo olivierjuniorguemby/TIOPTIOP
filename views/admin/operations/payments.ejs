@@ -1,10 +1,440 @@
 <section class="admin-heading">
-  <div>
-    <span class="eyebrow">Administration</span>
+  <div class="payments-header">
+    <span class="admin-section-badge">Administration</span>
     <h1>💳 Paiements & caisse</h1>
   </div>
-  <button class="button primary">➕ Nouvelle opération</button>
 </section>
-<div class="panel">
-  <p>Page EJS stable, sans include relatif. Ajoutez progressivement le CRUD de TiopTiop Signature 2.4.4 ici.</p>
-</div>
+
+<section class="admin-payments-page">
+
+  
+
+  <!-- KPI -->
+  <div class="payment-kpis">
+
+    <article class="payment-kpi-card">
+      <span>Espèces EN ATTENTE</span>
+      <strong>39,70 €</strong>
+    </article>
+
+    <article class="payment-kpi-card">
+      <span>Espèces encaissées</span>
+      <strong>26,40 €</strong>
+    </article>
+
+    <article class="payment-kpi-card">
+      <span>Carte</span>
+      <strong>0,00 €</strong>
+    </article>
+
+    <article class="payment-kpi-card">
+      <span>Mobile Money</span>
+      <strong>0,00 €</strong>
+    </article>
+
+  </div>
+
+  <!-- TABLEAU -->
+  <div class="payments-table-card">
+
+    <div class="payments-table-wrapper">
+
+      <table class="payments-table">
+
+        <thead>
+          <tr>
+            <th>Commande</th>
+            <th>Mode</th>
+            <th>Montant</th>
+            <th>Statut</th>
+            <th>Encaissement</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <!-- PAIEMENT DÉJÀ ENCAISSÉ -->
+          <tr>
+            <td>
+              <a href="/admin/commandes/TIOP-30634"
+                 class="payment-order-link">
+                TIOP-30634
+              </a>
+            </td>
+
+            <td>Espèces</td>
+
+            <td>26,40 €</td>
+
+            <td>
+              <span class="payment-status paid">
+                PAYÉ
+              </span>
+            </td>
+
+            <td>
+              Caissier Démo
+            </td>
+          </tr>
+
+
+          <!-- PAIEMENT EN ATTENTE -->
+          <tr>
+            <td>
+              <a href="/admin/commandes/TIOP-41969"
+                 class="payment-order-link">
+                TIOP-41969
+              </a>
+            </td>
+
+            <td>Espèces</td>
+
+            <td>12,40 €</td>
+
+            <td>
+              <span class="payment-status pending">
+                EN_ATTENTE
+              </span>
+            </td>
+
+            <td>
+              <form
+                method="POST"
+                action="/admin/paiements/TIOP-41969/confirmer"
+              >
+                <button
+                  type="submit"
+                  class="btn-confirm-payment"
+                >
+                  Confirmer reçu
+                </button>
+              </form>
+            </td>
+          </tr>
+
+
+          <!-- PAIEMENT EN ATTENTE -->
+          <tr>
+            <td>
+              <a href="/admin/commandes/TIOP-00124"
+                 class="payment-order-link">
+                TIOP-00124
+              </a>
+            </td>
+
+            <td>Espèces</td>
+
+            <td>27,30 €</td>
+
+            <td>
+              <span class="payment-status pending">
+                EN_ATTENTE
+              </span>
+            </td>
+
+            <td>
+              <form
+                method="POST"
+                action="/admin/paiements/TIOP-00124/confirmer"
+              >
+                <button
+                  type="submit"
+                  class="btn-confirm-payment"
+                >
+                  Confirmer reçu
+                </button>
+              </form>
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</section>
+
+<style>
+  /* =========================================================
+   ADMIN - PAIEMENTS & CAISSE
+========================================================= */
+
+.admin-payments-page {
+    padding: 12px;
+}
+
+
+/* HEADER */
+
+.payments-header {
+    margin-bottom: 26px;
+}
+
+.admin-section-badge {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 5px 11px;
+
+    border-radius: 999px;
+
+    background: #fff0df;
+    color: #ff7900;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.payments-header h1 {
+    margin: 10px 0 0;
+
+    font-size: 34px;
+    line-height: 1.1;
+
+    font-weight: 800;
+    color: #171310;
+}
+
+
+/* =========================================================
+   KPI
+========================================================= */
+
+.payment-kpis {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 14px;
+
+    margin-bottom: 16px;
+}
+
+.payment-kpi-card {
+    min-height: 105px;
+
+    padding: 24px 18px;
+
+    border-radius: 20px;
+
+    background: #fff;
+
+    box-sizing: border-box;
+}
+
+.payment-kpi-card span {
+    display: block;
+
+    margin-bottom: 14px;
+
+    color: #776f6a;
+
+    font-size: 14px;
+}
+
+.payment-kpi-card strong {
+    display: block;
+
+    color: #171310;
+
+    font-size: 30px;
+    line-height: 1;
+
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   TABLEAU
+========================================================= */
+
+.payments-table-card {
+    overflow: hidden;
+
+    background: #fff;
+
+    border-radius: 20px;
+}
+
+.payments-table-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
+}
+
+.payments-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    font-size: 14px;
+}
+
+
+/* HEADER */
+
+.payments-table thead {
+    background: #faf8f5;
+}
+
+.payments-table th {
+    padding: 16px 14px;
+
+    text-align: left;
+
+    color: #171310;
+
+    font-weight: 800;
+
+    border-bottom: 1px solid #dedbd7;
+}
+
+
+/* CELLULES */
+
+.payments-table td {
+    padding: 18px 14px;
+
+    color: #171310;
+
+    vertical-align: middle;
+
+    border-bottom: 1px solid #e7e4e0;
+}
+
+.payments-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+
+/* LIEN COMMANDE */
+
+.payment-order-link {
+    color: #171310;
+
+    text-decoration: none;
+
+    font-weight: 500;
+}
+
+.payment-order-link:hover {
+    color: #ff7900;
+
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   STATUTS
+========================================================= */
+
+.payment-status {
+    display: inline-flex;
+
+    align-items: center;
+
+    font-size: 13px;
+
+    font-weight: 600;
+}
+
+.payment-status.paid {
+    color: #171310;
+}
+
+.payment-status.pending {
+    color: #171310;
+}
+
+
+/* =========================================================
+   BOUTON CONFIRMATION
+========================================================= */
+
+.btn-confirm-payment {
+    border: 0;
+
+    padding: 12px 18px;
+
+    border-radius: 999px;
+
+    background: #ff7900;
+
+    color: #fff;
+
+    font-size: 14px;
+
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+        transform .15s ease,
+        background .15s ease;
+}
+
+.btn-confirm-payment:hover {
+    background: #e86e00;
+
+    transform: translateY(-1px);
+}
+
+.btn-confirm-payment:active {
+    transform: translateY(0);
+}
+
+
+/* =========================================================
+   TABLETTE
+========================================================= */
+
+@media (max-width: 1000px) {
+
+    .payment-kpis {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 650px) {
+
+    .admin-payments-page {
+        padding: 10px;
+    }
+
+    .payments-header h1 {
+        font-size: 29px;
+    }
+
+    .payment-kpis {
+        grid-template-columns: 1fr;
+
+        gap: 10px;
+    }
+
+    .payment-kpi-card {
+        min-height: auto;
+
+        padding: 20px;
+    }
+
+    .payment-kpi-card strong {
+        font-size: 27px;
+    }
+
+    .payments-table {
+        min-width: 720px;
+    }
+
+}
+</style>
