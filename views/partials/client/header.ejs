@@ -1,6 +1,26 @@
 <header class="site-header">
   <div class="container header-row">
-    <a class="brand" href="/">Tiop<span>Tiop</span></a>
+    
+    <a href="/" class="tiop-brand">
+
+        <span class="tiop-brand-portrait">
+            <img
+                src="/media/logo.png"
+                alt="TiopTiop"
+            >
+        </span>
+
+        <span class="tiop-brand-text">
+            <strong>
+                Tiop<span>Tiop</span>
+            </strong>
+
+            <small>
+                SAVEURS DU CONGO
+            </small>
+        </span>
+
+    </a>
 
     <nav class="main-nav" aria-label="Navigation principale">
       <a href="/menu">🍽️ Menu</a>
@@ -30,3 +50,98 @@
     </div>
   </div>
 </header>
+
+<style>
+  /* portrait */
+
+.tiop-brand-portrait{
+    width:68px;
+    height:68px;
+
+    display:grid;
+    place-items:center;
+
+    position:relative;
+
+    border-radius:50%;
+
+    background:#fff8ee;
+
+    border:2px solid #ff7900;
+
+    overflow:hidden;
+
+    box-shadow:
+        0 5px 18px rgba(50,30,10,.10);
+}
+
+
+.tiop-brand-portrait::after{
+    content:"";
+
+    position:absolute;
+    inset:4px;
+
+    border-radius:50%;
+
+    border:1px dashed rgba(255,121,0,.40);
+
+    pointer-events:none;
+}
+
+
+.tiop-brand-portrait img{
+    width:112%;
+    height:112%;
+
+    object-fit:contain;
+
+    object-position:center;
+
+    transition:
+        transform .3s ease,
+        filter .3s ease;
+}
+
+
+.tiop-brand:hover .tiop-brand-portrait img{
+    transform:scale(1.06) rotate(-1deg);
+}
+
+
+/* =====================================================
+   NOM
+===================================================== */
+
+.tiop-brand-text{
+    display:flex;
+    flex-direction:column;
+
+    line-height:1;
+}
+
+
+.tiop-brand-text strong{
+    font-size:32px;
+    font-weight:950;
+    letter-spacing:-1.8px;
+}
+
+
+.tiop-brand-text strong span{
+    color:#ff7900;
+}
+
+
+.tiop-brand-text small{
+    margin-top:7px;
+
+    font-size:9px;
+    font-weight:900;
+
+    letter-spacing:1.8px;
+
+    color:#756b62;
+}
+
+</style>
