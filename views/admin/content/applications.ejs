@@ -1,39 +1,1826 @@
-<section class="admin-heading">
-  <div>
-    <span class="eyebrow">Recrutement</span>
-    <h1>📨 Candidatures</h1>
-  </div>
-</section>
+<main class="recruit-page">
 
-<div class="table-wrap">
-  <table>
-    <thead>
-      <tr>
-        <th>Référence</th>
-        <th>Candidat</th>
-        <th>Poste</th>
-        <th>Email</th>
-        <th>Statut</th>
-        <th>CV</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% applications.forEach((application) => { %>
-        <tr>
-          <td><%= application.reference %></td>
-          <td><%= application.first_name %> <%= application.last_name %></td>
-          <td><%= application.job_title %></td>
-          <td><%= application.email %></td>
-          <td><span class="badge"><%= application.status %></span></td>
-          <td>
-            <% if (application.cv_url) { %>
-              <a class="button small" target="_blank" href="<%= application.cv_url %>">📄 Voir</a>
-            <% } else { %>
-              —
-            <% } %>
-          </td>
-        </tr>
-      <% }) %>
-    </tbody>
-  </table>
+    <!-- =========================================================
+         TITRE
+    ========================================================== -->
+    <div class="recruit-heading">
+        <span class="admin-label">Administration</span>
+
+        <h1>📨 Gestion des candidatures</h1>
+    </div>
+
+
+    <!-- =========================================================
+         STATISTIQUES
+    ========================================================== -->
+    <section class="recruit-stats">
+
+        <article class="recruit-stat-card">
+            <div class="stat-label">📥 Toutes</div>
+            <strong>3</strong>
+            <span>Dossiers reçus</span>
+        </article>
+
+        <article class="recruit-stat-card">
+            <div class="stat-label">🆕 Nouvelles</div>
+            <strong>3</strong>
+            <span>À examiner</span>
+        </article>
+
+        <article class="recruit-stat-card">
+            <div class="stat-label">🗓️ Entretiens</div>
+            <strong>0</strong>
+            <span>Planifiés / à planifier</span>
+        </article>
+
+        <article class="recruit-stat-card">
+            <div class="stat-label">✅ Embauchées</div>
+            <strong>0</strong>
+            <span>Candidats retenus</span>
+        </article>
+
+    </section>
+
+
+    <!-- =========================================================
+         LISTE
+    ========================================================== -->
+    <section class="recruit-list-section">
+
+        <div class="recruit-list-title">
+            <strong>Liste des candidatures</strong>
+            <span>
+                CRUD complet : consulter, créer, modifier,
+                supprimer et traiter les dossiers.
+            </span>
+        </div>
+
+
+        <!-- FILTRES -->
+        <div class="recruit-filters">
+
+            <div class="recruit-search">
+                🔎
+                <input
+                    type="text"
+                    id="candidateSearch"
+                    placeholder="Nom, email, poste, référence"
+                >
+            </div>
+
+            <select id="statusFilter">
+                <option value="">Tous les statuts</option>
+                <option value="Nouvelle">Nouvelle</option>
+                <option value="Entretien">Entretien</option>
+                <option value="Embauchée">Embauchée</option>
+                <option value="Refusée">Refusée</option>
+            </select>
+
+            <select id="jobFilter">
+                <option value="">Tous les postes</option>
+                <option value="Équipier cuisine">Équipier cuisine</option>
+                <option value="Caissier">Caissier</option>
+                <option value="Livreur">Livreur</option>
+                <option value="Manager">Manager</option>
+            </select>
+
+            <button class="filter-button" onclick="filterCandidates()">
+                Filtrer
+            </button>
+
+        </div>
+
+
+        <!-- =====================================================
+             TABLEAU
+        ====================================================== -->
+        <div class="recruit-table-container">
+
+            <table class="recruit-table">
+
+                <thead>
+                <tr>
+                    <th>Référence</th>
+                    <th>Candidat</th>
+                    <th>Poste</th>
+                    <th>CV PDF</th>
+                    <th>Statut</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+
+                <tbody id="candidateTable">
+
+                <!-- CANDIDATURE 1 -->
+                <tr
+                    data-search="tiop-job-2026-0003 hhl y@g équipier cuisine"
+                    data-status="Nouvelle"
+                    data-job="Équipier cuisine"
+                >
+                    <td>
+                        <strong>TIOP-JOB-2026-0003</strong>
+                    </td>
+
+                    <td>
+                        <strong>hhl</strong>
+                        <small>y@g</small>
+                    </td>
+
+                    <td>Équipier cuisine</td>
+
+                    <td>
+                        <span class="cv-badge missing">
+                            CV non joint
+                        </span>
+                    </td>
+
+                    <td>
+                        <span class="candidate-status new">
+                            Nouvelle
+                        </span>
+                    </td>
+
+                    <td>06/08/2026 21:23:07</td>
+
+                    <td>
+                        <div class="candidate-actions">
+
+                            <button
+                                class="action-btn"
+                                onclick="viewCandidate('0003')"
+                            >
+                                👁 Voir
+                            </button>
+
+                            <button
+                                class="action-btn"
+                                onclick="editCandidate('0003')"
+                            >
+                                ▰ Modifier
+                            </button>
+
+                            <button
+                                class="action-btn delete"
+                                onclick="deleteCandidate('TIOP-JOB-2026-0003')"
+                            >
+                                🗑 Supprimer
+                            </button>
+
+                        </div>
+                    </td>
+                </tr>
+
+
+                <!-- CANDIDATURE 2 -->
+                <tr
+                    data-search="tiop-job-2026-0002 hhl y@g équipier cuisine"
+                    data-status="Nouvelle"
+                    data-job="Équipier cuisine"
+                >
+                    <td>
+                        <strong>TIOP-JOB-2026-0002</strong>
+                    </td>
+
+                    <td>
+                        <strong>hhl</strong>
+                        <small>y@g</small>
+                    </td>
+
+                    <td>Équipier cuisine</td>
+
+                    <td>
+                        <span class="cv-badge missing">
+                            CV non joint
+                        </span>
+                    </td>
+
+                    <td>
+                        <span class="candidate-status new">
+                            Nouvelle
+                        </span>
+                    </td>
+
+                    <td>06/08/2026 21:22:21</td>
+
+                    <td>
+                        <div class="candidate-actions">
+
+                            <button class="action-btn"
+                                    onclick="viewCandidate('0002')">
+                                👁 Voir
+                            </button>
+
+                            <button class="action-btn"
+                                    onclick="editCandidate('0002')">
+                                ▰ Modifier
+                            </button>
+
+                            <button class="action-btn delete"
+                                    onclick="deleteCandidate('TIOP-JOB-2026-0002')">
+                                🗑 Supprimer
+                            </button>
+
+                        </div>
+                    </td>
+                </tr>
+
+
+                <!-- CANDIDATURE 3 -->
+                <tr
+                    data-search="tiop-job-adm-1785804006792 testeur test@gmail.com équipier cuisine"
+                    data-status="Nouvelle"
+                    data-job="Équipier cuisine"
+                >
+                    <td>
+                        <strong>TIOP-JOB-ADM-1785804006792</strong>
+                    </td>
+
+                    <td>
+                        <strong>TESTEUR</strong>
+                        <small>test@gmail.com</small>
+                    </td>
+
+                    <td>Équipier cuisine</td>
+
+                    <td>
+                        <span class="cv-badge available">
+                            PDF disponible
+                        </span>
+                    </td>
+
+                    <td>
+                        <span class="candidate-status new">
+                            Nouvelle
+                        </span>
+                    </td>
+
+                    <td>04/08/2026 02:40:06</td>
+
+                    <td>
+                        <div class="candidate-actions">
+
+                            <button class="action-btn"
+                                    onclick="viewCandidate('testeur')">
+                                👁 Voir
+                            </button>
+
+                            <button class="action-btn"
+                                    onclick="editCandidate('testeur')">
+                                ▰ Modifier
+                            </button>
+
+                            <button class="action-btn delete"
+                                    onclick="deleteCandidate('TIOP-JOB-ADM-1785804006792')">
+                                🗑 Supprimer
+                            </button>
+
+                        </div>
+                    </td>
+                </tr>
+
+                </tbody>
+            </table>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- =============================================================
+     MODAL : VOIR CANDIDATURE
+============================================================= -->
+
+<div class="candidate-modal-overlay" id="viewCandidateModal">
+
+    <div class="candidate-modal view-modal">
+
+        <button class="candidate-modal-close"
+                onclick="closeCandidateModal('viewCandidateModal')">
+            ×
+        </button>
+
+        <h2 id="viewCandidateTitle">
+            👁 Candidature TIOP-JOB-2026-0003
+        </h2>
+
+
+        <div class="candidate-detail-grid">
+
+            <!-- GAUCHE -->
+            <div class="candidate-personal">
+
+                <h3>
+                    👤 <span id="viewName">hhl</span>
+                </h3>
+
+                <div class="candidate-contact">
+                    <div>📧 <span id="viewEmail">y@g</span></div>
+                    <div>📞 <span id="viewPhone">33</span></div>
+                </div>
+
+
+                <div class="candidate-information">
+
+                    <p>
+                        <strong>Poste :</strong>
+                        <span id="viewJob">Équipier cuisine</span>
+                    </p>
+
+                    <p>
+                        <strong>Expérience :</strong>
+                        <span id="viewExperience">—</span>
+                    </p>
+
+                    <p>
+                        <strong>Disponibilité :</strong>
+                        <span id="viewAvailability">—</span>
+                    </p>
+
+                    <p>
+                        <strong>Date :</strong>
+                        <span id="viewDate">
+                            06/08/2026 21:23:07
+                        </span>
+                    </p>
+
+                </div>
+
+
+                <div class="candidate-note-box">
+
+                    <strong>Motivation</strong>
+
+                    <p id="viewMotivation">
+                        Aucun message.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- DROITE -->
+            <div class="candidate-document">
+
+                <div class="candidate-cv-card">
+
+                    <h3>📄 Curriculum Vitae</h3>
+
+                    <p id="viewCvStatus">
+                        CV non joint
+                    </p>
+
+                    <div id="viewCvMessage">
+                        Ce dossier ne contient pas encore de PDF
+                        visualisable. Les nouvelles candidatures
+                        enregistrent maintenant le PDF.
+                    </div>
+
+                    <a
+                        href="#"
+                        id="viewCvButton"
+                        class="candidate-cv-button"
+                        style="display:none"
+                        target="_blank"
+                    >
+                        📄 Ouvrir le PDF
+                    </a>
+
+                </div>
+
+
+                <div class="candidate-view-status">
+                    <strong>Statut :</strong>
+                    <span id="viewStatus">Nouvelle</span>
+                </div>
+
+
+                <div class="candidate-note-box">
+
+                    <strong>Note interne</strong>
+
+                    <p id="viewInternalNote">
+                        Aucune note.
+                    </p>
+
+                </div>
+
+
+                <button
+                    class="candidate-orange-button candidate-treat-button"
+                    onclick="editFromView()"
+                >
+                    ▰ Modifier / traiter
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
+
+
+<!-- =============================================================
+     MODAL : MODIFIER
+============================================================= -->
+
+<div class="candidate-modal-overlay" id="editCandidateModal">
+
+    <div class="candidate-modal edit-modal">
+
+        <button
+            class="candidate-modal-close"
+            onclick="closeCandidateModal('editCandidateModal')"
+        >
+            ×
+        </button>
+
+
+        <h2>▰ Modifier la candidature</h2>
+
+
+        <form id="candidateEditForm">
+
+            <input type="hidden" id="editCandidateId">
+
+
+            <div class="candidate-form-grid">
+
+                <div class="candidate-field">
+                    <label>
+                        Nom complet <span>*</span>
+                    </label>
+
+                    <input
+                        id="editName"
+                        type="text"
+                        required
+                    >
+                </div>
+
+
+                <div class="candidate-field">
+                    <label>
+                        Email <span>*</span>
+                    </label>
+
+                    <input
+                        id="editEmail"
+                        type="email"
+                        required
+                    >
+                </div>
+
+
+                <div class="candidate-field">
+                    <label>Téléphone</label>
+
+                    <input
+                        id="editPhone"
+                        type="text"
+                    >
+                </div>
+
+
+                <div class="candidate-field">
+
+                    <label>Poste</label>
+
+                    <select id="editJob">
+
+                        <option>Équipier cuisine</option>
+                        <option>Caissier</option>
+                        <option>Livreur</option>
+                        <option>Manager</option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="candidate-field">
+                    <label>Expérience</label>
+
+                    <input
+                        id="editExperience"
+                        type="text"
+                    >
+                </div>
+
+
+                <div class="candidate-field">
+                    <label>Disponibilité</label>
+
+                    <input
+                        id="editAvailability"
+                        type="text"
+                    >
+                </div>
+
+
+                <div class="candidate-field">
+
+                    <label>Statut</label>
+
+                    <select id="editStatus">
+
+                        <option value="Nouvelle">
+                            Nouvelle
+                        </option>
+
+                        <option value="À étudier">
+                            À étudier
+                        </option>
+
+                        <option value="Entretien">
+                            Entretien
+                        </option>
+
+                        <option value="Embauchée">
+                            Embauchée
+                        </option>
+
+                        <option value="Refusée">
+                            Refusée
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="candidate-field">
+
+                    <label>CV PDF</label>
+
+                    <div class="candidate-file-field">
+
+                        <input
+                            id="editCv"
+                            type="file"
+                            accept="application/pdf"
+                        >
+
+                    </div>
+
+                    <small id="currentCv">
+                        Actuel : CV non joint
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <div class="candidate-field full">
+
+                <label>Motivation</label>
+
+                <textarea id="editMotivation"></textarea>
+
+            </div>
+
+
+            <div class="candidate-field full">
+
+                <label>Note interne</label>
+
+                <textarea
+                    id="editInternalNote"
+                    placeholder="Ajouter une note réservée à l'administration..."
+                ></textarea>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="candidate-orange-button save-candidate"
+            >
+                💾 Enregistrer
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+<style>
+  /* =========================================================
+   PAGE
+========================================================= */
+
+.recruit-page {
+    padding: 14px;
+    color: #171310;
+}
+
+.recruit-heading {
+    margin-bottom: 25px;
+}
+
+.admin-label {
+    display: inline-flex;
+    padding: 8px 14px;
+    margin-bottom: 14px;
+
+    border-radius: 999px;
+
+    background: #fff0df;
+    color: #ff7900;
+
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.recruit-heading h1 {
+    margin: 0;
+    font-size: 38px;
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   STATISTIQUES
+========================================================= */
+
+.recruit-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 16px;
+    margin-bottom: 25px;
+}
+
+.recruit-stat-card {
+    min-height: 130px;
+    padding: 20px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #e9e4df;
+    border-radius: 20px;
+
+    background: #fff;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-label {
+    margin-bottom: 10px;
+
+    color: #625c56;
+    font-size: 16px;
+}
+
+.recruit-stat-card strong {
+    margin-bottom: 4px;
+
+    font-size: 31px;
+}
+
+.recruit-stat-card > span {
+    color: #77706a;
+}
+
+
+/* =========================================================
+   LISTE
+========================================================= */
+
+.recruit-list-title {
+    display: flex;
+    flex-direction: column;
+
+    margin-bottom: 17px;
+}
+
+.recruit-list-title strong {
+    font-size: 17px;
+}
+
+.recruit-list-title span {
+    margin-top: 4px;
+
+    color: #77706a;
+    font-size: 16px;
+}
+
+
+/* =========================================================
+   FILTRES
+========================================================= */
+
+.recruit-filters {
+    display: grid;
+
+    grid-template-columns:
+        1.45fr
+        1fr
+        1fr
+        auto;
+
+    gap: 12px;
+
+    margin-bottom: 17px;
+}
+
+.recruit-search {
+    height: 52px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 16px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #e5e1de;
+    border-radius: 14px;
+
+    background: white;
+}
+
+.recruit-search input {
+    flex: 1;
+
+    height: 100%;
+
+    margin-left: 7px;
+
+    border: 0;
+    outline: 0;
+
+    background: transparent;
+
+    font: inherit;
+}
+
+.recruit-filters select {
+    height: 52px;
+
+    padding: 0 16px;
+
+    border: 1px solid #e5e1de;
+    border-radius: 14px;
+
+    background: white;
+
+    font: inherit;
+}
+
+.filter-button {
+    min-width: 90px;
+
+    padding: 0 20px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: white;
+
+    font-weight: 800;
+    font-size: 15px;
+
+    box-shadow: 0 8px 24px rgba(0,0,0,.05);
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.recruit-table-container {
+    width: 100%;
+
+    overflow-x: auto;
+
+    border-radius: 18px;
+
+    background: white;
+}
+
+.recruit-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    min-width: 1150px;
+}
+
+.recruit-table thead {
+    background: #faf7f4;
+}
+
+.recruit-table th {
+    padding: 17px 15px;
+
+    text-align: left;
+
+    font-size: 14px;
+}
+
+.recruit-table td {
+    padding: 16px 15px;
+
+    border-top: 1px solid #ebe7e3;
+
+    vertical-align: middle;
+}
+
+.recruit-table td small {
+    display: block;
+
+    margin-top: 3px;
+
+    color: #81776f;
+}
+
+.cv-badge,
+.candidate-status {
+    display: inline-flex;
+
+    padding: 8px 12px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.cv-badge.missing {
+    background: #fff0df;
+    color: #b96300;
+}
+
+.cv-badge.available {
+    background: #e6f5ea;
+    color: #267747;
+}
+
+.candidate-status.new {
+    background: #fff0df;
+    color: #a85c00;
+}
+
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.candidate-actions {
+    display: flex;
+    gap: 7px;
+
+    white-space: nowrap;
+}
+
+.action-btn {
+    padding: 11px 15px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: white;
+    color: #171310;
+
+    font-weight: 800;
+
+    box-shadow: 0 7px 20px rgba(0,0,0,.05);
+
+    cursor: pointer;
+}
+
+.action-btn.delete {
+    background: #fde7e5;
+    color: #c44236;
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.candidate-modal-overlay {
+    position: fixed;
+    inset: 0;
+
+    z-index: 99999;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    box-sizing: border-box;
+
+    background: rgba(18,16,14,.55);
+}
+
+.candidate-modal-overlay.show {
+    display: flex;
+}
+
+.candidate-modal {
+    position: relative;
+
+    width: min(1200px, 94vw);
+    max-height: 92vh;
+
+    padding: 38px;
+
+    box-sizing: border-box;
+
+    overflow-y: auto;
+
+    border-radius: 32px;
+
+    background: white;
+
+    box-shadow:
+        0 30px 80px rgba(0,0,0,.30);
+}
+
+.candidate-modal h2 {
+    margin: 0 0 32px;
+
+    font-size: 34px;
+    font-weight: 800;
+}
+
+.candidate-modal-close {
+    position: absolute;
+
+    top: 28px;
+    right: 28px;
+
+    width: 56px;
+    height: 56px;
+
+    border: 0;
+    border-radius: 50%;
+
+    background: #f1f1f1;
+
+    font-size: 24px;
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   VIEW
+========================================================= */
+
+.candidate-detail-grid {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 30px;
+}
+
+.candidate-personal,
+.candidate-document {
+    padding: 5px;
+}
+
+.candidate-personal h3 {
+    margin: 5px 0 25px;
+
+    font-size: 28px;
+}
+
+.candidate-contact {
+    margin-bottom: 25px;
+
+    font-size: 20px;
+    line-height: 1.6;
+}
+
+.candidate-information {
+    margin-bottom: 25px;
+}
+
+.candidate-information p {
+    margin: 6px 0;
+
+    font-size: 18px;
+}
+
+.candidate-note-box {
+    padding: 20px;
+
+    border: 1px dashed #ff9a42;
+    border-radius: 20px;
+
+    background: #fffaf4;
+}
+
+.candidate-note-box strong {
+    font-size: 20px;
+}
+
+.candidate-note-box p {
+    margin: 7px 0 0;
+
+    font-size: 17px;
+}
+
+
+/* CV */
+
+.candidate-cv-card {
+    padding: 25px;
+
+    margin-bottom: 25px;
+
+    border: 1px solid #ddd7d2;
+    border-radius: 20px;
+
+    background: #faf8f5;
+}
+
+.candidate-cv-card h3 {
+    margin: 0 0 25px;
+
+    font-size: 24px;
+}
+
+.candidate-cv-card p {
+    font-size: 20px;
+}
+
+.candidate-cv-card div {
+    color: #77706a;
+
+    line-height: 1.5;
+    font-size: 17px;
+}
+
+.candidate-cv-button {
+    display: inline-flex;
+
+    margin-top: 18px;
+    padding: 11px 17px;
+
+    border-radius: 999px;
+
+    background: #171310;
+    color: white;
+
+    text-decoration: none;
+    font-weight: 800;
+}
+
+.candidate-view-status {
+    margin-bottom: 22px;
+
+    font-size: 20px;
+}
+
+.candidate-treat-button {
+    width: auto !important;
+
+    margin-top: 20px;
+    padding-left: 27px !important;
+    padding-right: 27px !important;
+}
+
+
+/* =========================================================
+   EDIT FORM
+========================================================= */
+
+.edit-modal {
+    width: min(1050px, 94vw);
+}
+
+.candidate-form-grid {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 16px;
+}
+
+.candidate-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.candidate-field.full {
+    margin-top: 17px;
+}
+
+.candidate-field label {
+    margin-bottom: 5px;
+
+    font-size: 18px;
+}
+
+.candidate-field label span {
+    color: #d64035;
+}
+
+.candidate-field input,
+.candidate-field select,
+.candidate-field textarea {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    border: 1px solid #ddd;
+    border-radius: 14px;
+
+    background: white;
+
+    font: inherit;
+    font-size: 17px;
+}
+
+.candidate-field input,
+.candidate-field select {
+    height: 58px;
+
+    padding: 0 17px;
+}
+
+.candidate-field textarea {
+    min-height: 95px;
+
+    padding: 15px;
+
+    resize: vertical;
+}
+
+.candidate-field small {
+    margin-top: 8px;
+
+    color: #817a75;
+}
+
+.candidate-file-field {
+    min-height: 58px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 15px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #ddd;
+    border-radius: 14px;
+}
+
+.candidate-file-field input {
+    height: auto;
+
+    padding: 0;
+
+    border: 0;
+}
+
+
+/* =========================================================
+   ORANGE BUTTON
+========================================================= */
+
+.candidate-orange-button {
+    min-height: 56px;
+
+    padding: 0 25px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: #ff7900;
+    color: white;
+
+    font: inherit;
+    font-size: 19px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.save-candidate {
+    width: 100%;
+
+    margin-top: 20px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1000px) {
+
+    .recruit-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .recruit-filters {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .candidate-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media (max-width: 700px) {
+
+    .recruit-page {
+        padding: 10px;
+    }
+
+    .recruit-heading h1 {
+        font-size: 29px;
+    }
+
+    .recruit-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .recruit-filters {
+        grid-template-columns: 1fr;
+    }
+
+    .filter-button {
+        min-height: 50px;
+    }
+
+    .candidate-modal {
+        width: 97vw;
+
+        padding: 25px 18px;
+    }
+
+    .candidate-modal h2 {
+        padding-right: 50px;
+
+        font-size: 25px;
+    }
+
+    .candidate-modal-close {
+        top: 20px;
+        right: 18px;
+
+        width: 45px;
+        height: 45px;
+    }
+
+    .candidate-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media (max-width: 450px) {
+
+    .recruit-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .candidate-modal {
+        border-radius: 22px;
+    }
+
+}
+</style>
+
+<script>
+
+/* =========================================================
+   DONNÉES STATIQUES
+========================================================= */
+
+const candidates = {
+
+    "0003": {
+        id: "0003",
+        reference: "TIOP-JOB-2026-0003",
+        name: "hhl",
+        email: "y@g",
+        phone: "33",
+        job: "Équipier cuisine",
+        experience: "",
+        availability: "",
+        status: "Nouvelle",
+        date: "06/08/2026 21:23:07",
+        motivation: "",
+        note: "",
+        cv: null
+    },
+
+    "0002": {
+        id: "0002",
+        reference: "TIOP-JOB-2026-0002",
+        name: "hhl",
+        email: "y@g",
+        phone: "33",
+        job: "Équipier cuisine",
+        experience: "",
+        availability: "",
+        status: "Nouvelle",
+        date: "06/08/2026 21:22:21",
+        motivation: "",
+        note: "",
+        cv: null
+    },
+
+    "testeur": {
+        id: "testeur",
+        reference: "TIOP-JOB-ADM-1785804006792",
+        name: "TESTEUR",
+        email: "test@gmail.com",
+        phone: "+242 06 000 00 00",
+        job: "Équipier cuisine",
+        experience: "1 an",
+        availability: "Immédiate",
+        status: "Nouvelle",
+        date: "04/08/2026 02:40:06",
+        motivation:
+            "Je souhaite rejoindre l'équipe TiopTiop et participer au développement du restaurant.",
+        note:
+            "Profil à examiner.",
+        cv: "/uploads/cv/testeur.pdf"
+    }
+
+};
+
+
+let currentCandidateId = null;
+
+
+/* =========================================================
+   OUVRIR VIEW
+========================================================= */
+
+function viewCandidate(id) {
+
+    const candidate = candidates[id];
+
+    if (!candidate) return;
+
+    currentCandidateId = id;
+
+
+    document.getElementById("viewCandidateTitle").textContent =
+        "👁 Candidature " + candidate.reference;
+
+
+    document.getElementById("viewName").textContent =
+        candidate.name;
+
+    document.getElementById("viewEmail").textContent =
+        candidate.email;
+
+    document.getElementById("viewPhone").textContent =
+        candidate.phone || "—";
+
+    document.getElementById("viewJob").textContent =
+        candidate.job || "—";
+
+    document.getElementById("viewExperience").textContent =
+        candidate.experience || "—";
+
+    document.getElementById("viewAvailability").textContent =
+        candidate.availability || "—";
+
+    document.getElementById("viewDate").textContent =
+        candidate.date;
+
+    document.getElementById("viewMotivation").textContent =
+        candidate.motivation || "Aucun message.";
+
+    document.getElementById("viewInternalNote").textContent =
+        candidate.note || "Aucune note.";
+
+    document.getElementById("viewStatus").textContent =
+        candidate.status;
+
+
+    const cvStatus =
+        document.getElementById("viewCvStatus");
+
+    const cvMessage =
+        document.getElementById("viewCvMessage");
+
+    const cvButton =
+        document.getElementById("viewCvButton");
+
+
+    if (candidate.cv) {
+
+        cvStatus.textContent =
+            "PDF disponible";
+
+        cvMessage.textContent =
+            "Le Curriculum Vitae du candidat est disponible.";
+
+        cvButton.href =
+            candidate.cv;
+
+        cvButton.style.display =
+            "inline-flex";
+
+    } else {
+
+        cvStatus.textContent =
+            "CV non joint";
+
+        cvMessage.textContent =
+            "Ce dossier ne contient pas encore de PDF visualisable. " +
+            "Les nouvelles candidatures enregistrent maintenant le PDF.";
+
+        cvButton.style.display =
+            "none";
+
+    }
+
+
+    openCandidateModal("viewCandidateModal");
+}
+
+
+/* =========================================================
+   MODIFIER
+========================================================= */
+
+function editCandidate(id) {
+
+    const candidate = candidates[id];
+
+    if (!candidate) return;
+
+    currentCandidateId = id;
+
+
+    document.getElementById("editCandidateId").value =
+        candidate.id;
+
+    document.getElementById("editName").value =
+        candidate.name;
+
+    document.getElementById("editEmail").value =
+        candidate.email;
+
+    document.getElementById("editPhone").value =
+        candidate.phone || "";
+
+    document.getElementById("editJob").value =
+        candidate.job;
+
+    document.getElementById("editExperience").value =
+        candidate.experience || "";
+
+    document.getElementById("editAvailability").value =
+        candidate.availability || "";
+
+    document.getElementById("editStatus").value =
+        candidate.status;
+
+    document.getElementById("editMotivation").value =
+        candidate.motivation || "";
+
+    document.getElementById("editInternalNote").value =
+        candidate.note || "";
+
+
+    document.getElementById("currentCv").textContent =
+        candidate.cv
+            ? "Actuel : PDF disponible"
+            : "Actuel : CV non joint";
+
+
+    openCandidateModal("editCandidateModal");
+}
+
+
+/* =========================================================
+   VIEW -> EDIT
+========================================================= */
+
+function editFromView() {
+
+    if (!currentCandidateId) return;
+
+    const id = currentCandidateId;
+
+    closeCandidateModal("viewCandidateModal");
+
+    editCandidate(id);
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+function openCandidateModal(id) {
+
+    document
+        .getElementById(id)
+        .classList.add("show");
+
+    document.body.style.overflow =
+        "hidden";
+}
+
+
+function closeCandidateModal(id) {
+
+    document
+        .getElementById(id)
+        .classList.remove("show");
+
+    document.body.style.overflow =
+        "";
+}
+
+
+/* =========================================================
+   ENREGISTREMENT
+========================================================= */
+
+document
+    .getElementById("candidateEditForm")
+    .addEventListener("submit", function(event) {
+
+        event.preventDefault();
+
+
+        const id =
+            document.getElementById("editCandidateId").value;
+
+        const candidate =
+            candidates[id];
+
+
+        if (!candidate) return;
+
+
+        candidate.name =
+            document.getElementById("editName").value;
+
+        candidate.email =
+            document.getElementById("editEmail").value;
+
+        candidate.phone =
+            document.getElementById("editPhone").value;
+
+        candidate.job =
+            document.getElementById("editJob").value;
+
+        candidate.experience =
+            document.getElementById("editExperience").value;
+
+        candidate.availability =
+            document.getElementById("editAvailability").value;
+
+        candidate.status =
+            document.getElementById("editStatus").value;
+
+        candidate.motivation =
+            document.getElementById("editMotivation").value;
+
+        candidate.note =
+            document.getElementById("editInternalNote").value;
+
+
+        const cvInput =
+            document.getElementById("editCv");
+
+
+        if (cvInput.files.length > 0) {
+
+            const file =
+                cvInput.files[0];
+
+
+            if (file.type !== "application/pdf") {
+
+                alert(
+                    "Le CV doit être un fichier PDF."
+                );
+
+                return;
+            }
+
+
+            /*
+             * Pour le moment :
+             * simulation statique.
+             *
+             * Avec Express/Multer :
+             * cette valeur viendra du serveur.
+             */
+
+            candidate.cv =
+                "/uploads/cv/" + file.name;
+        }
+
+
+        alert(
+            "Candidature enregistrée avec succès."
+        );
+
+
+        closeCandidateModal(
+            "editCandidateModal"
+        );
+
+    });
+
+
+/* =========================================================
+   FILTRAGE
+========================================================= */
+
+function filterCandidates() {
+
+    const search =
+        document
+            .getElementById("candidateSearch")
+            .value
+            .toLowerCase()
+            .trim();
+
+
+    const status =
+        document
+            .getElementById("statusFilter")
+            .value;
+
+
+    const job =
+        document
+            .getElementById("jobFilter")
+            .value;
+
+
+    document
+        .querySelectorAll("#candidateTable tr")
+        .forEach(function(row) {
+
+            const searchable =
+                (
+                    row.dataset.search ||
+                    ""
+                ).toLowerCase();
+
+
+            const rowStatus =
+                row.dataset.status || "";
+
+
+            const rowJob =
+                row.dataset.job || "";
+
+
+            const searchMatch =
+                !search ||
+                searchable.includes(search);
+
+
+            const statusMatch =
+                !status ||
+                status === rowStatus;
+
+
+            const jobMatch =
+                !job ||
+                job === rowJob;
+
+
+            row.style.display =
+                searchMatch &&
+                statusMatch &&
+                jobMatch
+                    ? ""
+                    : "none";
+
+        });
+
+}
+
+
+/* =========================================================
+   SUPPRESSION
+========================================================= */
+
+function deleteCandidate(reference) {
+
+    const confirmation =
+        confirm(
+            "Voulez-vous vraiment supprimer la candidature " +
+            reference +
+            " ?"
+        );
+
+
+    if (!confirmation) return;
+
+
+    const row =
+        Array.from(
+            document.querySelectorAll(
+                "#candidateTable tr"
+            )
+        ).find(function(item) {
+
+            return item
+                .innerText
+                .includes(reference);
+
+        });
+
+
+    if (row) {
+
+        row.remove();
+
+    }
+
+}
+
+
+/* =========================================================
+   FERMETURE AU CLIC SUR FOND
+========================================================= */
+
+document
+    .querySelectorAll(
+        ".candidate-modal-overlay"
+    )
+    .forEach(function(overlay) {
+
+        overlay.addEventListener(
+            "click",
+            function(event) {
+
+                if (event.target === overlay) {
+
+                    overlay.classList.remove(
+                        "show"
+                    );
+
+                    document.body.style.overflow =
+                        "";
+
+                }
+
+            }
+        );
+
+    });
+
+
+/* =========================================================
+   ESCAPE
+========================================================= */
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (event.key !== "Escape") {
+            return;
+        }
+
+
+        document
+            .querySelectorAll(
+                ".candidate-modal-overlay.show"
+            )
+            .forEach(function(modal) {
+
+                modal.classList.remove(
+                    "show"
+                );
+
+            });
+
+
+        document.body.style.overflow =
+            "";
+
+    }
+);
+
+</script>

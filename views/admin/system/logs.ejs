@@ -1,10 +1,500 @@
 <section class="admin-heading">
   <div>
-    <span class="eyebrow">Administration</span>
+    <span class="admin-badge">Administration</span>
     <h1>📊 Journaux</h1>
   </div>
-  <button class="button primary">➕ Nouvelle opération</button>
 </section>
-<div class="panel">
-  <p>Page EJS stable, sans include relatif. Ajoutez progressivement le CRUD de TiopTiop Signature 2.4.4 ici.</p>
-</div>
+
+<section class="logs-page">
+
+    <div class="logs-panel">
+
+        <!-- FILTRES -->
+        <!--
+        <form class="logs-filters" method="GET" action="/admin/journaux">
+
+            <input
+                type="search"
+                name="q"
+                class="logs-search"
+                placeholder="Rechercher une action"
+                value="<%= typeof q !== 'undefined' ? q : '' %>"
+            >
+
+            <select name="user" class="logs-user-select">
+                <option value="">Tous utilisateurs</option>
+
+                <% if (typeof users !== 'undefined' && users) { %>
+                    <% users.forEach(user => { %>
+
+                        <option
+                            value="<%= user.id %>"
+                            <%= String(selectedUser || '') === String(user.id) ? 'selected' : '' %>
+                        >
+                            <%= user.name %>
+                        </option>
+
+                    <% }) %>
+                <% } %>
+            </select>
+
+            <button type="submit" class="logs-filter-btn">
+                Filtrer
+            </button>
+
+        </form>
+        -->
+        <div class="logs-filters">
+
+          <input
+              type="search"
+              id="logSearch"
+              class="logs-search"
+              placeholder="Rechercher une action"
+          >
+
+          <select id="logUser" class="logs-user-select">
+              <option value="">Tous utilisateurs</option>
+              <option value="Administrateur TiopTiop">
+                  Administrateur TiopTiop
+              </option>
+              <option value="Manager Centre-ville">
+                  Manager Centre-ville
+              </option>
+              <option value="Caissier Démo">
+                  Caissier Démo
+              </option>
+          </select>
+
+          <button type="button" class="logs-filter-btn">
+              Filtrer
+          </button>
+
+      </div>
+
+        <!-- HISTORIQUE -->
+        <!--
+        <div class="logs-list">
+
+            <% if (typeof logs !== 'undefined' && logs && logs.length > 0) { %>
+
+                <% logs.forEach(log => { %>
+
+                    <article class="log-item">
+
+                        <div class="log-title">
+                            <%= log.action %>
+                        </div>
+
+                        <div class="log-meta">
+
+                            <span>
+                                🕒 <%= log.date %>
+                            </span>
+
+                            <span class="log-user">
+                                👤 <%= log.user_name %>
+                            </span>
+
+                        </div>
+
+                    </article>
+
+                <% }) %>
+
+            <% } else { %>
+
+                <div class="logs-empty">
+                    <div class="logs-empty-icon">📊</div>
+                    <strong>Aucune activité trouvée</strong>
+                    <span>Aucune action ne correspond aux critères sélectionnés.</span>
+                </div>
+
+            <% } %>
+
+        </div>
+        -->
+        <!-- HISTORIQUE -->
+        <div class="logs-list">
+
+            <article class="log-item">
+                <div class="log-title">
+                    Candidature créée : TIOP-JOB-ADM-1785804006792
+                </div>
+
+                <div class="log-meta">
+                    <span>🕒 04/08/2026 02:40:06</span>
+                    <span class="log-user">
+                        👤 Administrateur TiopTiop
+                    </span>
+                </div>
+            </article>
+
+
+            <article class="log-item">
+                <div class="log-title">
+                    Connexion à l’administration
+                </div>
+
+                <div class="log-meta">
+                    <span>🕒 Aujourd’hui 19:42</span>
+                    <span class="log-user">
+                        👤 Administrateur TiopTiop
+                    </span>
+                </div>
+            </article>
+
+
+            <article class="log-item">
+                <div class="log-title">
+                    Encaissement espèces TIOP-00123
+                </div>
+
+                <div class="log-meta">
+                    <span>🕒 Aujourd’hui 18:13</span>
+                    <span class="log-user">
+                        👤 Caissier Démo
+                    </span>
+                </div>
+            </article>
+
+
+            <article class="log-item">
+                <div class="log-title">
+                    Modification du produit Poulet Braisé
+                </div>
+
+                <div class="log-meta">
+                    <span>🕒 Hier 16:20</span>
+                    <span class="log-user">
+                        👤 Manager Centre-ville
+                    </span>
+                </div>
+            </article>
+
+        </div>
+
+    </div>
+
+</section>
+
+<style>
+  /* =========================================================
+   JOURNAUX / HISTORIQUE
+========================================================= */
+
+.logs-page {
+    padding: 20px;
+}
+
+.logs-header {
+    margin-bottom: 35px;
+}
+
+.admin-badge {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 8px 16px;
+
+    background: #fff0df;
+    color: #ff7900;
+
+    border-radius: 999px;
+
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.logs-header h1 {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    margin: 15px 0 0;
+
+    font-size: 48px;
+    line-height: 1.1;
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   PANEL
+========================================================= */
+
+.logs-panel {
+    background: #fff;
+
+    border-radius: 32px;
+
+    padding: 48px 30px 28px;
+
+    box-shadow: 0 15px 45px rgba(0, 0, 0, .04);
+}
+
+
+/* =========================================================
+   FILTRES
+========================================================= */
+
+.logs-filters {
+    display: grid;
+
+    grid-template-columns:
+        minmax(300px, 1fr)
+        minmax(300px, 1fr)
+        auto;
+
+    align-items: center;
+
+    gap: 15px;
+
+    margin: 0 20px 55px;
+}
+
+.logs-search,
+.logs-user-select {
+    box-sizing: border-box;
+
+    width: 100%;
+    height: 74px;
+
+    padding: 0 20px;
+
+    border: 2px solid #e5e5e5;
+
+    border-radius: 20px;
+
+    background: #fff;
+
+    outline: none;
+
+    font-family: inherit;
+    font-size: 23px;
+
+    transition:
+        border-color .15s ease,
+        box-shadow .15s ease;
+}
+
+.logs-search::placeholder {
+    color: #8b8b8b;
+}
+
+.logs-search:focus,
+.logs-user-select:focus {
+    border-color: #ff7900;
+
+    box-shadow: 0 0 0 4px rgba(255, 121, 0, .08);
+}
+
+.logs-user-select {
+    cursor: pointer;
+}
+
+.logs-filter-btn {
+    height: 74px;
+
+    padding: 0 28px;
+
+    border: none;
+    border-radius: 999px;
+
+    background: #ff7900;
+    color: #fff;
+
+    font-family: inherit;
+
+    font-size: 22px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+        background .15s ease,
+        transform .15s ease;
+}
+
+.logs-filter-btn:hover {
+    background: #eb7000;
+}
+
+.logs-filter-btn:active {
+    transform: scale(.97);
+}
+
+
+/* =========================================================
+   LISTE DES JOURNAUX
+========================================================= */
+
+.logs-list {
+    width: 100%;
+}
+
+.log-item {
+    padding: 0 0 20px;
+
+    margin-bottom: 22px;
+
+    border-bottom: 1px solid #ddd;
+}
+
+.log-item:last-child {
+    margin-bottom: 0;
+}
+
+.log-title {
+    margin-bottom: 4px;
+
+    color: #111;
+
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.log-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+    color: #6f6f6f;
+
+    font-size: 18px;
+}
+
+.log-user {
+    display: inline-flex;
+    align-items: center;
+}
+
+
+/* =========================================================
+   VIDE
+========================================================= */
+
+.logs-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 250px;
+
+    padding: 30px;
+
+    text-align: center;
+
+    color: #777;
+}
+
+.logs-empty-icon {
+    margin-bottom: 15px;
+
+    font-size: 45px;
+}
+
+.logs-empty strong {
+    margin-bottom: 7px;
+
+    color: #222;
+
+    font-size: 21px;
+}
+
+.logs-empty span {
+    font-size: 16px;
+}
+
+
+/* =========================================================
+   TABLETTE
+========================================================= */
+
+@media (max-width: 1000px) {
+
+    .logs-filters {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .logs-filter-btn {
+        grid-column: 1 / -1;
+
+        width: 180px;
+
+        justify-self: end;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+
+    .logs-page {
+        padding: 12px;
+    }
+
+    .logs-header {
+        margin-bottom: 25px;
+    }
+
+    .logs-header h1 {
+        font-size: 30px;
+    }
+
+    .logs-panel {
+        padding: 22px 16px;
+
+        border-radius: 22px;
+    }
+
+    .logs-filters {
+        grid-template-columns: 1fr;
+
+        gap: 12px;
+
+        margin: 0 0 35px;
+    }
+
+    .logs-search,
+    .logs-user-select,
+    .logs-filter-btn {
+        width: 100%;
+        height: 58px;
+
+        font-size: 16px;
+    }
+
+    .logs-filter-btn {
+        grid-column: auto;
+    }
+
+    .log-item {
+        padding-bottom: 17px;
+        margin-bottom: 17px;
+    }
+
+    .log-title {
+        font-size: 17px;
+    }
+
+    .log-meta {
+        flex-direction: column;
+        align-items: flex-start;
+
+        gap: 4px;
+
+        font-size: 15px;
+    }
+
+}
+</style>
+
+

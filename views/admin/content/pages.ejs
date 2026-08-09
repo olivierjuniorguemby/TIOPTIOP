@@ -5,6 +5,2207 @@
   </div>
   <button class="button primary">➕ Nouvelle opération</button>
 </section>
-<div class="panel">
-  <p>Page EJS stable, sans include relatif. Ajoutez progressivement le CRUD de TiopTiop Signature 2.4.4 ici.</p>
+
+<section class="cms-page">
+
+  <!-- =====================================================
+       HEADER
+  ====================================================== -->
+  <div class="cms-header">
+
+    <div>
+      <span class="admin-badge">Administration</span>
+
+      <h1>📄 Pages CMS</h1>
+    </div>
+
+    <button
+      type="button"
+      class="cms-main-btn"
+      onclick="openCmsPageModal()"
+    >
+      + Nouvelle page
+    </button>
+
+  </div>
+
+
+  <!-- =====================================================
+       STATISTIQUES
+  ====================================================== -->
+  <div class="cms-stats">
+
+    <div class="cms-stat-card">
+      <span>📄 Pages</span>
+      <strong>8</strong>
+    </div>
+
+    <div class="cms-stat-card">
+      <span>🟢 Publiées</span>
+      <strong>6</strong>
+    </div>
+
+    <div class="cms-stat-card">
+      <span>📝 Brouillons</span>
+      <strong>1</strong>
+    </div>
+
+    <div class="cms-stat-card">
+      <span>👁 Masquées</span>
+      <strong>1</strong>
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       FILTRES
+  ====================================================== -->
+  <div class="cms-filter-card">
+
+    <input
+      type="search"
+      id="cmsSearch"
+      class="cms-filter-input"
+      placeholder="Rechercher une page..."
+    >
+
+    <select
+      id="cmsStatusFilter"
+      class="cms-filter-input"
+    >
+      <option value="">Tous les statuts</option>
+      <option value="Publiee">Publiée</option>
+      <option value="Brouillon">Brouillon</option>
+      <option value="Masquee">Masquée</option>
+    </select>
+
+    <button
+      type="button"
+      class="cms-filter-btn"
+      onclick="filterCmsPages()"
+    >
+      🔎 Filtrer
+    </button>
+
+  </div>
+
+
+  <!-- =====================================================
+       TABLEAU PAGES
+  ====================================================== -->
+  <div class="cms-table-wrapper">
+
+    <table class="cms-table">
+
+      <thead>
+        <tr>
+          <th>Page</th>
+          <th>URL</th>
+          <th>Statut</th>
+          <th>Dernière modification</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody id="cmsPagesBody">
+
+        <tr data-title="Accueil" data-status="Publiee">
+          <td>
+            <div class="cms-page-name">
+              <span class="cms-page-icon">🏠</span>
+              <strong>Accueil</strong>
+            </div>
+          </td>
+
+          <td>/</td>
+
+          <td>
+            <span class="cms-status published">
+              Publiée
+            </span>
+          </td>
+
+          <td>09/08/2026 01:45</td>
+
+          <td>
+            <div class="cms-actions">
+
+              <button
+                type="button"
+                class="cms-action-edit"
+                onclick="openCmsEditModal({
+                  id: 1,
+                  title: 'Accueil',
+                  slug: '/',
+                  status: 'Publiee',
+                  seoTitle: 'TiopTiop - Cuisine congolaise moderne',
+                  seoDescription: 'Découvrez TiopTiop et commandez vos plats congolais préférés.',
+                  showFooter: true
+                })"
+              >
+                Modifier
+              </button>
+
+              <a
+                href="/"
+                target="_blank"
+                class="cms-action-view"
+              >
+                👁 Voir
+              </a>
+
+            </div>
+          </td>
+        </tr>
+
+
+        <tr data-title="Notre histoire" data-status="Publiee">
+          <td>
+            <div class="cms-page-name">
+              <span class="cms-page-icon">📖</span>
+              <strong>Notre histoire</strong>
+            </div>
+          </td>
+
+          <td>/histoire</td>
+
+          <td>
+            <span class="cms-status published">
+              Publiée
+            </span>
+          </td>
+
+          <td>08/08/2026 22:20</td>
+
+          <td>
+            <div class="cms-actions">
+
+              <button
+                type="button"
+                class="cms-action-edit"
+                onclick="openCmsEditModal({
+                  id: 2,
+                  title: 'Notre histoire',
+                  slug: '/histoire',
+                  status: 'Publiee',
+                  seoTitle: 'Notre histoire - TiopTiop',
+                  seoDescription: 'Découvrez les origines et les ambitions de TiopTiop.',
+                  showFooter: true
+                })"
+              >
+                Modifier
+              </button>
+
+              <a href="/histoire" target="_blank" class="cms-action-view">
+                👁 Voir
+              </a>
+
+            </div>
+          </td>
+        </tr>
+
+
+        <tr data-title="Contact" data-status="Publiee">
+          <td>
+            <div class="cms-page-name">
+              <span class="cms-page-icon">📞</span>
+              <strong>Contact</strong>
+            </div>
+          </td>
+
+          <td>/contact</td>
+
+          <td>
+            <span class="cms-status published">
+              Publiée
+            </span>
+          </td>
+
+          <td>08/08/2026 20:10</td>
+
+          <td>
+            <div class="cms-actions">
+
+              <button
+                type="button"
+                class="cms-action-edit"
+                onclick="openCmsEditModal({
+                  id: 3,
+                  title: 'Contact',
+                  slug: '/contact',
+                  status: 'Publiee',
+                  seoTitle: 'Contact - TiopTiop',
+                  seoDescription: 'Contactez notre équipe TiopTiop.',
+                  showFooter: true
+                })"
+              >
+                Modifier
+              </button>
+
+              <a href="/contact" target="_blank" class="cms-action-view">
+                👁 Voir
+              </a>
+
+            </div>
+          </td>
+        </tr>
+
+
+        <tr data-title="Tiop+" data-status="Publiee">
+          <td>
+            <div class="cms-page-name">
+              <span class="cms-page-icon">🎁</span>
+              <strong>Tiop+</strong>
+            </div>
+          </td>
+
+          <td>/tiopplus</td>
+
+          <td>
+            <span class="cms-status published">
+              Publiée
+            </span>
+          </td>
+
+          <td>07/08/2026 17:40</td>
+
+          <td>
+            <div class="cms-actions">
+
+              <button
+                type="button"
+                class="cms-action-edit"
+                onclick="openCmsEditModal({
+                  id: 4,
+                  title: 'Tiop+',
+                  slug: '/tiopplus',
+                  status: 'Publiee',
+                  seoTitle: 'Tiop+ - Fidélité',
+                  seoDescription: 'Cumulez des points et profitez des récompenses.',
+                  showFooter: true
+                })"
+              >
+                Modifier
+              </button>
+
+              <a href="/tiopplus" target="_blank" class="cms-action-view">
+                👁 Voir
+              </a>
+
+            </div>
+          </td>
+        </tr>
+
+
+        <tr data-title="Restaurants" data-status="Publiee">
+          <td>
+            <div class="cms-page-name">
+              <span class="cms-page-icon">🍴</span>
+              <strong>Restaurants</strong>
+            </div>
+          </td>
+
+          <td>/restaurants</td>
+
+          <td>
+            <span class="cms-status published">
+              Publiée
+            </span>
+          </td>
+
+          <td>07/08/2026 13:18</td>
+
+          <td>
+            <div class="cms-actions">
+
+              <button
+                type="button"
+                class="cms-action-edit"
+                onclick="openCmsEditModal({
+                  id: 5,
+                  title: 'Restaurants',
+                  slug: '/restaurants',
+                  status: 'Publiee',
+                  seoTitle: 'Nos restaurants - TiopTiop',
+                  seoDescription: 'Découvrez les restaurants TiopTiop.',
+                  showFooter: true
+                })"
+              >
+                Modifier
+              </button>
+
+              <a href="/restaurants" target="_blank" class="cms-action-view">
+                👁 Voir
+              </a>
+
+            </div>
+          </td>
+        </tr>
+
+
+        <tr data-title="Conditions" data-status="Publiee">
+          <td>
+            <div class="cms-page-name">
+              <span class="cms-page-icon">⚖️</span>
+              <strong>Conditions</strong>
+            </div>
+          </td>
+
+          <td>/conditions</td>
+
+          <td>
+            <span class="cms-status published">
+              Publiée
+            </span>
+          </td>
+
+          <td>06/08/2026 19:42</td>
+
+          <td>
+            <div class="cms-actions">
+
+              <button
+                type="button"
+                class="cms-action-edit"
+                onclick="openCmsEditModal({
+                  id: 6,
+                  title: 'Conditions',
+                  slug: '/conditions',
+                  status: 'Publiee',
+                  seoTitle: 'Conditions générales - TiopTiop',
+                  seoDescription: 'Consultez les conditions générales TiopTiop.',
+                  showFooter: true
+                })"
+              >
+                Modifier
+              </button>
+
+              <a href="/conditions" target="_blank" class="cms-action-view">
+                👁 Voir
+              </a>
+
+            </div>
+          </td>
+        </tr>
+
+
+        <tr data-title="À propos" data-status="Brouillon">
+          <td>
+            <div class="cms-page-name">
+              <span class="cms-page-icon">📝</span>
+              <strong>À propos</strong>
+            </div>
+          </td>
+
+          <td>/a-propos</td>
+
+          <td>
+            <span class="cms-status draft">
+              Brouillon
+            </span>
+          </td>
+
+          <td>05/08/2026 12:10</td>
+
+          <td>
+            <div class="cms-actions">
+
+              <button
+                type="button"
+                class="cms-action-edit"
+                onclick="openCmsEditModal({
+                  id: 7,
+                  title: 'À propos',
+                  slug: '/a-propos',
+                  status: 'Brouillon',
+                  seoTitle: '',
+                  seoDescription: '',
+                  showFooter: false
+                })"
+              >
+                Modifier
+              </button>
+
+              <button
+                type="button"
+                class="cms-action-delete"
+                onclick="deleteCmsPage('À propos')"
+              >
+                Supprimer
+              </button>
+
+            </div>
+          </td>
+        </tr>
+
+
+        <tr data-title="Landing temporaire" data-status="Masquee">
+          <td>
+            <div class="cms-page-name">
+              <span class="cms-page-icon">🙈</span>
+              <strong>Landing temporaire</strong>
+            </div>
+          </td>
+
+          <td>/landing</td>
+
+          <td>
+            <span class="cms-status hidden">
+              Masquée
+            </span>
+          </td>
+
+          <td>02/08/2026 11:00</td>
+
+          <td>
+            <div class="cms-actions">
+
+              <button
+                type="button"
+                class="cms-action-edit"
+                onclick="openCmsEditModal({
+                  id: 8,
+                  title: 'Landing temporaire',
+                  slug: '/landing',
+                  status: 'Masquee',
+                  seoTitle: '',
+                  seoDescription: '',
+                  showFooter: false
+                })"
+              >
+                Modifier
+              </button>
+
+              <button
+                type="button"
+                class="cms-action-delete"
+                onclick="deleteCmsPage('Landing temporaire')"
+              >
+                Supprimer
+              </button>
+
+            </div>
+          </td>
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================================
+     MODAL CREATION / MODIFICATION PAGE
+========================================================= -->
+
+<div class="cms-modal-overlay" id="cmsPageModal">
+
+  <div class="cms-modal">
+
+    <div class="cms-modal-header">
+
+      <h2 id="cmsModalTitle">
+        ➕ Nouvelle page
+      </h2>
+
+      <button
+        type="button"
+        class="cms-modal-close"
+        onclick="closeCmsPageModal()"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <form id="cmsPageForm">
+
+      <input type="hidden" id="cmsPageId">
+
+
+      <!-- =================================================
+           INFORMATIONS
+      ================================================== -->
+
+      <div class="cms-form-section">
+
+        <h3>📄 Informations générales</h3>
+
+
+        <div class="cms-form-grid">
+
+          <div class="cms-form-field">
+            <label>Titre</label>
+
+            <input
+              type="text"
+              id="cmsPageTitle"
+              placeholder="Ex : Notre histoire"
+              required
+            >
+          </div>
+
+
+          <div class="cms-form-field">
+            <label>URL / Slug</label>
+
+            <input
+              type="text"
+              id="cmsPageSlug"
+              placeholder="/notre-page"
+              required
+            >
+          </div>
+
+
+          <div class="cms-form-field">
+
+            <label>Statut</label>
+
+            <select id="cmsPageStatus">
+
+              <option value="Brouillon">
+                Brouillon
+              </option>
+
+              <option value="Publiee">
+                Publiée
+              </option>
+
+              <option value="Masquee">
+                Masquée
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="cms-form-field">
+
+            <label>Type de page</label>
+
+            <select id="cmsPageType">
+
+              <option value="standard">
+                Page standard
+              </option>
+
+              <option value="landing">
+                Landing page
+              </option>
+
+              <option value="institutional">
+                Institutionnelle
+              </option>
+
+              <option value="marketing">
+                Marketing
+              </option>
+
+            </select>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           HERO
+      ================================================== -->
+
+      <div class="cms-form-section">
+
+        <h3>🖼️ Hero / introduction</h3>
+
+
+        <div class="cms-form-field">
+          <label>Titre principal</label>
+
+          <input
+            type="text"
+            id="cmsHeroTitle"
+            placeholder="Titre principal de la page"
+          >
+        </div>
+
+
+        <div class="cms-form-field">
+          <label>Sous-titre</label>
+
+          <textarea
+            id="cmsHeroSubtitle"
+            placeholder="Sous-titre ou description..."
+          ></textarea>
+        </div>
+
+
+        <div class="cms-form-field">
+
+          <label>Image principale</label>
+
+          <input
+            type="file"
+            id="cmsHeroImage"
+            accept="image/png,image/jpeg,image/webp"
+            onchange="previewCmsImage(this)"
+          >
+
+        </div>
+
+
+        <div class="cms-image-preview-wrap">
+
+          <img
+            id="cmsHeroPreview"
+            src="/media/icons/image-placeholder.png"
+            alt="Aperçu"
+          >
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           SECTIONS
+      ================================================== -->
+
+      <div class="cms-form-section">
+
+        <div class="cms-section-heading">
+
+          <h3>🧩 Sections de la page</h3>
+
+          <button
+            type="button"
+            class="cms-small-orange-btn"
+            onclick="addCmsSection()"
+          >
+            + Ajouter une section
+          </button>
+
+        </div>
+
+
+        <div id="cmsSectionsContainer">
+
+          <!-- SECTION 1 -->
+          <div class="cms-content-section">
+
+            <div class="cms-content-section-head">
+
+              <div>
+                <strong>Section 1</strong>
+                <span>Texte éditorial</span>
+              </div>
+
+              <div class="cms-section-actions">
+
+                <button type="button" onclick="moveCmsSection(this, -1)">
+                  ↑
+                </button>
+
+                <button type="button" onclick="moveCmsSection(this, 1)">
+                  ↓
+                </button>
+
+                <button
+                  type="button"
+                  class="cms-section-remove"
+                  onclick="removeCmsSection(this)"
+                >
+                  ×
+                </button>
+
+              </div>
+
+            </div>
+
+
+            <input
+              type="text"
+              class="cms-section-title"
+              placeholder="Titre de section"
+              value="Découvrez TiopTiop"
+            >
+
+
+            <textarea
+              class="cms-section-content"
+              placeholder="Contenu de la section..."
+            >TiopTiop met en valeur la cuisine congolaise dans une expérience moderne, rapide et accessible.</textarea>
+
+
+            <input
+              type="file"
+              class="cms-section-image"
+              accept="image/png,image/jpeg,image/webp"
+            >
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           SEO
+      ================================================== -->
+
+      <div class="cms-form-section">
+
+        <h3>🔍 Référencement SEO</h3>
+
+
+        <div class="cms-form-field">
+
+          <label>Titre SEO</label>
+
+          <input
+            type="text"
+            id="cmsSeoTitle"
+            placeholder="Titre affiché dans Google"
+          >
+
+        </div>
+
+
+        <div class="cms-form-field">
+
+          <label>Description SEO</label>
+
+          <textarea
+            id="cmsSeoDescription"
+            placeholder="Description courte pour les moteurs de recherche"
+          ></textarea>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           OPTIONS
+      ================================================== -->
+
+      <div class="cms-form-section">
+
+        <h3>⚙️ Options</h3>
+
+
+        <label class="cms-checkbox-row">
+
+          <span>Afficher dans le footer</span>
+
+          <input
+            type="checkbox"
+            id="cmsShowFooter"
+          >
+
+        </label>
+
+
+        <label class="cms-checkbox-row">
+
+          <span>Autoriser l'indexation par les moteurs de recherche</span>
+
+          <input
+            type="checkbox"
+            id="cmsIndexable"
+            checked
+          >
+
+        </label>
+
+      </div>
+
+
+      <!-- =================================================
+           PREVIEW
+      ================================================== -->
+
+      <div class="cms-form-section">
+
+        <div class="cms-section-heading">
+
+          <h3>👁 Prévisualisation</h3>
+
+          <div class="cms-preview-switch">
+
+            <button
+              type="button"
+              class="cms-device-btn active"
+              onclick="setCmsPreviewDevice('desktop', this)"
+            >
+              🖥 Desktop
+            </button>
+
+            <button
+              type="button"
+              class="cms-device-btn"
+              onclick="setCmsPreviewDevice('mobile', this)"
+            >
+              📱 Mobile
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <div class="cms-preview desktop" id="cmsPreview">
+
+          <div class="cms-preview-browser">
+
+            <div class="cms-preview-browser-bar">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+
+
+            <div class="cms-preview-content">
+
+              <small>APERÇU</small>
+
+              <h2 id="cmsPreviewTitle">
+                Nouvelle page
+              </h2>
+
+              <p id="cmsPreviewDescription">
+                Le contenu de votre page apparaîtra ici.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           ACTIONS
+      ================================================== -->
+
+      <div class="cms-modal-footer">
+
+        <button
+          type="button"
+          class="cms-draft-btn"
+          onclick="saveCmsDraft()"
+        >
+          📝 Enregistrer comme brouillon
+        </button>
+
+        <button
+          type="submit"
+          class="cms-publish-btn"
+        >
+          💾 Enregistrer / Publier
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
 </div>
+
+<style>
+  /* =========================================================
+   CMS
+========================================================= */
+
+.cms-page {
+    padding: 20px;
+}
+
+.cms-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.admin-badge {
+    display: inline-flex;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: #fff0df;
+    color: #ff7900;
+    font-weight: 800;
+}
+
+.cms-header h1 {
+    margin: 16px 0 0;
+    font-size: 46px;
+    font-weight: 800;
+}
+
+.cms-main-btn {
+    padding: 17px 28px;
+    border: 0;
+    border-radius: 999px;
+    background: #ff7900;
+    color: white;
+    font-size: 17px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   STATS
+========================================================= */
+
+.cms-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.cms-stat-card {
+    min-height: 110px;
+    padding: 20px;
+    border-radius: 22px;
+    background: #fff;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.cms-stat-card span {
+    color: #6c625c;
+}
+
+.cms-stat-card strong {
+    font-size: 32px;
+}
+
+
+/* =========================================================
+   FILTER
+========================================================= */
+
+.cms-filter-card {
+    display: grid;
+    grid-template-columns: 1.4fr .8fr auto;
+    gap: 12px;
+
+    padding: 14px;
+    margin-bottom: 20px;
+
+    background: #fff;
+    border-radius: 20px;
+}
+
+.cms-filter-input {
+    width: 100%;
+    height: 54px;
+
+    box-sizing: border-box;
+
+    padding: 0 16px;
+
+    border: 1px solid #ddd;
+    border-radius: 14px;
+
+    background: white;
+
+    font: inherit;
+}
+
+.cms-filter-btn {
+    padding: 0 22px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: #ff7900;
+    color: white;
+
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.cms-table-wrapper {
+    overflow-x: auto;
+
+    border-radius: 22px;
+
+    background: white;
+}
+
+.cms-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.cms-table th {
+    background: #faf7f4;
+
+    padding: 18px;
+
+    text-align: left;
+
+    border-bottom: 1px solid #ddd;
+}
+
+.cms-table td {
+    padding: 18px;
+
+    border-bottom: 1px solid #ddd;
+}
+
+.cms-page-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cms-page-icon {
+    font-size: 22px;
+}
+
+
+/* STATUS */
+
+.cms-status {
+    display: inline-flex;
+
+    padding: 7px 12px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.cms-status.published {
+    background: #e7f6ec;
+    color: #287548;
+}
+
+.cms-status.draft {
+    background: #fff1dd;
+    color: #ad6300;
+}
+
+.cms-status.hidden {
+    background: #efefef;
+    color: #555;
+}
+
+
+/* ACTIONS */
+
+.cms-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.cms-action-edit,
+.cms-action-view,
+.cms-action-delete {
+    border: 0;
+
+    padding: 10px 15px;
+
+    border-radius: 999px;
+
+    text-decoration: none;
+
+    font: inherit;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.cms-action-edit,
+.cms-action-view {
+    background: #fff;
+
+    color: #111;
+
+    box-shadow:
+        0 5px 18px rgba(0,0,0,.05);
+}
+
+.cms-action-delete {
+    background: #fde8e7;
+    color: #c43e32;
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.cms-modal-overlay {
+    position: fixed;
+    inset: 0;
+
+    z-index: 99999;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(0,0,0,.55);
+}
+
+.cms-modal-overlay.show {
+    display: flex;
+}
+
+.cms-modal {
+    width: min(1100px, 95vw);
+    max-height: 94vh;
+
+    overflow-y: auto;
+
+    box-sizing: border-box;
+
+    padding: 28px;
+
+    border-radius: 30px;
+
+    background: #fff;
+
+    box-shadow:
+        0 30px 80px rgba(0,0,0,.30);
+}
+
+.cms-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 20px;
+}
+
+.cms-modal-header h2 {
+    margin: 0;
+
+    font-size: 30px;
+}
+
+.cms-modal-close {
+    width: 48px;
+    height: 48px;
+
+    border: 0;
+    border-radius: 50%;
+
+    background: #f1f1f1;
+
+    font-size: 20px;
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   FORM SECTIONS
+========================================================= */
+
+.cms-form-section {
+    margin-bottom: 18px;
+
+    padding: 20px;
+
+    border: 1px solid #eee;
+    border-radius: 20px;
+
+    background: #fff;
+}
+
+.cms-form-section h3 {
+    margin: 0 0 18px;
+
+    font-size: 20px;
+}
+
+.cms-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+}
+
+.cms-form-field {
+    margin-bottom: 14px;
+}
+
+.cms-form-field label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    font-weight: 800;
+}
+
+.cms-form-field input,
+.cms-form-field select,
+.cms-form-field textarea {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 13px;
+
+    border: 1px solid #ddd;
+    border-radius: 13px;
+
+    background: white;
+
+    font: inherit;
+}
+
+.cms-form-field input,
+.cms-form-field select {
+    min-height: 48px;
+}
+
+.cms-form-field textarea {
+    min-height: 100px;
+
+    resize: vertical;
+}
+
+
+/* =========================================================
+   IMAGE
+========================================================= */
+
+.cms-image-preview-wrap {
+    margin-top: 10px;
+}
+
+.cms-image-preview-wrap img {
+    width: 180px;
+    height: 110px;
+
+    object-fit: cover;
+
+    border-radius: 14px;
+
+    background: #eee;
+}
+
+
+/* =========================================================
+   SECTIONS DYNAMIQUES
+========================================================= */
+
+.cms-section-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    align-items: center;
+}
+
+.cms-small-orange-btn {
+    padding: 10px 15px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: #ff7900;
+    color: white;
+
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.cms-content-section {
+    margin-top: 15px;
+
+    padding: 16px;
+
+    border: 1px solid #ddd;
+    border-radius: 16px;
+
+    background: #faf8f6;
+}
+
+.cms-content-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 12px;
+}
+
+.cms-content-section-head div:first-child {
+    display: flex;
+    flex-direction: column;
+}
+
+.cms-content-section-head span {
+    color: #777;
+
+    font-size: 13px;
+}
+
+.cms-section-actions {
+    display: flex;
+
+    gap: 6px;
+}
+
+.cms-section-actions button {
+    width: 34px;
+    height: 34px;
+
+    border: 0;
+    border-radius: 9px;
+
+    background: white;
+
+    cursor: pointer;
+}
+
+.cms-section-remove {
+    color: #c33;
+}
+
+.cms-section-title,
+.cms-section-content,
+.cms-section-image {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    margin-top: 8px;
+
+    padding: 11px;
+
+    border: 1px solid #ddd;
+    border-radius: 10px;
+
+    font: inherit;
+}
+
+.cms-section-content {
+    min-height: 90px;
+
+    resize: vertical;
+}
+
+
+/* =========================================================
+   CHECKBOX
+========================================================= */
+
+.cms-checkbox-row {
+    min-height: 54px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 16px;
+
+    margin-bottom: 10px;
+
+    border-radius: 13px;
+
+    background: #faf7f4;
+}
+
+.cms-checkbox-row input {
+    width: 20px;
+    height: 20px;
+}
+
+
+/* =========================================================
+   PREVIEW
+========================================================= */
+
+.cms-preview-switch {
+    display: flex;
+    gap: 7px;
+}
+
+.cms-device-btn {
+    padding: 8px 13px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: #eee;
+
+    cursor: pointer;
+}
+
+.cms-device-btn.active {
+    background: #17120e;
+    color: white;
+}
+
+.cms-preview {
+    display: flex;
+    justify-content: center;
+
+    padding: 20px;
+
+    border-radius: 18px;
+
+    background: #eee;
+}
+
+.cms-preview-browser {
+    width: 100%;
+
+    border-radius: 15px;
+
+    background: white;
+
+    overflow: hidden;
+}
+
+.cms-preview.mobile .cms-preview-browser {
+    width: 390px;
+}
+
+.cms-preview-browser-bar {
+    display: flex;
+    gap: 5px;
+
+    padding: 10px;
+
+    background: #1a1613;
+}
+
+.cms-preview-browser-bar span {
+    width: 9px;
+    height: 9px;
+
+    border-radius: 50%;
+
+    background: #fff;
+}
+
+.cms-preview-content {
+    padding: 35px;
+}
+
+.cms-preview-content small {
+    color: #ff7900;
+
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.cms-modal-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    gap: 12px;
+}
+
+.cms-draft-btn,
+.cms-publish-btn {
+    min-height: 55px;
+
+    border: 0;
+    border-radius: 999px;
+
+    font: inherit;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.cms-draft-btn {
+    background: #eee;
+
+    color: #222;
+}
+
+.cms-publish-btn {
+    background: #ff7900;
+
+    color: white;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .cms-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .cms-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cms-filter-card {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media (max-width: 600px) {
+
+    .cms-page {
+        padding: 12px;
+    }
+
+    .cms-header {
+        flex-direction: column;
+    }
+
+    .cms-main-btn {
+        width: 100%;
+    }
+
+    .cms-header h1 {
+        font-size: 32px;
+    }
+
+    .cms-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .cms-modal {
+        padding: 18px;
+    }
+
+    .cms-form-section {
+        padding: 14px;
+    }
+
+    .cms-section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .cms-modal-footer {
+        grid-template-columns: 1fr;
+    }
+
+}
+</style>
+
+<script>
+
+let cmsSectionCounter = 1;
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+function openCmsPageModal() {
+
+    resetCmsForm();
+
+    document.getElementById('cmsModalTitle').textContent =
+        '➕ Nouvelle page';
+
+    document
+        .getElementById('cmsPageModal')
+        .classList.add('show');
+
+    document.body.style.overflow = 'hidden';
+}
+
+
+function openCmsEditModal(page) {
+
+    resetCmsForm();
+
+    document.getElementById('cmsModalTitle').textContent =
+        '✏️ Modifier la page';
+
+
+    document.getElementById('cmsPageId').value =
+        page.id || '';
+
+    document.getElementById('cmsPageTitle').value =
+        page.title || '';
+
+    document.getElementById('cmsPageSlug').value =
+        page.slug || '';
+
+    document.getElementById('cmsPageStatus').value =
+        page.status || 'Brouillon';
+
+    document.getElementById('cmsSeoTitle').value =
+        page.seoTitle || '';
+
+    document.getElementById('cmsSeoDescription').value =
+        page.seoDescription || '';
+
+    document.getElementById('cmsShowFooter').checked =
+        !!page.showFooter;
+
+
+    updateCmsPreview();
+
+
+    document
+        .getElementById('cmsPageModal')
+        .classList.add('show');
+
+    document.body.style.overflow = 'hidden';
+}
+
+
+function closeCmsPageModal() {
+
+    document
+        .getElementById('cmsPageModal')
+        .classList.remove('show');
+
+    document.body.style.overflow = '';
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+function resetCmsForm() {
+
+    document.getElementById('cmsPageForm').reset();
+
+    document.getElementById('cmsPageId').value = '';
+
+    document.getElementById('cmsHeroPreview').src =
+        '/media/icons/image-placeholder.png';
+
+    document.getElementById('cmsSectionsContainer').innerHTML = '';
+
+    cmsSectionCounter = 0;
+
+    addCmsSection();
+
+    updateCmsPreview();
+}
+
+
+/* =========================================================
+   SECTIONS
+========================================================= */
+
+function addCmsSection() {
+
+    cmsSectionCounter++;
+
+    const container =
+        document.getElementById('cmsSectionsContainer');
+
+
+    const section =
+        document.createElement('div');
+
+    section.className =
+        'cms-content-section';
+
+
+    section.innerHTML = `
+        <div class="cms-content-section-head">
+
+            <div>
+                <strong>Section ${cmsSectionCounter}</strong>
+                <span>Bloc éditorial</span>
+            </div>
+
+            <div class="cms-section-actions">
+
+                <button
+                    type="button"
+                    onclick="moveCmsSection(this,-1)">
+                    ↑
+                </button>
+
+                <button
+                    type="button"
+                    onclick="moveCmsSection(this,1)">
+                    ↓
+                </button>
+
+                <button
+                    type="button"
+                    class="cms-section-remove"
+                    onclick="removeCmsSection(this)">
+                    ×
+                </button>
+
+            </div>
+
+        </div>
+
+        <input
+            type="text"
+            class="cms-section-title"
+            placeholder="Titre de section"
+        >
+
+        <textarea
+            class="cms-section-content"
+            placeholder="Contenu de la section..."
+        ></textarea>
+
+        <input
+            type="file"
+            class="cms-section-image"
+            accept="image/png,image/jpeg,image/webp"
+        >
+    `;
+
+
+    container.appendChild(section);
+}
+
+
+function removeCmsSection(button) {
+
+    const section =
+        button.closest('.cms-content-section');
+
+    if (!section) return;
+
+    section.remove();
+
+    renumberCmsSections();
+}
+
+
+function moveCmsSection(button, direction) {
+
+    const section =
+        button.closest('.cms-content-section');
+
+    const container =
+        document.getElementById('cmsSectionsContainer');
+
+    if (!section) return;
+
+
+    if (
+        direction === -1 &&
+        section.previousElementSibling
+    ) {
+
+        container.insertBefore(
+            section,
+            section.previousElementSibling
+        );
+    }
+
+
+    if (
+        direction === 1 &&
+        section.nextElementSibling
+    ) {
+
+        container.insertBefore(
+            section.nextElementSibling,
+            section
+        );
+    }
+
+
+    renumberCmsSections();
+}
+
+
+function renumberCmsSections() {
+
+    document
+        .querySelectorAll('.cms-content-section')
+        .forEach(function(section, index) {
+
+            section
+                .querySelector('strong')
+                .textContent =
+                    'Section ' + (index + 1);
+
+        });
+
+}
+
+
+/* =========================================================
+   PREVIEW IMAGE
+========================================================= */
+
+function previewCmsImage(input) {
+
+    const file =
+        input.files &&
+        input.files[0];
+
+
+    if (!file) return;
+
+
+    if (!file.type.startsWith('image/')) {
+
+        alert(
+            'Veuillez sélectionner une image.'
+        );
+
+        input.value = '';
+
+        return;
+    }
+
+
+    const reader =
+        new FileReader();
+
+
+    reader.onload =
+        function(event) {
+
+            document.getElementById(
+                'cmsHeroPreview'
+            ).src =
+                event.target.result;
+
+        };
+
+
+    reader.readAsDataURL(file);
+}
+
+
+/* =========================================================
+   PREVIEW TEXTE
+========================================================= */
+
+function updateCmsPreview() {
+
+    const title =
+        document.getElementById(
+            'cmsHeroTitle'
+        ).value ||
+        document.getElementById(
+            'cmsPageTitle'
+        ).value ||
+        'Nouvelle page';
+
+
+    const description =
+        document.getElementById(
+            'cmsHeroSubtitle'
+        ).value ||
+        'Le contenu de votre page apparaîtra ici.';
+
+
+    document.getElementById(
+        'cmsPreviewTitle'
+    ).textContent = title;
+
+
+    document.getElementById(
+        'cmsPreviewDescription'
+    ).textContent = description;
+}
+
+
+[
+    'cmsPageTitle',
+    'cmsHeroTitle',
+    'cmsHeroSubtitle'
+]
+.forEach(function(id) {
+
+    const element =
+        document.getElementById(id);
+
+    if (!element) return;
+
+    element.addEventListener(
+        'input',
+        updateCmsPreview
+    );
+
+});
+
+
+/* =========================================================
+   DESKTOP / MOBILE
+========================================================= */
+
+function setCmsPreviewDevice(
+    device,
+    button
+) {
+
+    const preview =
+        document.getElementById(
+            'cmsPreview'
+        );
+
+
+    preview.classList.remove(
+        'desktop',
+        'mobile'
+    );
+
+    preview.classList.add(
+        device
+    );
+
+
+    document
+        .querySelectorAll(
+            '.cms-device-btn'
+        )
+        .forEach(function(btn) {
+
+            btn.classList.remove(
+                'active'
+            );
+
+        });
+
+
+    button.classList.add(
+        'active'
+    );
+}
+
+
+/* =========================================================
+   FILTRE
+========================================================= */
+
+function filterCmsPages() {
+
+    const search =
+        document.getElementById(
+            'cmsSearch'
+        ).value
+        .toLowerCase()
+        .trim();
+
+
+    const status =
+        document.getElementById(
+            'cmsStatusFilter'
+        ).value;
+
+
+    document
+        .querySelectorAll(
+            '#cmsPagesBody tr'
+        )
+        .forEach(function(row) {
+
+            const title =
+                (
+                    row.dataset.title ||
+                    ''
+                )
+                .toLowerCase();
+
+
+            const rowStatus =
+                row.dataset.status ||
+                '';
+
+
+            const matchText =
+                !search ||
+                title.includes(
+                    search
+                );
+
+
+            const matchStatus =
+                !status ||
+                rowStatus === status;
+
+
+            row.style.display =
+                matchText &&
+                matchStatus
+                    ? ''
+                    : 'none';
+
+        });
+
+}
+
+
+/* =========================================================
+   DELETE
+========================================================= */
+
+function deleteCmsPage(pageName) {
+
+    if (
+        !confirm(
+            'Supprimer la page "' +
+            pageName +
+            '" ?'
+        )
+    ) {
+        return;
+    }
+
+
+    alert(
+        'Page supprimée : ' +
+        pageName
+    );
+}
+
+
+/* =========================================================
+   DRAFT
+========================================================= */
+
+function saveCmsDraft() {
+
+    document.getElementById(
+        'cmsPageStatus'
+    ).value =
+        'Brouillon';
+
+
+    alert(
+        'Page enregistrée comme brouillon.'
+    );
+
+
+    closeCmsPageModal();
+}
+
+
+/* =========================================================
+   SUBMIT
+========================================================= */
+
+document
+    .getElementById(
+        'cmsPageForm'
+    )
+    .addEventListener(
+        'submit',
+        function(event) {
+
+            event.preventDefault();
+
+
+            const title =
+                document.getElementById(
+                    'cmsPageTitle'
+                ).value.trim();
+
+
+            const slug =
+                document.getElementById(
+                    'cmsPageSlug'
+                ).value.trim();
+
+
+            if (
+                !title ||
+                !slug
+            ) {
+
+                alert(
+                    'Veuillez renseigner le titre et l’URL.'
+                );
+
+                return;
+            }
+
+
+            alert(
+                'Page CMS enregistrée avec succès.'
+            );
+
+
+            closeCmsPageModal();
+
+        }
+    );
+
+
+/* =========================================================
+   CLIC FOND
+========================================================= */
+
+document
+    .getElementById(
+        'cmsPageModal'
+    )
+    .addEventListener(
+        'click',
+        function(event) {
+
+            if (
+                event.target === this
+            ) {
+
+                closeCmsPageModal();
+
+            }
+
+        }
+    );
+
+
+/* =========================================================
+   ESC
+========================================================= */
+
+document.addEventListener(
+    'keydown',
+    function(event) {
+
+        if (
+            event.key ===
+            'Escape'
+        ) {
+
+            closeCmsPageModal();
+
+        }
+
+    }
+);
+
+</script>

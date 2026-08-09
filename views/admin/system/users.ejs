@@ -1,10 +1,1124 @@
 <section class="admin-heading">
   <div>
-    <span class="eyebrow">Administration</span>
+    <span class="admin-badge">Administration</span>
     <h1>👨‍💼 Utilisateurs admin</h1>
   </div>
-  <button class="button primary">➕ Nouvelle opération</button>
+  <button
+      type="button"
+      class="btn-user-add"
+      onclick="openAddAdminUserModal()"
+    >
+      + Ajouter
+    </button>
 </section>
-<div class="panel">
-  <p>Page EJS stable, sans include relatif. Ajoutez progressivement le CRUD de TiopTiop Signature 2.4.4 ici.</p>
-</div>
+
+<section class="admin-users-page">
+
+
+
+  <!-- =========================
+       TABLEAU
+  ========================== -->
+  <div class="admin-users-table-card">
+
+    <div class="admin-users-row admin-users-head">
+      <div>Utilisateur</div>
+      <div>Email</div>
+      <div>Rôle</div>
+      <div>Statut</div>
+      <div>Actions</div>
+    </div>
+
+
+    <!-- UTILISATEUR 1 -->
+    <div class="admin-users-row">
+
+      <div class="admin-user-name">
+
+        <img
+          src="/media/admin/admin-default.jpg"
+          alt="Administrateur TiopTiop"
+          class="admin-user-avatar"
+          onerror="this.src='/media/icons/avatar-default.png'"
+        >
+
+        <strong>Administrateur TiopTiop</strong>
+
+      </div>
+
+      <div>
+        admin@tioptiop.cg
+      </div>
+
+      <div>
+        Super Admin
+      </div>
+
+      <div>
+        <span class="admin-user-status inactive">
+          Inactif
+        </span>
+      </div>
+
+      <div class="admin-user-actions">
+
+        <button
+          type="button"
+          class="btn-user-edit"
+          onclick="openEditAdminUserModal(
+            1,
+            'Administrateur TiopTiop',
+            'admin@tioptiop.cg',
+            '',
+            'Super Admin',
+            false,
+            '/media/admin/admin-default.jpg'
+          )"
+        >
+          ✏️ Modifier
+        </button>
+
+        <button
+          type="button"
+          class="btn-user-toggle"
+        >
+          Activer
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- UTILISATEUR 2 -->
+    <div class="admin-users-row">
+
+      <div class="admin-user-name">
+
+        <img
+          src="/media/admin/manager.jpg"
+          alt="Manager Centre-ville"
+          class="admin-user-avatar"
+          onerror="this.src='/media/icons/avatar-default.png'"
+        >
+
+        <strong>Manager Centre-ville</strong>
+
+      </div>
+
+      <div>
+        manager@tioptiop.cg
+      </div>
+
+      <div>
+        Manager restaurant
+      </div>
+
+      <div>
+        <span class="admin-user-status active">
+          Actif
+        </span>
+      </div>
+
+      <div class="admin-user-actions">
+
+        <button
+          type="button"
+          class="btn-user-edit"
+          onclick="openEditAdminUserModal(
+            2,
+            'Manager Centre-ville',
+            'manager@tioptiop.cg',
+            '0644702966',
+            'Manager restaurant',
+            true,
+            '/media/admin/manager.jpg'
+          )"
+        >
+          ✏️ Modifier
+        </button>
+
+        <button
+          type="button"
+          class="btn-user-toggle danger"
+        >
+          Désactiver
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- UTILISATEUR 3 -->
+    <div class="admin-users-row">
+
+      <div class="admin-user-name">
+
+        <img
+          src="/media/admin/support.jpg"
+          alt="Agent Support"
+          class="admin-user-avatar"
+          onerror="this.src='/media/icons/avatar-default.png'"
+        >
+
+        <strong>Agent Support</strong>
+
+      </div>
+
+      <div>
+        support@tioptiop.cg
+      </div>
+
+      <div>
+        Support
+      </div>
+
+      <div>
+        <span class="admin-user-status active">
+          Actif
+        </span>
+      </div>
+
+      <div class="admin-user-actions">
+
+        <button
+          type="button"
+          class="btn-user-edit"
+          onclick="openEditAdminUserModal(
+            3,
+            'Agent Support',
+            'support@tioptiop.cg',
+            '',
+            'Support',
+            true,
+            '/media/admin/support.jpg'
+          )"
+        >
+          ✏️ Modifier
+        </button>
+
+        <button
+          type="button"
+          class="btn-user-toggle danger"
+        >
+          Désactiver
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ======================================================
+       MODAL AJOUT
+  ======================================================= -->
+  <div
+    class="admin-user-modal-overlay"
+    id="addAdminUserModal"
+    onclick="closeAdminUserModalOutside(event, 'addAdminUserModal')"
+  >
+
+    <div class="admin-user-modal">
+
+      <div class="admin-user-modal-header">
+
+        <h2>
+          ➕ Nouvel utilisateur admin
+        </h2>
+
+        <button
+          type="button"
+          class="admin-user-modal-close"
+          onclick="closeAdminUserModal('addAdminUserModal')"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <form
+        action="/admin/users"
+        method="POST"
+        enctype="multipart/form-data"
+      >
+
+        <input
+          type="text"
+          name="name"
+          class="admin-user-input"
+          placeholder="Nom"
+          required
+        >
+
+
+        <input
+          type="email"
+          name="email"
+          class="admin-user-input"
+          placeholder="Email"
+          required
+        >
+
+
+        <input
+          type="tel"
+          name="phone"
+          class="admin-user-input"
+          placeholder="Téléphone"
+        >
+
+
+        <select
+          name="role"
+          class="admin-user-input admin-user-select"
+          required
+        >
+          <option value="Super Admin">
+            Super Admin
+          </option>
+
+          <option value="Manager restaurant">
+            Manager restaurant
+          </option>
+
+          <option value="Support">
+            Support
+          </option>
+
+          <option value="Caissier">
+            Caissier
+          </option>
+
+          <option value="Livreur">
+            Livreur
+          </option>
+        </select>
+
+
+        <!-- PHOTO -->
+        <div class="admin-photo-field">
+
+          <label>
+            📷 Photo de profil
+          </label>
+
+          <div class="admin-file-wrapper">
+
+            <input
+              type="file"
+              name="profileImage"
+              id="addAdminProfileImage"
+              accept="image/png,image/jpeg,image/jpg,image/webp"
+              onchange="previewAdminImage(this, 'addAdminPreview')"
+            >
+
+          </div>
+
+          <!-- aperçu -->
+          <div class="admin-image-preview-container">
+
+            <img
+              id="addAdminPreview"
+              class="admin-image-preview"
+              src="/media/icons/avatar-default.png"
+              alt="Aperçu"
+            >
+
+          </div>
+
+        </div>
+
+
+        <!-- ACTIF -->
+        <label class="admin-active-field">
+
+          <span>
+            Compte actif
+          </span>
+
+          <input
+            type="checkbox"
+            name="active"
+            value="1"
+            checked
+          >
+
+        </label>
+
+
+        <button
+          type="submit"
+          class="admin-user-save"
+        >
+          💾 Enregistrer l’utilisateur
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+  <!-- ======================================================
+       MODAL MODIFICATION
+  ======================================================= -->
+  <div
+    class="admin-user-modal-overlay"
+    id="editAdminUserModal"
+    onclick="closeAdminUserModalOutside(event, 'editAdminUserModal')"
+  >
+
+    <div class="admin-user-modal">
+
+      <div class="admin-user-modal-header">
+
+        <h2>
+          ✏️ Modifier utilisateur
+        </h2>
+
+        <button
+          type="button"
+          class="admin-user-modal-close"
+          onclick="closeAdminUserModal('editAdminUserModal')"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <form
+        id="editAdminUserForm"
+        method="POST"
+        enctype="multipart/form-data"
+      >
+
+        <input
+          type="hidden"
+          name="id"
+          id="editAdminId"
+        >
+
+
+        <input
+          type="text"
+          name="name"
+          id="editAdminName"
+          class="admin-user-input"
+          placeholder="Nom"
+          required
+        >
+
+
+        <input
+          type="email"
+          name="email"
+          id="editAdminEmail"
+          class="admin-user-input"
+          placeholder="Email"
+          required
+        >
+
+
+        <input
+          type="tel"
+          name="phone"
+          id="editAdminPhone"
+          class="admin-user-input"
+          placeholder="Téléphone"
+        >
+
+
+        <select
+          name="role"
+          id="editAdminRole"
+          class="admin-user-input admin-user-select"
+        >
+
+          <option value="Super Admin">
+            Super Admin
+          </option>
+
+          <option value="Manager restaurant">
+            Manager restaurant
+          </option>
+
+          <option value="Support">
+            Support
+          </option>
+
+          <option value="Caissier">
+            Caissier
+          </option>
+
+          <option value="Livreur">
+            Livreur
+          </option>
+
+        </select>
+
+
+        <!-- PHOTO -->
+        <div class="admin-photo-field">
+
+          <label>
+            📷 Photo de profil
+          </label>
+
+          <div class="admin-file-wrapper">
+
+            <input
+              type="file"
+              name="profileImage"
+              id="editAdminProfileImage"
+              accept="image/png,image/jpeg,image/jpg,image/webp"
+              onchange="previewAdminImage(this, 'editAdminPreview')"
+            >
+
+          </div>
+
+
+          <div class="admin-image-preview-container">
+
+            <img
+              id="editAdminPreview"
+              class="admin-image-preview"
+              src="/media/icons/avatar-default.png"
+              alt="Photo utilisateur"
+            >
+
+          </div>
+
+        </div>
+
+
+        <!-- ACTIF -->
+        <label class="admin-active-field">
+
+          <span>
+            Compte actif
+          </span>
+
+          <input
+            type="checkbox"
+            name="active"
+            id="editAdminActive"
+            value="1"
+          >
+
+        </label>
+
+
+        <button
+          type="submit"
+          class="admin-user-save"
+        >
+          💾 Enregistrer l’utilisateur
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+</section>
+
+<style>
+  /* =========================================================
+   UTILISATEURS ADMIN
+========================================================= */
+
+.admin-users-page {
+    padding: 20px;
+}
+
+.admin-users-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.admin-users-header h1 {
+    margin: 12px 0 0;
+    font-size: clamp(32px, 4vw, 48px);
+    font-weight: 800;
+    color: #171310;
+}
+
+.admin-badge {
+    display: inline-flex;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: #fff0df;
+    color: #ff7900;
+    font-weight: 800;
+}
+
+.btn-user-add {
+    border: 0;
+    background: #ff7900;
+    color: #fff;
+    padding: 17px 28px;
+    border-radius: 999px;
+    font-size: 17px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+
+/* TABLEAU */
+
+.admin-users-table-card {
+    background: #fff;
+    border-radius: 25px;
+    overflow: hidden;
+}
+
+.admin-users-row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr .9fr .55fr 1.5fr;
+    align-items: center;
+    min-height: 105px;
+    border-bottom: 1px solid #ddd;
+}
+
+.admin-users-row:last-child {
+    border-bottom: none;
+}
+
+.admin-users-row > div {
+    padding: 20px 25px;
+}
+
+.admin-users-head {
+    min-height: 70px;
+    background: #faf7f4;
+    font-weight: 800;
+}
+
+
+/* PHOTO TABLEAU */
+
+.admin-user-name {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.admin-user-name strong {
+    font-size: 17px;
+}
+
+.admin-user-avatar {
+    width: 50px;
+    height: 50px;
+    min-width: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #fff;
+    box-shadow: 0 3px 12px rgba(0,0,0,.12);
+}
+
+
+/* STATUT */
+
+.admin-user-status {
+    display: inline-flex;
+    padding: 9px 16px;
+    border-radius: 999px;
+    font-weight: 800;
+}
+
+.admin-user-status.active {
+    background: #e8f7ed;
+    color: #287449;
+}
+
+.admin-user-status.inactive {
+    background: #fff0df;
+    color: #9a5200;
+}
+
+
+/* ACTIONS */
+
+.admin-user-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn-user-edit,
+.btn-user-toggle {
+    border: 0;
+    padding: 14px 20px;
+    border-radius: 999px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.btn-user-edit {
+    background: #fff;
+    color: #111;
+    box-shadow: 0 5px 20px rgba(0,0,0,.05);
+}
+
+.btn-user-toggle {
+    background: #fde8e7;
+    color: #bd4036;
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.admin-user-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    padding: 25px;
+
+    background: rgba(0,0,0,.52);
+}
+
+.admin-user-modal-overlay.show {
+    display: flex;
+}
+
+.admin-user-modal {
+    width: min(1400px, 92vw);
+    max-height: 94vh;
+    overflow-y: auto;
+
+    padding: 40px;
+
+    background: #fff;
+    border-radius: 38px;
+
+    box-shadow:
+        0 30px 80px
+        rgba(0,0,0,.30);
+}
+
+.admin-user-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 30px;
+}
+
+.admin-user-modal-header h2 {
+    margin: 0;
+
+    font-size: clamp(27px, 3vw, 40px);
+    font-weight: 800;
+}
+
+.admin-user-modal-close {
+    width: 65px;
+    height: 65px;
+
+    border: 0;
+    border-radius: 50%;
+
+    background: #f2f2f2;
+
+    font-size: 25px;
+
+    cursor: pointer;
+}
+
+
+/* INPUT */
+
+.admin-user-input {
+    width: 100%;
+    min-height: 80px;
+
+    margin-bottom: 18px;
+
+    padding: 0 25px;
+
+    box-sizing: border-box;
+
+    border: 2px solid #e5e5e5;
+    border-radius: 22px;
+
+    background: #fff;
+
+    font-size: 23px;
+
+    outline: none;
+}
+
+.admin-user-input:focus {
+    border-color: #ff7900;
+}
+
+.admin-user-select {
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   PHOTO
+========================================================= */
+
+.admin-photo-field {
+    margin: 5px 0 18px;
+}
+
+.admin-photo-field > label {
+    display: block;
+    margin-bottom: 10px;
+
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.admin-file-wrapper {
+    padding: 15px;
+
+    border: 2px solid #e5e5e5;
+    border-radius: 18px;
+}
+
+.admin-file-wrapper input {
+    width: 100%;
+    font-size: 16px;
+}
+
+
+/* APERÇU PHOTO */
+
+.admin-image-preview-container {
+    margin-top: 15px;
+}
+
+.admin-image-preview {
+    width: 100px;
+    height: 100px;
+
+    display: block;
+
+    border-radius: 20px;
+
+    object-fit: cover;
+
+    border: 3px solid #fff;
+
+    box-shadow:
+        0 5px 20px
+        rgba(0,0,0,.15);
+}
+
+
+/* COMPTE ACTIF */
+
+.admin-active-field {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    min-height: 80px;
+
+    padding: 0 25px;
+    margin-bottom: 18px;
+
+    border-radius: 22px;
+
+    background: #faf7f4;
+
+    font-size: 23px;
+
+    cursor: pointer;
+}
+
+.admin-active-field input {
+    width: 24px;
+    height: 24px;
+
+    accent-color: #ff7900;
+
+    cursor: pointer;
+}
+
+
+/* BOUTON ENREGISTRER */
+
+.admin-user-save {
+    width: 100%;
+    min-height: 80px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: #ff7900;
+    color: #fff;
+
+    font-size: 24px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.admin-user-save:hover,
+.btn-user-add:hover {
+    background: #e96f00;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1000px) {
+
+    .admin-users-table-card {
+        overflow-x: auto;
+    }
+
+    .admin-users-row {
+        min-width: 1050px;
+    }
+
+    .admin-user-modal {
+        padding: 30px;
+        border-radius: 28px;
+    }
+
+}
+
+@media (max-width: 600px) {
+
+    .admin-users-page {
+        padding: 12px;
+    }
+
+    .admin-users-header {
+        flex-direction: column;
+    }
+
+    .btn-user-add {
+        width: 100%;
+    }
+
+    .admin-user-modal-overlay {
+        padding: 10px;
+    }
+
+    .admin-user-modal {
+        width: 100%;
+        padding: 22px;
+        border-radius: 25px;
+    }
+
+    .admin-user-input {
+        min-height: 60px;
+        font-size: 17px;
+        border-radius: 16px;
+    }
+
+    .admin-active-field {
+        min-height: 65px;
+        font-size: 18px;
+    }
+
+    .admin-user-save {
+        min-height: 65px;
+        font-size: 18px;
+    }
+
+    .admin-user-modal-close {
+        width: 48px;
+        height: 48px;
+    }
+
+}
+</style>
+
+<script>
+
+function openAddAdminUserModal() {
+
+    const modal = document.getElementById("addAdminUserModal");
+
+    modal.classList.add("show");
+
+    document.body.style.overflow = "hidden";
+}
+
+
+function openEditAdminUserModal(
+    id,
+    name,
+    email,
+    phone,
+    role,
+    active,
+    image
+) {
+
+    document.getElementById("editAdminId").value = id;
+
+    document.getElementById("editAdminName").value = name;
+
+    document.getElementById("editAdminEmail").value = email;
+
+    document.getElementById("editAdminPhone").value = phone || "";
+
+    document.getElementById("editAdminRole").value = role;
+
+    document.getElementById("editAdminActive").checked =
+        active === true ||
+        active === 1 ||
+        active === "1";
+
+
+    /* PHOTO ACTUELLE */
+
+    const preview =
+        document.getElementById("editAdminPreview");
+
+    if (image) {
+
+        preview.src = image;
+
+    } else {
+
+        preview.src =
+            "/media/icons/avatar-default.png";
+    }
+
+
+    /* URL FORMULAIRE */
+
+    document.getElementById(
+        "editAdminUserForm"
+    ).action =
+        "/admin/users/" + id + "/update";
+
+
+    /* AFFICHAGE */
+
+    document.getElementById(
+        "editAdminUserModal"
+    ).classList.add("show");
+
+    document.body.style.overflow = "hidden";
+}
+
+
+function closeAdminUserModal(id) {
+
+    document
+        .getElementById(id)
+        .classList.remove("show");
+
+    document.body.style.overflow = "";
+}
+
+
+function closeAdminUserModalOutside(event, id) {
+
+    if (event.target.id === id) {
+        closeAdminUserModal(id);
+    }
+}
+
+
+/* =====================================================
+   PREVIEW IMAGE AVANT UPLOAD
+===================================================== */
+
+function previewAdminImage(input, previewId) {
+
+    const preview =
+        document.getElementById(previewId);
+
+    if (!input.files || !input.files[0]) {
+        return;
+    }
+
+    const file = input.files[0];
+
+
+    /* Vérification type */
+
+    if (!file.type.startsWith("image/")) {
+
+        alert(
+            "Veuillez sélectionner une image."
+        );
+
+        input.value = "";
+
+        return;
+    }
+
+
+    /* Taille max : 5 Mo */
+
+    if (file.size > 5 * 1024 * 1024) {
+
+        alert(
+            "L'image ne doit pas dépasser 5 Mo."
+        );
+
+        input.value = "";
+
+        return;
+    }
+
+
+    const reader = new FileReader();
+
+    reader.onload = function(event) {
+
+        preview.src =
+            event.target.result;
+    };
+
+    reader.readAsDataURL(file);
+}
+
+
+/* ESC ferme les modals */
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (event.key === "Escape") {
+
+            document
+                .querySelectorAll(
+                    ".admin-user-modal-overlay.show"
+                )
+                .forEach(function(modal) {
+
+                    modal.classList.remove("show");
+
+                });
+
+            document.body.style.overflow = "";
+        }
+    }
+);
+
+</script>

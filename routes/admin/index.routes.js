@@ -42,6 +42,7 @@ router.get("/support", page.render("admin/content/support", "Support"));
 router.get("/restaurants", page.render("admin/content/restaurants", "Restaurants"));
 router.get("/pages", page.render("admin/content/pages", "Pages CMS"));
 router.get("/faq", page.render("admin/content/faq", "FAQ"));
+router.get("/conditions", page.render("admin/content/conditions", "Conditions"));
 router.get("/carrieres", page.render("admin/content/jobs", "Carrières"));
 
 router.get("/utilisateurs", page.render("admin/system/users", "Utilisateurs admin"));

@@ -56,17 +56,6 @@ io.on("connection", (socket) => {
 
 app.use(notFound);
 app.use(errorHandler);
-app.get("/test-image", (req, res) => {
-    res.sendFile(
-        path.join(
-            __dirname,
-            "public",
-            "media",
-            "products",
-            "pain-1.jpg"
-        )
-    );
-});
 
 const port = Number(process.env.PORT || 3000);
 server.listen(port, () => {

@@ -1,10 +1,614 @@
 <section class="admin-heading">
   <div>
-    <span class="eyebrow">Administration</span>
+    <span class="admin-badge">Administration</span>
     <h1>👤 Profil</h1>
   </div>
-  <button class="button primary">➕ Nouvelle opération</button>
 </section>
-<div class="panel">
-  <p>Page EJS stable, sans include relatif. Ajoutez progressivement le CRUD de TiopTiop Signature 2.4.4 ici.</p>
+
+<section class="admin-profile-page">
+
+
+    <div class="profile-layout">
+
+        <!-- ==========================================
+             PROFIL
+        =========================================== -->
+        <div class="profile-card">
+
+            <form id="profileForm">
+
+                <!-- PHOTO -->
+                <div class="profile-photo-row">
+
+                    <div class="profile-avatar" id="avatarContainer">
+                        <span id="avatarLetter">A</span>
+
+                        <img
+                            id="profilePreview"
+                            src=""
+                            alt="Photo de profil"
+                            style="display:none;"
+                        >
+                    </div>
+
+                    <div class="profile-upload">
+                        <input
+                            type="file"
+                            id="profilePhoto"
+                            name="photo"
+                            accept="image/png,image/jpeg,image/webp"
+                        >
+                    </div>
+
+                </div>
+
+                <!-- NOM -->
+                <input
+                    type="text"
+                    class="profile-input"
+                    name="name"
+                    value="Administrateur TiopTiop"
+                    placeholder="Nom"
+                >
+
+                <!-- EMAIL -->
+                <input
+                    type="email"
+                    class="profile-input"
+                    name="email"
+                    value="admin@tioptiop.cg"
+                    placeholder="Email"
+                >
+
+                <!-- TELEPHONE -->
+                <input
+                    type="tel"
+                    class="profile-input"
+                    name="phone"
+                    value="+242 06 900 00 00"
+                    placeholder="Téléphone"
+                >
+
+                <!-- ROLE -->
+                <input
+                    type="text"
+                    class="profile-input profile-role"
+                    value="Super Admin"
+                    readonly
+                >
+
+                <button type="submit" class="profile-save-btn">
+                    💾 Enregistrer
+                </button>
+
+            </form>
+
+        </div>
+
+
+        <!-- ==========================================
+             PANNEAU DROIT
+        =========================================== -->
+        <aside class="profile-side-card">
+
+            <div class="profile-side-section">
+
+                <h2>🔐 Sécurité</h2>
+
+                <p>
+                    Gérez votre mot de passe administrateur.
+                </p>
+
+                <button
+                    type="button"
+                    class="password-btn"
+                    onclick="openPasswordModal()"
+                >
+                    🔑 Modifier le mot de passe
+                </button>
+
+            </div>
+
+
+            <div class="profile-side-section notifications-section">
+
+                <h2>🔔 Notifications</h2>
+
+                <p>
+                    Alertes commandes, paiements, support,
+                    candidatures et stocks.
+                </p>
+
+            </div>
+
+        </aside>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     MODAL CHANGEMENT MOT DE PASSE
+====================================================== -->
+
+<div
+    class="profile-modal-overlay"
+    id="passwordModal"
+    onclick="closePasswordModalOutside(event)"
+>
+
+    <div class="profile-modal">
+
+        <div class="profile-modal-header">
+
+            <h2>🔑 Modifier le mot de passe</h2>
+
+            <button
+                type="button"
+                class="profile-modal-close"
+                onclick="closePasswordModal()"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="passwordForm">
+
+            <input
+                type="password"
+                class="password-input"
+                name="currentPassword"
+                placeholder="Mot de passe actuel"
+                required
+            >
+
+            <input
+                type="password"
+                class="password-input"
+                name="newPassword"
+                placeholder="Nouveau mot de passe"
+                required
+            >
+
+            <input
+                type="password"
+                class="password-input"
+                name="confirmPassword"
+                placeholder="Confirmer"
+                required
+            >
+
+            <button type="submit" class="password-save-btn">
+                Enregistrer
+            </button>
+
+        </form>
+
+    </div>
+
 </div>
+
+<style>
+  /* =========================================================
+   PROFIL ADMIN
+========================================================= */
+
+.admin-profile-page {
+    padding: 20px;
+}
+
+.profile-page-header {
+    margin-bottom: 35px;
+}
+
+.admin-badge {
+    display: inline-block;
+    padding: 9px 18px;
+    background: #fff0df;
+    color: #ff7900;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.profile-page-header h1 {
+    margin: 15px 0 0;
+    font-size: 48px;
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   LAYOUT
+========================================================= */
+
+.profile-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.85fr) minmax(350px, 1fr);
+    gap: 25px;
+}
+
+.profile-card,
+.profile-side-card {
+    background: #fff;
+    border-radius: 32px;
+    box-shadow: 0 15px 40px rgba(0,0,0,.04);
+}
+
+
+/* =========================================================
+   FORMULAIRE
+========================================================= */
+
+.profile-card {
+    padding: 30px;
+}
+
+.profile-photo-row {
+    display: grid;
+    grid-template-columns: 115px 1fr;
+    gap: 25px;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.profile-avatar {
+    width: 110px;
+    height: 110px;
+
+    border-radius: 50%;
+    overflow: hidden;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: linear-gradient(135deg, #ff8a00, #ffc23d);
+
+    font-size: 45px;
+    font-weight: 800;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-upload {
+    min-height: 72px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 20px;
+
+    border: 2px solid #e7e7e7;
+    border-radius: 18px;
+}
+
+.profile-upload input {
+    width: 100%;
+    font-size: 17px;
+}
+
+.profile-input {
+    box-sizing: border-box;
+
+    display: block;
+    width: 100%;
+    height: 72px;
+
+    margin-bottom: 15px;
+    padding: 0 20px;
+
+    border: 2px solid #e7e7e7;
+    border-radius: 18px;
+
+    background: #fff;
+
+    font-family: inherit;
+    font-size: 20px;
+
+    outline: none;
+}
+
+.profile-input:focus {
+    border-color: #ff7900;
+    box-shadow: 0 0 0 4px rgba(255,121,0,.08);
+}
+
+.profile-role {
+    color: #555;
+    background: #fff;
+}
+
+.profile-save-btn,
+.password-save-btn {
+    width: 100%;
+    min-height: 68px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: #ff7900;
+    color: #fff;
+
+    font-family: inherit;
+    font-size: 20px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.profile-save-btn:hover,
+.password-save-btn:hover {
+    background: #e96e00;
+}
+
+
+/* =========================================================
+   PANNEAU DROIT
+========================================================= */
+
+.profile-side-card {
+    padding: 50px 30px;
+}
+
+.profile-side-section {
+    margin-bottom: 45px;
+}
+
+.profile-side-section:last-child {
+    margin-bottom: 0;
+}
+
+.profile-side-section h2 {
+    margin: 0 0 30px;
+    font-size: 30px;
+    font-weight: 800;
+}
+
+.profile-side-section p {
+    margin: 0 0 28px;
+
+    color: #6e6e6e;
+
+    font-size: 20px;
+    line-height: 1.45;
+}
+
+.password-btn {
+    padding: 18px 25px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: #fff;
+
+    box-shadow: 0 8px 30px rgba(0,0,0,.06);
+
+    font-family: inherit;
+    font-size: 19px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.password-btn:hover {
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.profile-modal-overlay {
+    position: fixed;
+    inset: 0;
+
+    z-index: 9999;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    padding: 25px;
+
+    background: rgba(0,0,0,.55);
+}
+
+.profile-modal-overlay.active {
+    display: flex;
+}
+
+.profile-modal {
+    box-sizing: border-box;
+
+    width: min(1450px, 96vw);
+
+    padding: 45px;
+
+    background: #fff;
+
+    border-radius: 42px;
+
+    box-shadow: 0 30px 80px rgba(0,0,0,.25);
+}
+
+.profile-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 35px;
+}
+
+.profile-modal-header h2 {
+    margin: 0;
+
+    font-size: 40px;
+    font-weight: 800;
+}
+
+.profile-modal-close {
+    flex: 0 0 65px;
+
+    width: 65px;
+    height: 65px;
+
+    border: 0;
+    border-radius: 50%;
+
+    background: #f1f1f1;
+
+    font-size: 28px;
+
+    cursor: pointer;
+}
+
+.password-input {
+    box-sizing: border-box;
+
+    width: 100%;
+    height: 88px;
+
+    margin-bottom: 20px;
+    padding: 0 25px;
+
+    border: 2px solid #e5e5e5;
+    border-radius: 20px;
+
+    font-family: inherit;
+    font-size: 25px;
+
+    outline: none;
+}
+
+.password-input:focus {
+    border-color: #ff7900;
+}
+
+.password-save-btn {
+    min-height: 85px;
+    font-size: 25px;
+}
+
+
+/* =========================================================
+   TABLETTE
+========================================================= */
+
+@media (max-width: 1050px) {
+
+    .profile-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-side-card {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+
+    .profile-side-section {
+        margin: 0;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+
+    .admin-profile-page {
+        padding: 12px;
+    }
+
+    .profile-page-header h1 {
+        font-size: 32px;
+    }
+
+    .profile-card,
+    .profile-side-card {
+        border-radius: 22px;
+    }
+
+    .profile-card {
+        padding: 18px;
+    }
+
+    .profile-photo-row {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-avatar {
+        margin: auto;
+    }
+
+    .profile-upload {
+        min-height: 60px;
+    }
+
+    .profile-input {
+        height: 60px;
+        font-size: 16px;
+    }
+
+    .profile-side-card {
+        display: block;
+        padding: 25px 20px;
+    }
+
+    .profile-side-section {
+        margin-bottom: 35px;
+    }
+
+    .profile-side-section h2 {
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+
+    .profile-side-section p {
+        font-size: 16px;
+    }
+
+    .profile-modal {
+        padding: 25px 18px;
+        border-radius: 25px;
+    }
+
+    .profile-modal-header h2 {
+        font-size: 25px;
+    }
+
+    .profile-modal-close {
+        width: 48px;
+        height: 48px;
+        flex-basis: 48px;
+        font-size: 22px;
+    }
+
+    .password-input {
+        height: 62px;
+        font-size: 17px;
+    }
+
+    .password-save-btn {
+        min-height: 62px;
+        font-size: 18px;
+    }
+
+}
+</style>
+
+<script src="/js/admin-profile.js" defer></script>

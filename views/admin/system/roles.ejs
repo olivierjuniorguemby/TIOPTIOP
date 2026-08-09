@@ -1,10 +1,744 @@
 <section class="admin-heading">
   <div>
-    <span class="eyebrow">Administration</span>
+    <span class="admin-badge">Administration</span>
     <h1>🔐 Rôles & permissions</h1>
   </div>
-  <button class="button primary">➕ Nouvelle opération</button>
+  <button class="btn-orange" type="button" onclick="openNewRoleModal()">
+      + Nouveau rôle
+  </button>
 </section>
-<div class="panel">
-  <p>Page EJS stable, sans include relatif. Ajoutez progressivement le CRUD de TiopTiop Signature 2.4.4 ici.</p>
+
+<section class="roles-page">
+
+
+    <div class="roles-grid">
+
+        <!-- SUPER ADMIN -->
+        <article class="role-card">
+            <h2>🔐 Super Admin</h2>
+            <p class="role-count">1 permission(s) configurée(s)</p>
+
+            <div class="role-permission">
+                <span>Tout</span>
+                <span class="permission-ok">Autorisé</span>
+            </div>
+
+            <button
+                class="btn-edit-role"
+                type="button"
+                onclick='openEditRoleModal(
+                    1,
+                    "Super Admin",
+                    ["Tout"]
+                )'>
+                🖊 Modifier les permissions
+            </button>
+        </article>
+
+
+        <!-- MANAGER -->
+        <article class="role-card">
+            <h2>🔐 Manager restaurant</h2>
+            <p class="role-count">4 permission(s) configurée(s)</p>
+
+            <div class="role-permission">
+                <span>Commandes</span>
+                <span class="permission-ok">Autorisé</span>
+            </div>
+
+            <div class="role-permission">
+                <span>Produits</span>
+                <span class="permission-ok">Autorisé</span>
+            </div>
+
+            <div class="role-permission">
+                <span>Caisse</span>
+                <span class="permission-ok">Autorisé</span>
+            </div>
+
+            <div class="role-permission">
+                <span>Clients</span>
+                <span class="permission-ok">Autorisé</span>
+            </div>
+
+            <button
+                class="btn-edit-role"
+                type="button"
+                onclick='openEditRoleModal(
+                    2,
+                    "Manager restaurant",
+                    ["Commandes","Produits","Clients","POS"]
+                )'>
+                🖊 Modifier les permissions
+            </button>
+        </article>
+
+
+        <!-- SUPPORT -->
+        <article class="role-card">
+            <h2>🔐 Support</h2>
+            <p class="role-count">2 permission(s) configurée(s)</p>
+
+            <div class="role-permission">
+                <span>Support</span>
+                <span class="permission-ok">Autorisé</span>
+            </div>
+
+            <div class="role-permission">
+                <span>Commandes - lecture</span>
+                <span class="permission-ok">Autorisé</span>
+            </div>
+
+            <button
+                class="btn-edit-role"
+                type="button"
+                onclick='openEditRoleModal(
+                    3,
+                    "Support",
+                    ["Support","Commandes"]
+                )'>
+                🖊 Modifier les permissions
+            </button>
+        </article>
+
+
+        <!-- MARKETING -->
+        <article class="role-card">
+            <h2>🔐 Marketing</h2>
+            <p class="role-count">3 permission(s) configurée(s)</p>
+
+            <div class="role-permission">
+                <span>Promotions</span>
+                <span class="permission-ok">Autorisé</span>
+            </div>
+
+            <div class="role-permission">
+                <span>Tiop+</span>
+                <span class="permission-ok">Autorisé</span>
+            </div>
+
+            <div class="role-permission">
+                <span>Contenu</span>
+                <span class="permission-ok">Autorisé</span>
+            </div>
+
+            <button
+                class="btn-edit-role"
+                type="button"
+                onclick='openEditRoleModal(
+                    4,
+                    "Marketing",
+                    ["Promotions","Tiop+","Pages / CMS"]
+                )'>
+                🖊 Modifier les permissions
+            </button>
+        </article>
+
+    </div>
+</section>
+
+
+<!-- =====================================================
+     MODAL ROLE
+===================================================== -->
+
+<div class="role-modal-overlay" id="roleModal">
+
+    <div class="role-modal">
+
+        <div class="role-modal-header">
+            <h2 id="roleModalTitle">
+                🔐 Modifier le rôle
+            </h2>
+
+            <button
+                type="button"
+                class="role-modal-close"
+                onclick="closeRoleModal()">
+                ×
+            </button>
+        </div>
+
+        <form id="roleForm" method="POST">
+
+            <input type="hidden" name="roleId" id="roleId">
+
+            <input
+                type="text"
+                name="roleName"
+                id="roleName"
+                class="role-name-input"
+                placeholder="Nom du rôle"
+                required
+            >
+
+            <label class="permission-choice permission-all">
+                <input
+                    type="checkbox"
+                    id="permissionAll"
+                    name="permissions[]"
+                    value="Tout"
+                    onchange="toggleAllPermissions(this)"
+                >
+                <span><strong>Tout — accès complet</strong></span>
+            </label>
+
+            <div class="permissions-grid">
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="Dashboard">
+                    <span>Dashboard</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="Commandes">
+                    <span>Commandes</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="POS">
+                    <span>POS</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="Livraisons">
+                    <span>Livraisons</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="Paiements">
+                    <span>Paiements</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="Produits">
+                    <span>Produits</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="Catégories">
+                    <span>Catégories</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="Formules">
+                    <span>Formules</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="Promotions">
+                    <span>Promotions</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="Tiop+">
+                    <span>Tiop+</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="Clients">
+                    <span>Clients</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="Support">
+                    <span>Support</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="Restaurants">
+                    <span>Restaurants</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="FAQ">
+                    <span>FAQ</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="Carrières">
+                    <span>Carrières</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="Candidatures">
+                    <span>Candidatures</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="Pages / CMS">
+                    <span>Pages / CMS</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="Utilisateurs admin">
+                    <span>Utilisateurs admin</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="Rôles & permissions">
+                    <span>Rôles & permissions</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="Paramètres">
+                    <span>Paramètres</span>
+                </label>
+
+                <label class="permission-choice">
+                    <input type="checkbox" name="permissions[]" value="Journaux">
+                    <span>Journaux</span>
+                </label>
+
+            </div>
+
+            <button class="role-save-btn" type="submit">
+                💾 Enregistrer le rôle
+            </button>
+
+        </form>
+
+    </div>
+
 </div>
+
+<style>
+  /* =====================================================
+   ROLES & PERMISSIONS
+===================================================== */
+
+.roles-page {
+    padding: 15px;
+}
+
+.roles-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.roles-top h1 {
+    margin: 10px 0 0;
+    font-size: 38px;
+    font-weight: 800;
+}
+
+.admin-badge {
+    display: inline-flex;
+    padding: 7px 13px;
+    border-radius: 999px;
+    background: #fff0df;
+    color: #ff7900;
+    font-weight: 800;
+    font-size: 13px;
+}
+
+.btn-orange {
+    border: 0;
+    background: #ff7900;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+
+/* CARTES */
+
+.roles-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+}
+
+.role-card {
+    background: #fff;
+    border-radius: 25px;
+    padding: 28px;
+    min-height: 300px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.03);
+}
+
+.role-card h2 {
+    margin: 0 0 20px;
+    font-size: 25px;
+}
+
+.role-count {
+    color: #777;
+    margin-bottom: 18px;
+}
+
+.role-permission {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 43px;
+    border-bottom: 1px dotted #ddd;
+}
+
+.permission-ok {
+    background: #e8f7ed;
+    color: #257444;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.btn-edit-role {
+    border: 0;
+    margin-top: 15px;
+    padding: 13px 18px;
+    border-radius: 999px;
+    background: #fff;
+    font-weight: 800;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 6px 22px rgba(0,0,0,.06);
+}
+
+
+/* =====================================================
+   MODAL
+===================================================== */
+
+.role-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(0,0,0,.52);
+}
+
+.role-modal-overlay.show {
+    display: flex;
+}
+
+.role-modal {
+    width: min(1015px, 92vw);
+    max-height: 94vh;
+    overflow-y: auto;
+
+    background: white;
+    padding: 30px;
+
+    border-radius: 32px;
+
+    box-shadow: 0 30px 80px rgba(0,0,0,.30);
+}
+
+.role-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px;
+}
+
+.role-modal-header h2 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 800;
+}
+
+.role-modal-close {
+    width: 50px;
+    height: 50px;
+    border: 0;
+    border-radius: 50%;
+    background: #f1f1f1;
+    font-size: 21px;
+    cursor: pointer;
+}
+
+
+/* NOM ROLE */
+
+.role-name-input {
+    display: block;
+    box-sizing: border-box;
+
+    width: 100%;
+    height: 60px;
+
+    padding: 0 17px;
+    margin-bottom: 14px;
+
+    border: 1px solid #ddd;
+    border-radius: 16px;
+
+    outline: none;
+    font-size: 20px;
+}
+
+.role-name-input:focus {
+    border-color: #ff7900;
+}
+
+
+/* =====================================================
+   PERMISSIONS
+===================================================== */
+
+.permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 11px;
+}
+
+.permission-choice {
+    min-height: 58px;
+
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    padding: 0 20px;
+
+    background: #faf7f4;
+
+    border: 1px solid #ded8d3;
+    border-radius: 18px;
+
+    cursor: pointer;
+
+    transition: .15s ease;
+}
+
+.permission-choice:hover {
+    border-color: #ff7900;
+}
+
+.permission-choice input {
+    width: 17px;
+    height: 17px;
+    cursor: pointer;
+    accent-color: #147bf3;
+}
+
+.permission-choice span {
+    font-size: 19px;
+}
+
+
+/* BOUTON */
+
+.role-save-btn {
+    width: 100%;
+    height: 58px;
+
+    margin-top: 15px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: #ff7900;
+    color: #fff;
+
+    font-size: 17px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.role-save-btn:hover,
+.btn-orange:hover {
+    background: #e96f00;
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 800px) {
+
+    .roles-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .permissions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .roles-top {
+        flex-direction: column;
+    }
+
+    .btn-orange {
+        width: 100%;
+    }
+
+}
+
+@media (max-width: 500px) {
+
+    .role-modal {
+        padding: 20px;
+        border-radius: 23px;
+    }
+
+    .role-modal-header h2 {
+        font-size: 24px;
+    }
+
+    .permission-choice span {
+        font-size: 16px;
+    }
+
+}
+</style>
+
+<script>
+
+const roleModal = document.getElementById("roleModal");
+const roleForm = document.getElementById("roleForm");
+
+function resetRolePermissions() {
+
+    document
+        .querySelectorAll(
+            '#roleForm input[name="permissions[]"]'
+        )
+        .forEach(function(input) {
+            input.checked = false;
+        });
+}
+
+
+/* =====================================================
+   NOUVEAU ROLE
+===================================================== */
+
+function openNewRoleModal() {
+
+    resetRolePermissions();
+
+    document.getElementById("roleModalTitle").textContent =
+        "🔐 Nouveau rôle";
+
+    document.getElementById("roleId").value = "";
+
+    document.getElementById("roleName").value = "";
+
+    /*
+       Quand votre backend sera branché :
+       POST /admin/roles
+    */
+    roleForm.action = "/admin/roles";
+
+    roleModal.classList.add("show");
+
+    document.body.style.overflow = "hidden";
+}
+
+
+/* =====================================================
+   MODIFIER ROLE
+===================================================== */
+
+function openEditRoleModal(id, name, permissions) {
+
+    resetRolePermissions();
+
+    document.getElementById("roleModalTitle").textContent =
+        "🔐 Modifier le rôle";
+
+    document.getElementById("roleId").value = id;
+
+    document.getElementById("roleName").value = name;
+
+
+    /*
+       Cocher les permissions du rôle
+    */
+
+    document
+        .querySelectorAll(
+            '#roleForm input[name="permissions[]"]'
+        )
+        .forEach(function(input) {
+
+            if (permissions.includes(input.value)) {
+                input.checked = true;
+            }
+
+        });
+
+
+    /*
+       Route Express
+    */
+
+    roleForm.action =
+        "/admin/roles/" + id + "/update";
+
+
+    roleModal.classList.add("show");
+
+    document.body.style.overflow = "hidden";
+}
+
+
+/* =====================================================
+   FERMETURE
+===================================================== */
+
+function closeRoleModal() {
+
+    roleModal.classList.remove("show");
+
+    document.body.style.overflow = "";
+}
+
+
+/* CLIC SUR FOND GRIS */
+
+roleModal.addEventListener("click", function(event) {
+
+    if (event.target === roleModal) {
+        closeRoleModal();
+    }
+
+});
+
+
+/* TOUCHE ESC */
+
+document.addEventListener("keydown", function(event) {
+
+    if (
+        event.key === "Escape" &&
+        roleModal.classList.contains("show")
+    ) {
+
+        closeRoleModal();
+
+    }
+
+});
+
+function toggleAllPermissions(master) {
+
+    document
+        .querySelectorAll(
+            '#roleForm input[name="permissions[]"]'
+        )
+        .forEach(function(input) {
+
+            if (input !== master) {
+                input.checked = master.checked;
+            }
+
+        });
+}
+
+</script>
