@@ -678,7 +678,7 @@
 
 
 /* =========================================================
-   MODAL
+   MODAL - VERSION COMPACTE
 ========================================================= */
 
 .admin-user-modal-overlay {
@@ -690,7 +690,7 @@
     align-items: center;
     justify-content: center;
 
-    padding: 25px;
+    padding: 20px;
 
     background: rgba(0,0,0,.52);
 }
@@ -700,74 +700,96 @@
 }
 
 .admin-user-modal {
-    width: min(1400px, 92vw);
-    max-height: 94vh;
+    box-sizing: border-box;
+
+    width: min(780px, 90vw);
+    max-height: 90vh;
     overflow-y: auto;
 
-    padding: 40px;
+    padding: 28px 30px 30px;
 
     background: #fff;
-    border-radius: 38px;
+    border-radius: 26px;
 
-    box-shadow:
-        0 30px 80px
-        rgba(0,0,0,.30);
+    box-shadow: 0 25px 65px rgba(0,0,0,.28);
 }
+
+
+/* HEADER */
 
 .admin-user-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
 
-    margin-bottom: 30px;
+    gap: 15px;
+
+    margin-bottom: 22px;
 }
 
 .admin-user-modal-header h2 {
     margin: 0;
 
-    font-size: clamp(27px, 3vw, 40px);
+    font-size: 28px;
+    line-height: 1.2;
     font-weight: 800;
 }
 
 .admin-user-modal-close {
-    width: 65px;
-    height: 65px;
+    flex: 0 0 45px;
+
+    width: 45px;
+    height: 45px;
+
+    padding: 0;
 
     border: 0;
     border-radius: 50%;
 
     background: #f2f2f2;
 
-    font-size: 25px;
+    font-size: 20px;
+    line-height: 1;
 
     cursor: pointer;
 }
 
+.admin-user-modal-close:hover {
+    background: #e8e8e8;
+}
 
-/* INPUT */
+
+/* =========================================================
+   INPUT
+========================================================= */
 
 .admin-user-input {
-    width: 100%;
-    min-height: 80px;
-
-    margin-bottom: 18px;
-
-    padding: 0 25px;
-
     box-sizing: border-box;
 
-    border: 2px solid #e5e5e5;
-    border-radius: 22px;
+    display: block;
+
+    width: 100%;
+    min-height: 54px;
+    height: 54px;
+
+    margin-bottom: 12px;
+    padding: 0 17px;
+
+    border: 1px solid #e2e2e2;
+    border-radius: 14px;
 
     background: #fff;
 
-    font-size: 23px;
+    font-family: inherit;
+    font-size: 17px;
 
     outline: none;
 }
 
 .admin-user-input:focus {
     border-color: #ff7900;
+
+    box-shadow: 0 0 0 3px rgba(255,121,0,.08);
 }
 
 .admin-user-select {
@@ -780,78 +802,90 @@
 ========================================================= */
 
 .admin-photo-field {
-    margin: 5px 0 18px;
+    margin: 4px 0 12px;
 }
 
 .admin-photo-field > label {
     display: block;
-    margin-bottom: 10px;
 
-    font-size: 18px;
+    margin-bottom: 6px;
+
+    font-size: 15px;
     font-weight: 800;
 }
 
 .admin-file-wrapper {
-    padding: 15px;
+    min-height: 48px;
 
-    border: 2px solid #e5e5e5;
-    border-radius: 18px;
+    display: flex;
+    align-items: center;
+
+    box-sizing: border-box;
+
+    padding: 8px 12px;
+
+    border: 1px solid #e2e2e2;
+    border-radius: 14px;
 }
 
 .admin-file-wrapper input {
     width: 100%;
-    font-size: 16px;
+
+    font-family: inherit;
+    font-size: 14px;
 }
 
 
 /* APERÇU PHOTO */
 
 .admin-image-preview-container {
-    margin-top: 15px;
+    margin-top: 8px;
 }
 
 .admin-image-preview {
-    width: 100px;
-    height: 100px;
+    width: 65px;
+    height: 65px;
 
     display: block;
 
-    border-radius: 20px;
+    border-radius: 14px;
 
     object-fit: cover;
 
-    border: 3px solid #fff;
+    border: 2px solid #fff;
 
-    box-shadow:
-        0 5px 20px
-        rgba(0,0,0,.15);
+    box-shadow: 0 4px 15px rgba(0,0,0,.12);
 }
 
 
-/* COMPTE ACTIF */
+/* =========================================================
+   COMPTE ACTIF
+========================================================= */
 
 .admin-active-field {
     display: flex;
     justify-content: space-between;
     align-items: center;
 
-    min-height: 80px;
+    min-height: 52px;
 
-    padding: 0 25px;
-    margin-bottom: 18px;
+    padding: 0 17px;
+    margin-bottom: 12px;
 
-    border-radius: 22px;
+    box-sizing: border-box;
+
+    border-radius: 14px;
 
     background: #faf7f4;
 
-    font-size: 23px;
+    font-size: 17px;
 
     cursor: pointer;
 }
 
 .admin-active-field input {
-    width: 24px;
-    height: 24px;
+    width: 19px;
+    height: 19px;
 
     accent-color: #ff7900;
 
@@ -859,11 +893,13 @@
 }
 
 
-/* BOUTON ENREGISTRER */
+/* =========================================================
+   BOUTON ENREGISTRER
+========================================================= */
 
 .admin-user-save {
     width: 100%;
-    min-height: 80px;
+    min-height: 52px;
 
     border: 0;
     border-radius: 999px;
@@ -871,7 +907,8 @@
     background: #ff7900;
     color: #fff;
 
-    font-size: 24px;
+    font-family: inherit;
+    font-size: 17px;
     font-weight: 800;
 
     cursor: pointer;

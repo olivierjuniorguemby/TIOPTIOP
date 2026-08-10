@@ -179,43 +179,56 @@
 </section>
 
 <style>
-  /* =========================================================
+    /* =========================================================
    JOURNAUX / HISTORIQUE
+   VERSION COMPACTE - proche du premier rendu
 ========================================================= */
 
 .logs-page {
-    padding: 20px;
+    padding: 18px 20px 20px;
 }
 
-.logs-header {
-    margin-bottom: 35px;
+
+/* =========================================================
+   TITRE
+========================================================= */
+
+.admin-heading {
+    margin: 0 0 22px;
+    padding: 0 20px;
 }
 
 .admin-badge {
     display: inline-flex;
     align-items: center;
 
-    padding: 8px 16px;
+    padding: 7px 14px;
+
+    margin-bottom: 10px;
 
     background: #fff0df;
     color: #ff7900;
 
     border-radius: 999px;
 
-    font-size: 14px;
+    font-size: 13px;
+    line-height: 1;
     font-weight: 800;
 }
 
-.logs-header h1 {
+.admin-heading h1 {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
 
-    margin: 15px 0 0;
+    margin: 0;
 
-    font-size: 48px;
+    color: #111;
+
+    font-size: 38px;
     line-height: 1.1;
     font-weight: 800;
+    letter-spacing: -0.5px;
 }
 
 
@@ -224,13 +237,16 @@
 ========================================================= */
 
 .logs-panel {
+    width: 100%;
+    box-sizing: border-box;
+
     background: #fff;
 
-    border-radius: 32px;
+    border-radius: 24px;
 
-    padding: 48px 30px 28px;
+    padding: 32px 30px 22px;
 
-    box-shadow: 0 15px 45px rgba(0, 0, 0, .04);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, .035);
 }
 
 
@@ -242,61 +258,72 @@
     display: grid;
 
     grid-template-columns:
-        minmax(300px, 1fr)
-        minmax(300px, 1fr)
+        minmax(260px, 1fr)
+        minmax(260px, 1fr)
         auto;
 
     align-items: center;
 
-    gap: 15px;
+    gap: 12px;
 
-    margin: 0 20px 55px;
+    margin: 0 20px 42px;
 }
+
 
 .logs-search,
 .logs-user-select {
     box-sizing: border-box;
 
     width: 100%;
-    height: 74px;
+    height: 52px;
 
-    padding: 0 20px;
+    padding: 0 16px;
 
-    border: 2px solid #e5e5e5;
-
-    border-radius: 20px;
+    border: 1px solid #dedede;
+    border-radius: 14px;
 
     background: #fff;
+    color: #111;
 
     outline: none;
 
     font-family: inherit;
-    font-size: 23px;
+    font-size: 17px;
+    font-weight: 400;
 
     transition:
         border-color .15s ease,
         box-shadow .15s ease;
 }
 
+
 .logs-search::placeholder {
-    color: #8b8b8b;
+    color: #858585;
 }
+
 
 .logs-search:focus,
 .logs-user-select:focus {
     border-color: #ff7900;
 
-    box-shadow: 0 0 0 4px rgba(255, 121, 0, .08);
+    box-shadow:
+        0 0 0 3px rgba(255, 121, 0, .08);
 }
+
 
 .logs-user-select {
     cursor: pointer;
 }
 
-.logs-filter-btn {
-    height: 74px;
 
-    padding: 0 28px;
+/* =========================================================
+   BOUTON FILTRER
+========================================================= */
+
+.logs-filter-btn {
+    height: 52px;
+
+    padding: 0 22px;
 
     border: none;
     border-radius: 999px;
@@ -306,19 +333,23 @@
 
     font-family: inherit;
 
-    font-size: 22px;
+    font-size: 16px;
     font-weight: 800;
 
     cursor: pointer;
+
+    white-space: nowrap;
 
     transition:
         background .15s ease,
         transform .15s ease;
 }
 
+
 .logs-filter-btn:hover {
     background: #eb7000;
 }
+
 
 .logs-filter-btn:active {
     transform: scale(.97);
@@ -333,38 +364,45 @@
     width: 100%;
 }
 
+
 .log-item {
-    padding: 0 0 20px;
+    padding: 0 0 14px;
 
-    margin-bottom: 22px;
+    margin-bottom: 14px;
 
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #e2e2e2;
 }
+
 
 .log-item:last-child {
     margin-bottom: 0;
 }
 
+
 .log-title {
-    margin-bottom: 4px;
+    margin-bottom: 3px;
 
     color: #111;
 
-    font-size: 20px;
+    font-size: 15px;
+    line-height: 1.35;
     font-weight: 800;
 }
+
 
 .log-meta {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
 
-    gap: 10px;
+    gap: 8px;
 
-    color: #6f6f6f;
+    color: #747474;
 
-    font-size: 18px;
+    font-size: 14px;
+    line-height: 1.4;
 }
+
 
 .log-user {
     display: inline-flex;
@@ -373,7 +411,7 @@
 
 
 /* =========================================================
-   VIDE
+   ÉTAT VIDE
 ========================================================= */
 
 .logs-empty {
@@ -382,31 +420,34 @@
     align-items: center;
     justify-content: center;
 
-    min-height: 250px;
+    min-height: 200px;
 
-    padding: 30px;
+    padding: 25px;
 
     text-align: center;
 
     color: #777;
 }
 
-.logs-empty-icon {
-    margin-bottom: 15px;
 
-    font-size: 45px;
+.logs-empty-icon {
+    margin-bottom: 12px;
+
+    font-size: 36px;
 }
 
+
 .logs-empty strong {
-    margin-bottom: 7px;
+    margin-bottom: 6px;
 
     color: #222;
 
-    font-size: 21px;
+    font-size: 17px;
 }
 
+
 .logs-empty span {
-    font-size: 16px;
+    font-size: 14px;
 }
 
 
@@ -418,12 +459,15 @@
 
     .logs-filters {
         grid-template-columns: 1fr 1fr;
+
+        margin-left: 0;
+        margin-right: 0;
     }
 
     .logs-filter-btn {
         grid-column: 1 / -1;
 
-        width: 180px;
+        width: 140px;
 
         justify-self: end;
     }
@@ -438,60 +482,104 @@
 @media (max-width: 700px) {
 
     .logs-page {
-        padding: 12px;
+        padding: 10px 12px 18px;
     }
 
-    .logs-header {
-        margin-bottom: 25px;
+
+    .admin-heading {
+        padding: 0 12px;
+        margin-bottom: 18px;
     }
 
-    .logs-header h1 {
-        font-size: 30px;
+
+    .admin-badge {
+        padding: 6px 11px;
+
+        margin-bottom: 10px;
+
+        font-size: 11px;
     }
+
+
+    .admin-heading h1 {
+        gap: 8px;
+
+        font-size: 27px;
+    }
+
 
     .logs-panel {
-        padding: 22px 16px;
+        padding: 20px 16px;
 
-        border-radius: 22px;
+        border-radius: 20px;
     }
+
 
     .logs-filters {
         grid-template-columns: 1fr;
 
-        gap: 12px;
+        gap: 10px;
 
-        margin: 0 0 35px;
+        margin: 0 0 28px;
     }
+
 
     .logs-search,
     .logs-user-select,
     .logs-filter-btn {
         width: 100%;
-        height: 58px;
+        height: 48px;
 
-        font-size: 16px;
+        font-size: 15px;
     }
+
 
     .logs-filter-btn {
         grid-column: auto;
+
+        justify-self: stretch;
     }
+
 
     .log-item {
-        padding-bottom: 17px;
-        margin-bottom: 17px;
+        padding-bottom: 13px;
+        margin-bottom: 13px;
     }
 
+
     .log-title {
-        font-size: 17px;
+        font-size: 15px;
     }
+
+
+    .log-meta {
+        gap: 4px 8px;
+
+        font-size: 13px;
+    }
+
+}
+
+
+/* =========================================================
+   TRÈS PETIT MOBILE
+========================================================= */
+
+@media (max-width: 430px) {
+
+    .admin-heading h1 {
+        font-size: 24px;
+    }
+
+
+    .logs-panel {
+        padding: 16px 13px;
+    }
+
 
     .log-meta {
         flex-direction: column;
         align-items: flex-start;
-
-        gap: 4px;
-
-        font-size: 15px;
     }
 
 }

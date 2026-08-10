@@ -799,3 +799,14 @@
 
 });
 </script>
+
+<script>
+    console.log({
+    largeur: window.innerWidth,
+    media1024: matchMedia("(max-width: 1024px)").matches,
+    media1400: matchMedia("(max-width: 1400px)").matches,
+    nav: getComputedStyle(document.querySelector(".admin-header-nav")).display,
+    hamburger: getComputedStyle(document.querySelector(".admin-mobile-menu-btn")).display,
+    sidebar: getComputedStyle(document.querySelector(".admin-sidebar")).transform
+});
+</script>

@@ -1,1 +1,794 @@
-.admin-body{background:#f4f0ec}.admin-shell{display:grid;grid-template-columns:260px 1fr;min-height:100vh}.admin-sidebar{background:#1d1815;color:#fff;padding:22px 14px;overflow-y:auto;height:100vh;position:sticky;top:0}.admin-sidebar h3{font-size:10px;letter-spacing:1.3px;color:#9c9188;margin:24px 12px 8px}.admin-sidebar>a:not(.brand){display:block;padding:10px 12px;border-radius:11px;font-size:13px;font-weight:800}.admin-sidebar>a:not(.brand):hover{background:#332b26}.admin-content{min-width:0}.admin-header{height:70px;background:#fff;padding:0 24px;border-bottom:1px solid var(--line)}.admin-header small{display:block;color:var(--muted)}.admin-header-actions{display:flex;gap:10px;align-items:center}.admin-main{padding:26px}.admin-heading{margin-bottom:20px}.admin-heading h1{font-size:36px;margin:8px 0}.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.kpi{padding:19px}.kpi strong{display:block;font-size:29px;margin-top:8px}.data-row{padding:12px 0;border-bottom:1px solid var(--line)}.admin-login{max-width:520px;margin:80px auto}@media(max-width:900px){.admin-shell{grid-template-columns:1fr}.admin-sidebar{position:relative;height:auto}.kpi-grid{grid-template-columns:1fr 1fr}}@media(max-width:560px){.kpi-grid{grid-template-columns:1fr}.admin-main{padding:15px}}
+/* =========================================================
+   ADMIN
+========================================================= */
+
+.admin-body {
+    margin: 0;
+    background: #f7f3ef;
+}
+
+
+/* =========================================================
+   STRUCTURE
+========================================================= */
+
+.admin-shell {
+    display: grid;
+    grid-template-columns: 270px minmax(0, 1fr);
+    min-height: 100vh;
+}
+
+.admin-content {
+    min-width: 0;
+}
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.admin-sidebar {
+    position: sticky;
+    top: 0;
+
+    height: 100vh;
+    box-sizing: border-box;
+
+    padding: 22px 16px 30px;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    background: linear-gradient(
+        180deg,
+        #1d1815 0%,
+        #171310 100%
+    );
+
+    color: #fff;
+
+    border-right: 1px solid rgba(255,255,255,.05);
+}
+
+.admin-sidebar::-webkit-scrollbar {
+    width: 5px;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb {
+    background: #493d35;
+    border-radius: 999px;
+}
+
+
+/* =========================================================
+   LOGO SIDEBAR
+========================================================= */
+
+.admin-sidebar .brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    padding: 5px 10px 22px;
+    margin-bottom: 12px;
+
+    text-decoration: none;
+
+    border-bottom: 1px solid rgba(255,255,255,.09);
+}
+
+.admin-sidebar .brand img {
+    display: block;
+
+    width: 82px;
+    height: 82px;
+
+    object-fit: contain;
+
+    margin-bottom: 6px;
+}
+
+.admin-sidebar .brand strong {
+    display: block;
+
+    color: #fff;
+
+    font-size: 23px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.admin-sidebar .brand small {
+    display: block;
+
+    margin-top: 7px;
+
+    color: #b8ada6;
+
+    font-size: 9px;
+    font-weight: 700;
+
+    text-transform: uppercase;
+    letter-spacing: 1.3px;
+}
+
+
+/* =========================================================
+   TITRES SIDEBAR
+========================================================= */
+
+.admin-sidebar h3 {
+    margin: 25px 10px 8px;
+
+    color: #958980;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+}
+
+
+/* =========================================================
+   LIENS SIDEBAR
+========================================================= */
+
+.admin-sidebar > a:not(.brand) {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    min-height: 42px;
+    box-sizing: border-box;
+
+    margin: 3px 0;
+    padding: 10px 12px;
+
+    border-radius: 12px;
+
+    color: #e9e2de;
+
+    text-decoration: none;
+
+    font-size: 13px;
+    font-weight: 750;
+
+    transition:
+        background .18s ease,
+        color .18s ease,
+        transform .18s ease;
+}
+
+.admin-sidebar > a:not(.brand):hover {
+    background: rgba(255,121,0,.12);
+
+    color: #fff;
+
+    transform: translateX(3px);
+}
+
+.admin-sidebar > a:not(.brand):hover::before {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    top: 9px;
+    bottom: 9px;
+
+    width: 3px;
+
+    border-radius: 999px;
+
+    background: #ff7900;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.admin-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
+    height: 70px;
+
+    box-sizing: border-box;
+
+    padding: 0 24px;
+
+    background: #1d1815;
+
+    border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+
+/* votre DIV déjà existante */
+
+.admin-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    width: 100%;
+    height: 100%;
+
+    gap: 22px;
+
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   NAVIGATION HEADER
+========================================================= */
+
+.admin-header-nav {
+    display: flex;
+    align-items: center;
+
+    gap: 22px;
+
+    margin-left: auto;
+}
+
+.admin-header-nav a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #fff;
+
+    text-decoration: none;
+
+    font-size: 13px;
+    font-weight: 800;
+
+    white-space: nowrap;
+
+    transition:
+        color .18s ease,
+        opacity .18s ease;
+}
+
+.admin-header-nav a:hover {
+    color: #ff7900;
+}
+
+
+/* =========================================================
+   PROFIL HEADER
+========================================================= */
+
+.admin-header-profile {
+    display: flex;
+    align-items: center;
+
+    flex-shrink: 0;
+
+    gap: 9px;
+
+    padding: 5px 13px 5px 5px;
+
+    border-radius: 999px;
+
+    background: #332a25;
+
+    color: #fff;
+
+    text-decoration: none;
+}
+
+.admin-header-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 42px;
+    height: 42px;
+
+    flex-shrink: 0;
+
+    overflow: hidden;
+
+    border-radius: 50%;
+
+    border: 2px solid #ff7900;
+}
+
+.admin-header-avatar-img {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+.admin-header-name {
+    color: #fff;
+
+    font-size: 13px;
+    font-weight: 800;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   HAMBURGER
+   CACHÉ SUR ORDINATEUR
+========================================================= */
+
+.admin-mobile-menu-btn {
+    display: none;
+
+    border: 0;
+
+    cursor: pointer;
+
+    font-family: inherit;
+}
+
+
+/* =========================================================
+   CONTENU
+========================================================= */
+
+.admin-main {
+    padding: 26px;
+}
+
+.admin-heading {
+    margin-bottom: 20px;
+}
+
+.admin-heading h1 {
+    margin: 8px 0;
+
+    font-size: 36px;
+}
+
+
+/* =========================================================
+   KPI
+========================================================= */
+
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    gap: 14px;
+
+    margin-bottom: 18px;
+}
+
+.kpi {
+    min-width: 0;
+
+    padding: 19px;
+}
+
+.kpi strong {
+    display: block;
+
+    margin-top: 8px;
+
+    font-size: 29px;
+}
+
+.data-row {
+    padding: 12px 0;
+
+    border-bottom: 1px solid var(--line);
+}
+
+.admin-login {
+    max-width: 520px;
+
+    margin: 80px auto;
+}
+
+
+/* =========================================================
+   TABLETTE
+========================================================= */
+
+/* =========================================================
+   RESPONSIVE ADMIN
+   TABLETTE + IPAD PRO + MOBILE
+========================================================= */
+
+@media screen and (max-width: 1400px) {
+
+    .admin-shell {
+        display: block;
+        width: 100%;
+    }
+
+    .admin-content {
+        width: 100%;
+        min-width: 0;
+    }
+
+    /* SIDEBAR */
+
+    .admin-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+
+        z-index: 3000;
+
+        width: 270px;
+        max-width: 85vw;
+
+        height: 100vh;
+        height: 100dvh;
+
+        overflow-x: hidden;
+        overflow-y: auto;
+
+        transform: translateX(-100%);
+        transition: transform .25s ease;
+
+        box-shadow: 8px 0 24px rgba(0,0,0,.12);
+    }
+
+    .admin-sidebar.open {
+        transform: translateX(0);
+    }
+
+    /* HEADER */
+
+    .admin-header {
+        position: sticky;
+        top: 0;
+
+        z-index: 2000;
+
+        width: 100%;
+        height: 64px;
+
+        padding: 0 18px;
+    }
+
+    .admin-header-inner {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+
+        width: 100%;
+        height: 100%;
+
+        gap: 10px;
+    }
+
+    /* Cache les liens desktop */
+
+    .admin-header-nav {
+        display: none;
+    }
+
+    /* PROFIL */
+
+    .admin-header-profile {
+        display: flex;
+        align-items: center;
+
+        margin-left: auto;
+    }
+
+    /* HAMBURGER */
+
+    .admin-mobile-menu-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 44px;
+        height: 44px;
+
+        flex: 0 0 44px;
+
+        padding: 0;
+
+        border: 0;
+        border-radius: 12px;
+
+        background: #ff7900;
+        color: #fff;
+
+        font-size: 23px;
+        line-height: 1;
+
+        cursor: pointer;
+    }
+
+    /* CONTENU */
+
+    .admin-main {
+        width: 100%;
+
+        padding: 20px;
+
+        box-sizing: border-box;
+    }
+
+    .admin-heading h1 {
+        font-size: 31px;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media screen and (max-width: 700px) {
+
+    .admin-header {
+        height: 60px;
+        padding: 0 10px;
+    }
+
+    .admin-header-inner {
+        height: 60px;
+        gap: 8px;
+    }
+
+    /* Profil : avatar uniquement */
+
+    .admin-header-profile {
+        width: 40px;
+        height: 40px;
+
+        padding: 2px;
+
+        justify-content: center;
+
+        background: transparent;
+    }
+
+    .admin-header-name {
+        display: none;
+    }
+
+    .admin-header-avatar {
+        width: 36px;
+        height: 36px;
+    }
+
+    /* Hamburger */
+
+    .admin-mobile-menu-btn {
+        width: 42px;
+        height: 42px;
+
+        flex-basis: 42px;
+
+        border-radius: 10px;
+
+        font-size: 21px;
+    }
+
+    /* Sidebar */
+
+    .admin-sidebar {
+        width: 280px;
+        max-width: 88vw;
+
+        padding: 16px 12px 30px;
+    }
+
+    .admin-sidebar .brand img {
+        width: 68px;
+        height: 68px;
+    }
+
+    .admin-sidebar .brand strong {
+        font-size: 20px;
+    }
+
+    .admin-sidebar h3 {
+        margin-top: 19px;
+    }
+
+    .admin-sidebar > a:not(.brand) {
+        min-height: 39px;
+
+        padding: 8px 10px;
+
+        font-size: 12px;
+    }
+
+    /* Contenu */
+
+    .admin-main {
+        padding: 15px 12px 25px;
+    }
+
+    .admin-heading {
+        margin-bottom: 18px;
+    }
+
+    .admin-heading h1 {
+        font-size: 27px;
+        line-height: 1.15;
+    }
+
+    .kpi-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .kpi {
+        padding: 16px;
+    }
+
+    .kpi strong {
+        font-size: 25px;
+    }
+}
+
+/* =========================================================
+   IPAD PRO 1024px
+========================================================= */
+
+@media screen and (min-width: 901px) and (max-width: 1024px) {
+
+    .admin-shell {
+        display: block;
+        width: 100%;
+    }
+
+    .admin-content {
+        width: 100%;
+        min-width: 0;
+    }
+
+    /* Sidebar cachée */
+
+    .admin-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+
+        z-index: 3000;
+
+        width: 270px;
+        max-width: 85vw;
+
+        height: 100vh;
+        height: 100dvh;
+
+        overflow-y: auto;
+
+        transform: translateX(-100%);
+        transition: transform .25s ease;
+    }
+
+    /* Sidebar affichée au clic */
+
+    .admin-sidebar.open {
+        transform: translateX(0);
+    }
+
+    /* Header */
+
+    .admin-header {
+        position: sticky;
+        top: 0;
+
+        z-index: 2000;
+
+        width: 100%;
+        height: 64px;
+
+        padding: 0 16px;
+    }
+
+    .admin-header-inner {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+
+        width: 100%;
+        height: 100%;
+
+        gap: 10px;
+    }
+
+    /* Navigation desktop cachée */
+
+    .admin-header-nav {
+        display: none;
+    }
+
+    /* Profil à droite */
+
+    .admin-header-profile {
+        display: flex;
+        margin-left: auto;
+    }
+
+    /* HAMBURGER VISIBLE */
+
+    .admin-mobile-menu-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        flex: 0 0 44px;
+
+        width: 44px;
+        height: 44px;
+
+        padding: 0;
+
+        border: 0;
+        border-radius: 12px;
+
+        background: #ff7900;
+        color: #fff;
+
+        font-size: 22px;
+
+        cursor: pointer;
+    }
+
+    /* Dashboard */
+
+    .admin-main {
+        width: 100%;
+        padding: 20px;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* =========================================================
+   CORRECTION HEADER TABLETTE / IPAD PRO
+   À LAISSER TOUT EN BAS DE ADMIN.CSS
+========================================================= */
+
+@media screen and (max-width: 1400px) {
+
+    .admin-header .admin-header-inner .admin-header-nav {
+        display: none;
+    }
+
+    .admin-header .admin-header-inner .admin-mobile-menu-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 44px;
+        height: 44px;
+        flex: 0 0 44px;
+
+        padding: 0;
+        margin: 0;
+
+        border: 0;
+        border-radius: 12px;
+
+        background: #ff7900;
+        color: #fff;
+
+        font-size: 22px;
+        line-height: 1;
+
+        cursor: pointer;
+    }
+}

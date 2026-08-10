@@ -47,6 +47,7 @@ router.get("/carrieres", page.render("admin/content/jobs", "Carrières"));
 
 router.get("/utilisateurs", page.render("admin/system/users", "Utilisateurs admin"));
 router.get("/roles", page.render("admin/system/roles", "Rôles & permissions"));
+router.get("/notifications", page.render("admin/system/notifications", "Notifications"));
 router.get("/parametres", page.render("admin/system/settings", "Paramètres"));
 router.get("/journaux", page.render("admin/system/logs", "Journaux"));
 router.get("/profil", page.render("admin/system/profile", "Profil"));

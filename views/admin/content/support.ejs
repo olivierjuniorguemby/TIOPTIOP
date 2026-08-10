@@ -408,20 +408,19 @@
 
 
 /* =========================================================
-   MODAL
+   MODAL - VERSION COMPACTE
 ========================================================= */
 
 .support-modal-overlay {
     position: fixed;
     inset: 0;
-
     z-index: 99999;
 
     display: none;
     align-items: center;
     justify-content: center;
 
-    padding: 25px;
+    padding: 20px;
 
     background: rgba(0, 0, 0, .55);
 }
@@ -433,19 +432,18 @@
 .support-modal {
     box-sizing: border-box;
 
-    /*width: min(1450px, 96vw); --*/
-    max-height: 92vh;
+    width: min(780px, 90vw);
+    max-height: 90vh;
 
     overflow-y: auto;
 
-    padding: 45px;
+    padding: 28px 30px 30px;
 
-    border-radius: 42px;
+    border-radius: 26px;
 
     background: #fff;
 
-    box-shadow:
-        0 30px 80px rgba(0, 0, 0, .25);
+    box-shadow: 0 25px 65px rgba(0, 0, 0, .28);
 }
 
 
@@ -456,46 +454,56 @@
     align-items: center;
     justify-content: space-between;
 
-    gap: 20px;
+    gap: 15px;
 
-    margin-bottom: 60px;
+    margin-bottom: 22px;
 }
 
 .support-modal-header h2 {
     margin: 0;
 
-    font-size: 40px;
+    font-size: 28px;
+    line-height: 1.2;
     font-weight: 800;
 }
 
 .support-modal-close {
-    flex: 0 0 65px;
+    flex: 0 0 45px;
 
-    width: 65px;
-    height: 65px;
+    width: 45px;
+    height: 45px;
+
+    padding: 0;
 
     border: 0;
     border-radius: 50%;
 
-    background: #f1f1f1;
+    background: #f2f2f2;
 
     font-family: inherit;
-    font-size: 28px;
+    font-size: 20px;
+    line-height: 1;
 
     cursor: pointer;
 }
 
+.support-modal-close:hover {
+    background: #e8e8e8;
+}
 
-/* INFORMATIONS TICKET */
+
+/* =========================================================
+   INFORMATIONS TICKET
+========================================================= */
 
 .support-ticket-details {
-    margin-bottom: 25px;
+    margin-bottom: 16px;
 }
 
 .support-ticket-details p {
-    margin: 0 0 30px;
+    margin: 0 0 12px;
 
-    font-size: 26px;
+    font-size: 17px;
     line-height: 1.4;
 }
 
@@ -504,37 +512,54 @@
 }
 
 .support-message {
-    margin: 20px 0 30px;
+    margin: 12px 0 18px;
 
-    font-size: 25px;
+    padding: 12px 15px;
+
+    border-radius: 12px;
+
+    background: #faf7f4;
+
+    font-size: 16px;
+    line-height: 1.5;
 }
 
 
-/* SELECT */
+/* =========================================================
+   SELECT
+========================================================= */
 
 .support-status-select {
     box-sizing: border-box;
 
     width: 100%;
-    height: 85px;
+    height: 54px;
 
-    padding: 0 28px;
+    padding: 0 17px;
 
-    border: 3px solid #111;
-    border-radius: 25px;
+    border: 1px solid #e2e2e2;
+    border-radius: 14px;
 
     background: #fff;
 
     font-family: inherit;
-    font-size: 24px;
+    font-size: 17px;
 
     outline: none;
 
     cursor: pointer;
 }
 
+.support-status-select:focus {
+    border-color: #ff7900;
 
-/* TEXTAREA */
+    box-shadow: 0 0 0 3px rgba(255, 121, 0, .08);
+}
+
+
+/* =========================================================
+   TEXTAREA
+========================================================= */
 
 .support-response {
     box-sizing: border-box;
@@ -542,21 +567,22 @@
     display: block;
 
     width: 100%;
-    min-height: 130px;
+    min-height: 90px;
 
-    margin-top: 20px;
+    margin-top: 12px;
 
-    padding: 25px;
+    padding: 15px 17px;
 
     resize: vertical;
 
-    border: 2px solid #e4e4e4;
-    border-radius: 25px;
+    border: 1px solid #e2e2e2;
+    border-radius: 14px;
 
     background: #fff;
 
     font-family: inherit;
-    font-size: 24px;
+    font-size: 17px;
+    line-height: 1.5;
 
     outline: none;
 }
@@ -568,18 +594,19 @@
 .support-response:focus {
     border-color: #ff7900;
 
-    box-shadow:
-        0 0 0 4px rgba(255, 121, 0, .08);
+    box-shadow: 0 0 0 3px rgba(255, 121, 0, .08);
 }
 
 
-/* BOUTON */
+/* =========================================================
+   BOUTON
+========================================================= */
 
 .support-save-btn {
     width: 100%;
-    min-height: 80px;
+    min-height: 52px;
 
-    margin-top: 20px;
+    margin-top: 12px;
 
     border: 0;
     border-radius: 999px;
@@ -588,7 +615,7 @@
     color: #fff;
 
     font-family: inherit;
-    font-size: 25px;
+    font-size: 17px;
     font-weight: 800;
 
     cursor: pointer;

@@ -9,11 +9,9 @@
             <a href="/admin/commandes">Commandes</a>
             <a href="/admin/pos">POS</a>
             <a href="/admin/produits">Produits</a>
-            <a href="/admin/support">Support</a>
+            <a href="/admin/support">Support</a> &nbsp;&nbsp;&nbsp;
 
-            <a href="/" target="_blank" class="admin-view-site">
-                Voir le site ↗
-            </a>
+            <a href="/admin/notifications">🔔 </a>
         </nav>
 
         <!-- Profil administrateur -->
@@ -57,35 +55,44 @@
 </header>
 
 <style>
-  /* =========================================================
-   HEADER ADMIN TIOPTIOP
+    /* =========================================================
+   HEADER ADMIN
 ========================================================= */
 
 .admin-header {
-    width: 100%;
-    height: 94px;
-
-    display: flex;
-    align-items: center;
-
-    background: #17120e;
-
-    position: relative;
+    position: sticky;
+    top: 0;
     z-index: 1000;
+
+    width: 100%;
+    height: 72px;
+
+    box-sizing: border-box;
+
+    padding: 0 24px;
+
+    background: #1d1815;
+
+    border-bottom: 1px solid rgba(255,255,255,.06);
 }
+
+
+/* =========================================================
+   CONTENEUR
+========================================================= */
 
 .admin-header-inner {
     width: 100%;
+    height: 100%;
 
     display: flex;
     align-items: center;
     justify-content: flex-end;
 
-    gap: 45px;
+    gap: 12px;
 
-    padding: 0 48px;
-
-    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 
@@ -97,69 +104,118 @@
     display: flex;
     align-items: center;
 
-    gap: 38px;
+    gap: 4px;
+
+    margin: 0;
+    padding: 0;
 }
 
 .admin-header-nav a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 38px;
+
+    box-sizing: border-box;
+
+    padding: 0 11px;
+
+    border-radius: 10px;
+
     color: #fff;
 
     text-decoration: none;
 
-    font-size: 17px;
+    font-size: 13px;
+    line-height: 1;
+
     font-weight: 800;
 
     white-space: nowrap;
 
     transition:
-        color .2s ease,
-        transform .2s ease;
+        background .15s ease,
+        color .15s ease;
 }
 
 .admin-header-nav a:hover {
-    color: #ff7900;
-
-    transform: translateY(-1px);
-}
-
-
-/* VOIR LE SITE */
-
-.admin-header-nav .admin-view-site {
-    margin-left: 5px;
+    background: rgba(255,255,255,.08);
+    color: #ff8b21;
 }
 
 
 /* =========================================================
-   PROFIL ADMIN
+   VOIR LE SITE
+========================================================= */
+
+.admin-header-nav .admin-view-site {
+    margin-left: 4px;
+
+    color: #fff;
+}
+
+.admin-header-nav .admin-view-site:hover {
+    color: #ff7900;
+}
+
+
+/* =========================================================
+   NOTIFICATION
+   = dernier lien de la navigation
+========================================================= */
+
+.admin-header-nav a:last-child {
+    width: 38px;
+    height: 38px;
+
+    padding: 0;
+
+    border-radius: 50%;
+
+    font-size: 16px;
+
+    background: rgba(255,255,255,.06);
+}
+
+.admin-header-nav a:last-child:hover {
+    background: #fff0df;
+}
+
+
+/* =========================================================
+   PROFIL
 ========================================================= */
 
 .admin-header-profile {
-    min-height: 72px;
-
-    display: flex;
+    display: inline-flex;
     align-items: center;
 
-    gap: 16px;
-
-    padding: 8px 22px 8px 9px;
-
-    border-radius: 999px;
-
-    background: #352e29;
-
-    text-decoration: none;
+    height: 48px;
 
     box-sizing: border-box;
 
-    transition:
-        background .2s ease,
-        transform .2s ease;
+    gap: 10px;
+
+    padding: 4px 14px 4px 5px;
+
+    margin: 0;
+
+    border-radius: 999px;
+
+    background: #332b26;
+
+    color: #fff;
+
+    text-decoration: none;
+
+    white-space: nowrap;
+
+    transition: background .15s ease;
 }
 
 .admin-header-profile:hover {
-    background: #423934;
-
-    transform: translateY(-1px);
+    background: #42372f;
 }
 
 
@@ -168,56 +224,72 @@
 ========================================================= */
 
 .admin-header-avatar {
-    width: 58px;
-    height: 58px;
+    flex: 0 0 auto;
 
-    flex: 0 0 58px;
+    width: 38px;
+    height: 38px;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    overflow: hidden;
 
     border-radius: 50%;
 
-    background: linear-gradient(
-        145deg,
-        #ff7900,
-        #ffbe3b
-    );
+    background: #ff7900;
 
-    color: #fff;
-
-    font-size: 21px;
-    font-weight: 900;
+    border: 2px solid #ff7900;
 }
 
-.admin-header-name {
-    color: #fff;
+.admin-header-avatar-img {
+    display: block;
 
-    font-size: 17px;
-    font-weight: 800;
+    width: 100%;
+    height: 100%;
 
-    white-space: nowrap;
+    object-fit: cover;
+
+    border-radius: 50%;
 }
 
 
 /* =========================================================
-   MENU MOBILE
+   NOM
+========================================================= */
+
+.admin-header-name {
+    display: block;
+
+    max-width: 160px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    font-size: 13px;
+    line-height: 1;
+
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   BOUTON MOBILE
 ========================================================= */
 
 .admin-mobile-menu-btn {
     display: none;
 
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
+
+    padding: 0;
 
     border: 0;
-    border-radius: 14px;
+    border-radius: 10px;
 
-    background: #352e29;
-    color: white;
+    background: #ff7900;
+    color: #fff;
 
-    font-size: 23px;
+    font-size: 19px;
 
     cursor: pointer;
 }
@@ -227,24 +299,16 @@
    TABLETTE
 ========================================================= */
 
-@media (max-width: 1100px) {
-
-    .admin-header-inner {
-        padding: 0 25px;
-
-        gap: 25px;
-    }
-
-    .admin-header-nav {
-        gap: 20px;
-    }
+@media (max-width: 1400px) {
 
     .admin-header-nav a {
-        font-size: 15px;
+        padding: 0 8px;
+
+        font-size: 12px;
     }
 
     .admin-header-name {
-        font-size: 15px;
+        max-width: 110px;
     }
 
 }
@@ -254,68 +318,42 @@
    MOBILE
 ========================================================= */
 
-@media (max-width: 850px) {
+@media (max-width: 900px) {
 
     .admin-header {
-        height: auto;
+        height: 64px;
 
-        min-height: 80px;
+        padding: 0 15px;
     }
 
     .admin-header-inner {
-        min-height: 80px;
-
-        padding: 10px 16px;
-
         justify-content: flex-end;
     }
 
     .admin-header-nav {
         display: none;
-
-        position: absolute;
-
-        top: 80px;
-        left: 0;
-        right: 0;
-
-        padding: 20px;
-
-        background: #17120e;
-
-        flex-direction: column;
-        align-items: stretch;
-
-        gap: 5px;
-
-        border-top: 1px solid rgba(255,255,255,.08);
-
-        box-shadow:
-            0 15px 30px rgba(0,0,0,.18);
     }
 
-    .admin-header-nav.active {
-        display: flex;
+    .admin-header-name {
+        display: none;
     }
 
-    .admin-header-nav a {
-        display: block;
+    .admin-header-profile {
+        width: 44px;
+        height: 44px;
 
-        padding: 14px 15px;
+        padding: 3px;
 
-        border-radius: 12px;
-
-        font-size: 16px;
+        justify-content: center;
     }
 
-    .admin-header-nav a:hover {
-        background: #2d2722;
-
-        transform: none;
+    .admin-header-avatar {
+        width: 36px;
+        height: 36px;
     }
 
     .admin-mobile-menu-btn {
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
     }
@@ -323,82 +361,83 @@
 }
 
 
-/* =========================================================
-   PETIT MOBILE
-========================================================= */
-
-@media (max-width: 520px) {
-
-    .admin-header-profile {
-        min-height: 56px;
-
-        padding: 6px 12px 6px 6px;
-
-        gap: 9px;
-    }
-
-    .admin-header-avatar {
-        width: 44px;
-        height: 44px;
-
-        flex-basis: 44px;
-
-        font-size: 17px;
-    }
-
-    .admin-header-name {
-        max-width: 135px;
-
-        overflow: hidden;
-
-        text-overflow: ellipsis;
-
-        font-size: 13px;
-    }
-
-}
-
-.admin-header-avatar-img {
-    width: 58px;
-    height: 58px;
-
-    flex: 0 0 58px;
-
-    border-radius: 50%;
-
-    object-fit: cover;
-
-    display: block;
-}
-
-@media (max-width: 520px) {
-
-    .admin-header-avatar-img {
-        width: 44px;
-        height: 44px;
-
-        flex-basis: 44px;
-    }
-
-}
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    const button = document.getElementById('adminMobileMenuBtn');
-    const nav = document.querySelector('.admin-header-nav');
+    const menuButton = document.getElementById('adminMobileMenuBtn');
+    const sidebar = document.querySelector('.admin-sidebar');
 
-    if (!button || !nav) return;
+    if (!menuButton || !sidebar) {
+        return;
+    }
 
-    button.addEventListener('click', function () {
 
-        nav.classList.toggle('active');
+    /* OUVRIR / FERMER */
 
-        button.textContent =
-            nav.classList.contains('active')
-                ? '✕'
-                : '☰';
+    menuButton.addEventListener('click', function (event) {
+
+        event.stopPropagation();
+
+        sidebar.classList.toggle('open');
+
+    });
+
+
+    /* FERMER APRÈS CLIC SUR UN LIEN */
+
+    sidebar.querySelectorAll('a').forEach(function (link) {
+
+        link.addEventListener('click', function () {
+
+            if (window.innerWidth <= 1400) {
+                sidebar.classList.remove('open');
+            }
+
+        });
+
+    });
+
+
+    /* FERMER EN CLIQUANT À L'EXTÉRIEUR */
+
+    document.addEventListener('click', function (event) {
+
+        if (window.innerWidth > 1400) {
+            return;
+        }
+
+        if (
+            sidebar.classList.contains('open') &&
+            !sidebar.contains(event.target) &&
+            !menuButton.contains(event.target)
+        ) {
+            sidebar.classList.remove('open');
+        }
+
+    });
+
+
+    /* FERMER AVEC ECHAP */
+
+    document.addEventListener('keydown', function (event) {
+
+        if (event.key === 'Escape') {
+            sidebar.classList.remove('open');
+        }
+
+    });
+
+
+    /* RETOUR DESKTOP */
+
+    window.addEventListener('resize', function () {
+
+        if (window.innerWidth > 1400) {
+            sidebar.classList.remove('open');
+        }
+
     });
 
 });
