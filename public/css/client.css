@@ -1260,3 +1260,309 @@ body:before {
     }
 
 }
+
+/* =========================================================
+   FOOTER TIOPTIOP
+========================================================= */
+
+.site-footer {
+    margin-top: 70px;
+
+    background: #17130f;
+    color: #fff;
+
+    border-top: 1px solid rgba(255,255,255,.06);
+}
+
+
+/* Structure principale */
+
+.footer-container {
+    width: min(1180px, calc(100% - 32px));
+    margin: auto;
+
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+
+    gap: 70px;
+
+    padding: 65px 0 55px;
+}
+
+
+/* =========================================================
+   MARQUE
+========================================================= */
+
+.footer-brand {
+    max-width: 320px;
+}
+
+.footer-logo {
+    display: inline-block;
+
+    margin-bottom: 22px;
+
+    color: #fff;
+
+    font-size: 30px;
+    font-weight: 1000;
+
+    letter-spacing: -1.8px;
+    line-height: 1;
+}
+
+.footer-logo span {
+    color: #ff7900;
+}
+
+.footer-brand p {
+    margin: 0 0 25px;
+
+    color: #d3cac3;
+
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   RÉSEAUX SOCIAUX
+========================================================= */
+
+.footer-socials {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    flex-wrap: wrap;
+}
+
+
+.footer-social {
+    width: 42px;
+    height: 42px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid rgba(255,255,255,.13);
+    border-radius: 50%;
+
+    background: rgba(255,255,255,.045);
+
+    color: #fff;
+
+    font-size: 17px;
+
+    transition:
+        transform .2s ease,
+        background .2s ease,
+        border-color .2s ease,
+        color .2s ease;
+}
+
+
+.footer-social:hover {
+    transform: translateY(-3px);
+
+    background: #ff7900;
+
+    border-color: #ff7900;
+
+    color: #fff;
+}
+
+
+/* =========================================================
+   COLONNES
+========================================================= */
+
+.footer-column {
+    display: flex;
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 13px;
+}
+
+
+.footer-column h4 {
+    margin: 0 0 5px;
+
+    color: #fff;
+
+    font-size: 16px;
+    font-weight: 900;
+}
+
+
+.footer-column a {
+    position: relative;
+
+    color: #cfc5bd;
+
+    font-size: 15px;
+    font-weight: 500;
+
+    transition:
+        color .2s ease,
+        transform .2s ease;
+}
+
+
+.footer-column a:hover {
+    color: #ff7900;
+
+    transform: translateX(3px);
+}
+
+
+/* Petit trait orange */
+
+.footer-column h4::after {
+    content: "";
+
+    display: block;
+
+    width: 24px;
+    height: 3px;
+
+    margin-top: 8px;
+
+    border-radius: 99px;
+
+    background: #ff7900;
+}
+
+
+/* =========================================================
+   PARTIE BASSE
+========================================================= */
+
+.footer-bottom {
+    border-top: 1px solid rgba(255,255,255,.08);
+}
+
+
+.footer-bottom-inner {
+    width: min(1180px, calc(100% - 32px));
+    margin: auto;
+
+    min-height: 70px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    color: #938a83;
+
+    font-size: 12px;
+}
+
+
+.footer-signature {
+    color: #cfc5bd;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   TABLETTE
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .footer-container {
+        grid-template-columns: 1.4fr 1fr 1fr;
+
+        gap: 45px;
+    }
+
+    .footer-brand {
+        grid-column: 1 / -1;
+
+        max-width: none;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 620px) {
+
+    .site-footer {
+        margin-top: 45px;
+    }
+
+
+    .footer-container {
+        grid-template-columns: 1fr 1fr;
+
+        gap: 38px 25px;
+
+        padding:
+            45px
+            0
+            40px;
+    }
+
+
+    .footer-brand {
+        grid-column: 1 / -1;
+
+        padding-bottom: 25px;
+
+        border-bottom:
+            1px solid rgba(255,255,255,.08);
+    }
+
+
+    .footer-logo {
+        font-size: 28px;
+    }
+
+
+    .footer-brand p {
+        margin-bottom: 20px;
+    }
+
+
+    .footer-social {
+        width: 40px;
+        height: 40px;
+
+        font-size: 16px;
+    }
+
+
+    .footer-column:last-child {
+        grid-column: 1 / -1;
+    }
+
+
+    .footer-bottom-inner {
+        min-height: auto;
+
+        padding:
+            22px
+            0
+            100px;
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 8px;
+    }
+
+}
