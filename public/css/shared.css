@@ -467,7 +467,7 @@ th {
    RESPONSIVE - TABLETTE
    ========================= */
 
-@media (max-width: 900px) {
+@media (max-width: 900px) and (max-width: 1100px) {
 
     .main-nav {
         display: none;
@@ -489,6 +489,7 @@ th {
     }
 
 }
+
 
 
 /* =========================

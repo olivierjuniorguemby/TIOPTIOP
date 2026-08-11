@@ -673,85 +673,82 @@ footer {
 
 }
 
-@media(max-width:620px) {
-    .top {
-        display:none
-    }
+/* =========================================================
+   NAVIGATION MOBILE
+   Téléphones + iPad Mini + iPad Air
+========================================================= */
 
-    .navin {
-        height:64px
-    }
-
-    .hideM {
-        display:none
-    }
-
-    .heroGrid {
-        min-height:auto;
-        padding:36px 0
-    }
-
-    .hero h1,.pagehero h1 {
-        letter-spacing:-3px
-    }
-
-    .art {
-        min-height:310px
-    }
-
-    .plate {
-        width:280px
-    }
-
-    .searchbar {
-        grid-template-columns:1fr;
-        margin-top:0
-    }
-
-    .cats {
-        grid-template-columns:repeat(2,1fr)
-    }
-
-    .products,.three {
-        grid-template-columns:1fr
-    }
-
-    .sectionHead {
-        align-items:start;
-        flex-direction:column
-    }
-
-    .footer {
-        grid-template-columns:1fr
-    }
-
-    .summary {
-        position:static
-    }
+@media (max-width: 900px) {
 
     .mobile {
-        display:grid;
-        grid-template-columns:repeat(5,1fr);
-        position:fixed;
-        left:0;
-        right:0;
-        bottom:0;
-        background:rgba(255,255,255,.96);
-        backdrop-filter:blur(16px);
-        border-top:1px solid var(--line);
-        z-index:80;
-        padding:9px
+        display: grid;
+
+        grid-template-columns: repeat(5, 1fr);
+
+        position: fixed;
+
+        left: 0;
+        right: 0;
+        bottom: 0;
+
+        width: 100%;
+
+        background: rgba(255,255,255,.96);
+
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+
+        border-top: 1px solid var(--line);
+
+        box-shadow: 0 -8px 25px rgba(23,19,15,.08);
+
+        z-index: 999;
+
+        padding:
+            9px
+            9px
+            calc(9px + env(safe-area-inset-bottom));
+
+        box-sizing: border-box;
     }
+
 
     .mobile a {
-        text-align:center;
-        font-size:10px;
-        font-weight:800
+        display: flex;
+
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        min-width: 0;
+
+        text-align: center;
+
+        font-size: 10px;
+        font-weight: 800;
+
+        line-height: 1.2;
+
+        padding: 4px 2px;
+
+        border-radius: 10px;
     }
 
+
     .mobile span {
-        display:block;
-        font-size:20px
+        display: block;
+
+        margin-bottom: 3px;
+
+        font-size: 20px;
+
+        line-height: 1;
+    }
+
+
+    .mobile a:hover {
+        background: #fff0df;
+        color: #ff7900;
     }
 
 }
