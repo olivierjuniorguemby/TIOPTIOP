@@ -4,6 +4,10 @@ const applications = require("../../controllers/admin/application.controller");
 const page = require("../../controllers/admin/page.controller");
 const { requireAdmin } = require("../../middleware/auth");
 
+const category = require("../../controllers/admin/category.controller");
+const product = require("../../controllers/admin/product.controller");
+const { productUpload } = require("../../config/uploads");
+
 router.get("/connexion", (req, res) => {
   res.render("admin/login", {
     title: "Connexion administration",
@@ -31,8 +35,46 @@ router.get("/pos", page.render("admin/operations/pos", "POS / Nouvelle commande"
 router.get("/livraisons", page.render("admin/operations/deliveries", "Livraisons"));
 router.get("/paiements", page.render("admin/operations/payments", "Paiements & caisse"));
 
-router.get("/produits", page.render("admin/catalog/products", "Produits"));
-router.get("/categories", page.render("admin/catalog/categories", "Catégories"));
+// Products
+router.get(
+    "/produits",
+    product.index
+);
+
+
+router.post(
+    "/produits",
+    productUpload.array("images", 6),
+    product.create
+);
+
+
+router.post(
+    "/produits/:id/update",
+    productUpload.array("images", 6),
+    product.update
+);
+
+
+router.post(
+    "/produits/:id/toggle",
+    product.toggleActive
+);
+
+
+router.post(
+    "/produits/:id/delete",
+    product.remove
+);
+
+// Categories
+router.get("/categories", category.index);
+router.post("/categories", category.create);
+router.post("/categories/:id/update", category.update);
+router.post("/categories/:id/delete", category.remove);
+router.post("/categories/:id/toggle", category.toggleActive);
+
+
 router.get("/formules", page.render("admin/catalog/formulas", "Formules"));
 router.get("/promotions", page.render("admin/catalog/promotions", "Promotions"));
 router.get("/tiopplus", page.render("admin/catalog/loyalty", "Tiop+"));

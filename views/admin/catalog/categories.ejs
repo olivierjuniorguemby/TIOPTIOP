@@ -20,161 +20,107 @@
 
       <thead>
         <tr>
-          <th>Catégorie</th>
-          <th>Actif</th>
-          <th></th>
-          <th></th>
+          <th>Libelle</th>
+          <th>Statut</th>
+          <th>Position</th>
+          <th>Slug</th>
           <th>Actions</th>
         </tr>
       </thead>
 
       <tbody>
 
-        <tr>
-          <td>Tradition</td>
-          <td>Oui</td>
-          <td>—</td>
-          <td>—</td>
-          <td>
-            <div class="category-actions">
-              <button
-                type="button"
-                class="btn-category-edit"
-                onclick="openEditCategoryModal(1, 'Tradition', '', 0)">
-                Modifier
-              </button>
-
-              <button
-                type="button"
-                class="btn-category-delete"
-                onclick="deleteCategory(1, 'Tradition')">
-                Supprimer
-              </button>
-            </div>
-          </td>
-        </tr>
+    <% if (!categories || categories.length === 0) { %>
 
         <tr>
-          <td>Grillades</td>
-          <td>Oui</td>
-          <td>—</td>
-          <td>—</td>
-          <td>
-            <div class="category-actions">
-              <button
-                type="button"
-                class="btn-category-edit"
-                onclick="openEditCategoryModal(2, 'Grillades', '', 0)">
-                Modifier
-              </button>
-
-              <button
-                type="button"
-                class="btn-category-delete"
-                onclick="deleteCategory(2, 'Grillades')">
-                Supprimer
-              </button>
-            </div>
-          </td>
+            <td colspan="5">
+                Aucune catégorie enregistrée.
+            </td>
         </tr>
 
-        <tr>
-          <td>Accompagnements</td>
-          <td>Oui</td>
-          <td>—</td>
-          <td>—</td>
-          <td>
-            <div class="category-actions">
-              <button
-                type="button"
-                class="btn-category-edit"
-                onclick="openEditCategoryModal(3, 'Accompagnements', '', 0)">
-                Modifier
-              </button>
+    <% } else { %>
 
-              <button
-                type="button"
-                class="btn-category-delete"
-                onclick="deleteCategory(3, 'Accompagnements')">
-                Supprimer
-              </button>
-            </div>
-          </td>
-        </tr>
+        <% categories.forEach(category => { %>
 
-        <tr>
-          <td>Petit déjeuner</td>
-          <td>Oui</td>
-          <td>—</td>
-          <td>—</td>
-          <td>
-            <div class="category-actions">
-              <button
-                type="button"
-                class="btn-category-edit"
-                onclick="openEditCategoryModal(4, 'Petit déjeuner', '', 0)">
-                Modifier
-              </button>
+            <tr>
 
-              <button
-                type="button"
-                class="btn-category-delete"
-                onclick="deleteCategory(4, 'Petit déjeuner')">
-                Supprimer
-              </button>
-            </div>
-          </td>
-        </tr>
+                <td>
+                    <strong><%= category.name %></strong>
 
-        <tr>
-          <td>Boissons</td>
-          <td>Oui</td>
-          <td>—</td>
-          <td>—</td>
-          <td>
-            <div class="category-actions">
-              <button
-                type="button"
-                class="btn-category-edit"
-                onclick="openEditCategoryModal(5, 'Boissons', '', 0)">
-                Modifier
-              </button>
+                    <% if (category.description) { %>
+                        <div class="category-description">
+                            <%= category.description %>
+                        </div>
+                    <% } %>
+                </td>
 
-              <button
-                type="button"
-                class="btn-category-delete"
-                onclick="deleteCategory(5, 'Boissons')">
-                Supprimer
-              </button>
-            </div>
-          </td>
-        </tr>
 
-        <tr>
-          <td>Douceurs</td>
-          <td>Oui</td>
-          <td>—</td>
-          <td>—</td>
-          <td>
-            <div class="category-actions">
-              <button
-                type="button"
-                class="btn-category-edit"
-                onclick="openEditCategoryModal(6, 'Douceurs', '', 0)">
-                Modifier
-              </button>
+                <td>
 
-              <button
-                type="button"
-                class="btn-category-delete"
-                onclick="deleteCategory(6, 'Douceurs')">
-                Supprimer
-              </button>
-            </div>
-          </td>
-        </tr>
+                    <form
+                        method="POST"
+                        action="/admin/categories/<%= category.id %>/toggle">
 
-      </tbody>
+                        <button
+                            type="submit"
+                            class="category-status <%= category.is_active ? 'active' : 'inactive' %>">
+
+                            <%= category.is_active ? 'Oui' : 'Non' %>
+
+                        </button>
+
+                    </form>
+
+                </td>
+
+
+                <td>
+                    <%= category.position %>
+                </td>
+
+
+                <td>
+                    <%= category.slug %>
+                </td>
+
+
+                <td>
+
+                    <div class="category-actions">
+
+                        <button
+                            type="button"
+                            class="btn-category-edit"
+                            data-id="<%= category.id %>"
+                            data-name="<%= category.name %>"
+                            data-description="<%= category.description || '' %>"
+                            data-position="<%= category.position %>"
+                            onclick="openEditCategoryModalFromButton(this)">
+                            Modifier
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="btn-category-delete"
+                            onclick='deleteCategory(
+                                <%- JSON.stringify(category.id) %>,
+                                <%- JSON.stringify(category.name) %>
+                            )'>
+                            Supprimer
+                        </button>
+
+                    </div>
+
+                </td>
+
+            </tr>
+
+        <% }) %>
+
+    <% } %>
+
+</tbody>
     </table>
   </div>
 
@@ -219,7 +165,7 @@
 
       <input
         type="number"
-        name="sort_order"
+        name="position"
         class="category-field"
         value="0"
         min="0"
@@ -276,8 +222,8 @@
 
       <input
         type="number"
-        id="editCategoryOrder"
-        name="sort_order"
+        id="editCategoryPosition"
+        name="position"
         class="category-field"
         min="0"
         value="0">
@@ -620,5 +566,31 @@ body.modal-open {
         max-width: 100%;
     }
 }
+
+.category-status {
+    border: 0;
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.category-status.active {
+    background: #e5f8ea;
+    color: #238636;
+}
+
+.category-status.inactive {
+    background: #f1f1f1;
+    color: #777;
+}
+
+.category-description {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #777;
+}
+
 </style>
 <script src="/js/categories.js" defer></script>

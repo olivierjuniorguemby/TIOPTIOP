@@ -1,37 +1,54 @@
+// ======================================================
+// AJOUTER
+// ======================================================
+
 function openAddCategoryModal() {
     const modal = document.getElementById("addCategoryModal");
-
-    if (!modal) return;
 
     modal.classList.add("show");
     document.body.classList.add("modal-open");
 }
 
-
 function closeAddCategoryModal() {
     const modal = document.getElementById("addCategoryModal");
-
-    if (!modal) return;
 
     modal.classList.remove("show");
     document.body.classList.remove("modal-open");
 }
 
 
+// ======================================================
+// MODIFIER
+// ======================================================
+
+function openEditCategoryModalFromButton(button) {
+
+    const id = button.dataset.id;
+    const name = button.dataset.name;
+    const description = button.dataset.description;
+    const position = button.dataset.position;
+
+    openEditCategoryModal(
+        id,
+        name,
+        description,
+        position
+    );
+}
+
+
 function openEditCategoryModal(
     id,
     name,
-    description = "",
-    sortOrder = 0
+    description,
+    position
 ) {
+
     const modal =
         document.getElementById("editCategoryModal");
 
     const form =
         document.getElementById("editCategoryForm");
-
-    if (!modal || !form) return;
-
 
     document.getElementById("editCategoryName").value =
         name || "";
@@ -39,13 +56,11 @@ function openEditCategoryModal(
     document.getElementById("editCategoryDescription").value =
         description || "";
 
-    document.getElementById("editCategoryOrder").value =
-        sortOrder ?? 0;
-
+    document.getElementById("editCategoryPosition").value =
+        position || 0;
 
     form.action =
-        `/admin/categories/${id}`;
-
+        `/admin/categories/${id}/update`;
 
     modal.classList.add("show");
 
@@ -54,15 +69,18 @@ function openEditCategoryModal(
 
 
 function closeEditCategoryModal() {
-    const modal =
-        document.getElementById("editCategoryModal");
 
-    if (!modal) return;
+    document
+        .getElementById("editCategoryModal")
+        .classList.remove("show");
 
-    modal.classList.remove("show");
     document.body.classList.remove("modal-open");
 }
 
+
+// ======================================================
+// SUPPRIMER
+// ======================================================
 
 function deleteCategory(id, name) {
 
@@ -70,22 +88,25 @@ function deleteCategory(id, name) {
         `Voulez-vous vraiment supprimer la catégorie "${name}" ?`
     );
 
-    if (!confirmation) return;
-
+    if (!confirmation) {
+        return;
+    }
 
     const form =
         document.getElementById("deleteCategoryForm");
 
     form.action =
-        `/admin/categories/${id}/supprimer`;
+        `/admin/categories/${id}/delete`;
 
     form.submit();
 }
 
 
-/* Clic sur le fond */
+// ======================================================
+// FERMER MODAL EN CLIQUANT EN DEHORS
+// ======================================================
 
-document.addEventListener("click", function(event) {
+document.addEventListener("click", function (event) {
 
     if (event.target.id === "addCategoryModal") {
         closeAddCategoryModal();
@@ -98,9 +119,11 @@ document.addEventListener("click", function(event) {
 });
 
 
-/* ESC */
+// ======================================================
+// TOUCHE ECHAP
+// ======================================================
 
-document.addEventListener("keydown", function(event) {
+document.addEventListener("keydown", function (event) {
 
     if (event.key === "Escape") {
         closeAddCategoryModal();
