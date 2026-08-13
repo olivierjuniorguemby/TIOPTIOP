@@ -7,6 +7,10 @@ const { requireAdmin } = require("../../middleware/auth");
 const category = require("../../controllers/admin/category.controller");
 const product = require("../../controllers/admin/product.controller");
 const { productUpload } = require("../../config/uploads");
+const productController =
+    require("../../controllers/admin/product.controller");
+const productOptionController =
+    require("../../controllers/admin/product-option.controller");
 
 router.get("/connexion", (req, res) => {
   res.render("admin/login", {
@@ -67,6 +71,27 @@ router.post(
     product.remove
 );
 
+// Products Images
+// Images existantes
+router.get(
+    "/produits/:id/images",
+    productController.getProductImages
+);
+
+
+// Supprimer une image
+router.delete(
+    "/produits/:productId/images/:imageId",
+    productController.deleteProductImage
+);
+
+
+// Choisir l'image principale
+router.patch(
+    "/produits/:productId/images/:imageId/primary",
+    productController.setPrimaryProductImage
+);
+
 // Categories
 router.get("/categories", category.index);
 router.post("/categories", category.create);
@@ -93,5 +118,44 @@ router.get("/notifications", page.render("admin/system/notifications", "Notifica
 router.get("/parametres", page.render("admin/system/settings", "Paramètres"));
 router.get("/journaux", page.render("admin/system/logs", "Journaux"));
 router.get("/profil", page.render("admin/system/profile", "Profil"));
+
+/* =========================================================
+   OPTIONS / SUPPLEMENTS PRODUITS
+========================================================= */
+
+router.get(
+    "/produits/:productId/options",
+    productOptionController.index
+);
+
+router.post(
+    "/produits/:productId/options/groupes",
+    productOptionController.createGroup
+);
+
+router.post(
+    "/produits/options/groupes/:groupId/update",
+    productOptionController.updateGroup
+);
+
+router.post(
+    "/produits/options/groupes/:groupId/delete",
+    productOptionController.deleteGroup
+);
+
+router.post(
+    "/produits/options/groupes/:groupId/options",
+    productOptionController.createOption
+);
+
+router.post(
+    "/produits/options/:optionId/update",
+    productOptionController.updateOption
+);
+
+router.post(
+    "/produits/options/:optionId/delete",
+    productOptionController.deleteOption
+);
 
 module.exports = router;

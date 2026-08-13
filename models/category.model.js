@@ -17,6 +17,23 @@ async function findAll() {
     `);
 }
 
+async function findAllActive() {
+
+    return await db.query(`
+        SELECT
+            id,
+            name,
+            slug,
+            description,
+            image_url,
+            icon,
+            position
+        FROM categories
+        WHERE is_active = 1
+        ORDER BY position ASC, name ASC
+    `);
+}
+
 async function findById(id) {
     const rows = await db.query(`
         SELECT *
@@ -89,6 +106,7 @@ async function toggleActive(id) {
 
 module.exports = {
     findAll,
+    findAllActive,
     findById,
     create,
     update,

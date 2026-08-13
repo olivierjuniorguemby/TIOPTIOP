@@ -2,15 +2,105 @@
   <div class="container">
     <span class="eyebrow">🍽️ Catalogue</span>
     <h1>Menu</h1>
-    <form class="filters" method="get" action="/menu">
-      <input class="field" name="q" value="<%= typeof query !== 'undefined' ? query : '' %>" placeholder="Rechercher un plat">
-      <button class="button primary">Rechercher</button>
-    </form>
+    <form
+    action="/menu"
+    method="GET"
+    class="filters"
+>
+
+    <!-- RECHERCHE -->
+
+    <input
+        type="text"
+        name="q"
+        class="field"
+        placeholder="Rechercher un plat..."
+        value="<%= query || '' %>"
+    >
+
+
+    <!-- CATEGORIE -->
+
+    <select name="category" class="field">
+
+        <option value="">
+            Toutes catégories
+        </option>
+
+        <% categories.forEach(category => { %>
+
+            <option
+                value="<%= category.id %>"
+
+                <%= String(selectedCategory) === String(category.id)
+                    ? 'selected'
+                    : ''
+                %>
+            >
+
+                <%= category.name %>
+
+            </option>
+
+        <% }) %>
+
+    </select>
+
+
+    <!-- PRIX -->
+
+    <input
+        type="number"
+        name="maxPrice"
+        class="field"
+        min="0"
+        step="100"
+        placeholder="Prix maximum"
+        value="<%= maxPrice || '' %>"
+    >
+
+
+    <!-- BOUTON -->
+
+    <button
+        type="submit"
+        class="button primary"
+    >
+        Filtrer
+    </button>
+
+
+    <!-- RESET -->
+
+    <a
+        href="/menu"
+        class="button"
+    >
+        Réinitialiser
+    </a>
+
+</form>
   </div>
 </section>
 
 <section class="section">
+  
   <div class="container product-grid">
+    <% if (products.length === 0) { %>
+
+    <div class="empty-state">
+        <h2>Aucun produit trouvé</h2>
+        <p>
+            Aucun produit ne correspond à votre recherche.
+        </p>
+
+        <a href="/menu" class="button">
+            Voir tout le menu
+        </a>
+    </div>
+
+    <% } else { %>
+
     <% products.forEach((product) => { %>
       <article class="card">
         <% if (product.image_url) { %>
@@ -27,5 +117,7 @@
         </div>
       </article>
     <% }) %>
+
+    <% } %>
   </div>
 </section>

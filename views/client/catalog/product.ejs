@@ -1,10 +1,5 @@
 <section class="section">
   <div class="container">
-    <!-- =========================================================
-     TIOPTIOP - DETAIL PRODUIT
-     Route : /produit/1
-     views/client/catalog/product.ejs
-========================================================= -->
 
 <style>
   .tiop-product-page {
@@ -21,7 +16,7 @@
     color: var(--text);
   }
 
-  * {
+  .tiop-product-page * {
     box-sizing: border-box;
   }
 
@@ -49,9 +44,7 @@
   .product-thumbnail {
     width: 58px;
     height: 58px;
-
     padding: 0;
-
     overflow: hidden;
 
     border: 1px solid transparent;
@@ -69,6 +62,7 @@
   .product-thumbnail img {
     width: 100%;
     height: 100%;
+
     display: block;
     object-fit: cover;
   }
@@ -79,6 +73,11 @@
 
   .product-main-image {
     min-height: 645px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
     overflow: hidden;
 
     border-radius: 22px;
@@ -92,6 +91,19 @@
 
     display: block;
     object-fit: cover;
+  }
+
+  .product-no-image {
+    width: 100%;
+    min-height: 645px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #ffe7bf;
+
+    font-size: 100px;
   }
 
   /* =========================================================
@@ -112,11 +124,11 @@
   .product-category {
     display: inline-flex;
     align-items: center;
+    gap: 5px;
 
     min-height: 26px;
 
     padding: 0 12px;
-
     margin-bottom: 20px;
 
     border-radius: 999px;
@@ -129,13 +141,22 @@
   }
 
   .product-title {
-    margin: 0 0 15px;
+    margin: 0 0 12px;
 
     font-size: clamp(32px, 4vw, 45px);
     line-height: 1;
 
     font-weight: 900;
     letter-spacing: -2px;
+  }
+
+  .product-short-description {
+    margin: 0 0 18px;
+
+    color: var(--muted);
+
+    font-size: 13px;
+    line-height: 1.6;
   }
 
   /* =========================================================
@@ -147,11 +168,11 @@
     flex-wrap: wrap;
     gap: 7px;
 
-    margin-bottom: 26px;
+    margin-bottom: 20px;
   }
 
   .product-badge {
-    min-height: 23px;
+    min-height: 25px;
 
     display: inline-flex;
     align-items: center;
@@ -166,8 +187,42 @@
     font-weight: 800;
   }
 
+  .product-badge.featured {
+    background: #fff0df;
+    color: var(--orange);
+  }
+
+  .product-badge.halal {
+    background: #edf8f0;
+    color: #277a45;
+  }
+
+  .product-badge.vegetarian {
+    background: #edf8f0;
+    color: #277a45;
+  }
+
   /* =========================================================
-     PRIX + FAVORI
+     PIMENT
+  ========================================================= */
+
+  .product-spice {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+
+    margin-bottom: 18px;
+
+    font-size: 12px;
+  }
+
+  .product-spice strong {
+    margin-right: 5px;
+  }
+
+  /* =========================================================
+     PRIX
   ========================================================= */
 
   .product-price-row {
@@ -177,11 +232,26 @@
 
     gap: 15px;
 
-    margin-bottom: 14px;
+    margin-bottom: 18px;
+  }
+
+  .product-price-container {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .product-old-price {
+    color: #999;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    text-decoration: line-through;
   }
 
   .product-price {
-    font-size: 20px;
+    font-size: 23px;
     font-weight: 900;
   }
 
@@ -197,7 +267,7 @@
 
     color: var(--text);
 
-    box-shadow: 0 5px 20px rgba(0,0,0,.04);
+    box-shadow: 0 5px 20px rgba(0,0,0,.06);
 
     font-weight: 900;
     cursor: pointer;
@@ -208,7 +278,44 @@
   }
 
   /* =========================================================
-     OPTIONS
+     INFORMATIONS TECHNIQUES
+  ========================================================= */
+
+  .product-details {
+    display: grid;
+    gap: 10px;
+
+    margin: 18px 0;
+  }
+
+  .product-detail-item {
+    padding: 13px;
+
+    background: var(--soft);
+
+    border: 1px solid #f0ebe6;
+    border-radius: 12px;
+  }
+
+  .product-detail-item strong {
+    display: block;
+
+    margin-bottom: 5px;
+
+    font-size: 12px;
+  }
+
+  .product-detail-item p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  /* =========================================================
+     DESCRIPTION
   ========================================================= */
 
   .product-option-box {
@@ -220,46 +327,19 @@
   }
 
   .product-option-title {
-    margin: 0 0 14px;
+    margin: 0 0 10px;
 
     font-size: 14px;
     font-weight: 900;
   }
 
-  .product-option-row {
-    min-height: 34px;
+  .product-description {
+    margin: 0;
 
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 20px;
-
-    border-bottom: 1px dashed #ddd8d3;
+    color: var(--muted);
 
     font-size: 12px;
-  }
-
-  .product-option-row:last-child {
-    border-bottom: 0;
-  }
-
-  .product-option-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-
-    cursor: pointer;
-  }
-
-  .product-option-label input {
-    margin: 0;
-    accent-color: #087fff;
-  }
-
-  .product-option-price {
-    font-weight: 900;
-    white-space: nowrap;
+    line-height: 1.7;
   }
 
   /* =========================================================
@@ -268,9 +348,9 @@
 
   .product-instructions {
     width: 100%;
-    min-height: 50px;
+    min-height: 60px;
 
-    margin-top: 10px;
+    margin-top: 12px;
     padding: 14px;
 
     border: 1px solid #dedbd7;
@@ -335,7 +415,7 @@
   }
 
   /* =========================================================
-     MOTIF SEPARATEUR
+     SEPARATEUR
   ========================================================= */
 
   .african-separator {
@@ -343,7 +423,7 @@
     align-items: center;
     gap: 5px;
 
-    margin: 95px 0;
+    margin: 80px 0;
 
     overflow: hidden;
   }
@@ -373,6 +453,57 @@
     background: #34704e;
   }
 
+   /* =========================================================
+     OPTIONGROUPS
+  ========================================================= */
+  .product-option-row {
+    min-height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 4px 0;
+
+    border-bottom: 1px dashed #ddd8d3;
+
+    font-size: 12px;
+  }
+
+  .product-option-row:last-child {
+      border-bottom: 0;
+  }
+
+  .product-option-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      cursor: pointer;
+  }
+
+  .product-option-label input {
+      margin: 0;
+
+      accent-color: var(--orange);
+  }
+
+  .product-option-price {
+      font-weight: 900;
+      white-space: nowrap;
+  }
+
+  .product-option-title small {
+      margin-left: 4px;
+
+      color: var(--orange);
+
+      font-size: 9px;
+      font-weight: 800;
+  }
+
   /* =========================================================
      SUGGESTIONS
   ========================================================= */
@@ -384,7 +515,6 @@
     min-height: 25px;
 
     padding: 0 10px;
-
     margin-bottom: 12px;
 
     border-radius: 999px;
@@ -412,10 +542,6 @@
     gap: 13px;
   }
 
-  /* =========================================================
-     CARTE SUGGESTION
-  ========================================================= */
-
   .suggestion-card {
     overflow: hidden;
 
@@ -426,7 +552,7 @@
   }
 
   .suggestion-image {
-    height: 120px;
+    height: 150px;
 
     display: flex;
     align-items: center;
@@ -436,12 +562,18 @@
 
     background: #ffe7bf;
 
+    color: inherit;
+    text-decoration: none;
+
     font-size: 45px;
   }
 
   .suggestion-image img {
     width: 100%;
     height: 100%;
+
+    display: block;
+
     object-fit: cover;
   }
 
@@ -467,6 +599,7 @@
   .suggestion-price {
     font-size: 12px;
     font-weight: 900;
+
     white-space: nowrap;
   }
 
@@ -518,11 +651,25 @@
     cursor: pointer;
   }
 
+  .no-suggestions {
+    padding: 25px;
+
+    background: #fff;
+
+    border: 1px solid var(--border);
+    border-radius: 15px;
+
+    color: var(--muted);
+
+    font-size: 13px;
+  }
+
   /* =========================================================
      RESPONSIVE
   ========================================================= */
 
   @media (max-width: 1000px) {
+
     .product-main {
       grid-template-columns: 55px 1fr 1fr;
     }
@@ -533,17 +680,21 @@
   }
 
   @media (max-width: 800px) {
+
     .product-main {
       grid-template-columns: 1fr;
     }
 
     .product-thumbnails {
       flex-direction: row;
+      flex-wrap: wrap;
+
       order: 2;
     }
 
     .product-main-image {
       order: 1;
+
       min-height: 450px;
     }
 
@@ -551,8 +702,13 @@
       min-height: 450px;
     }
 
+    .product-no-image {
+      min-height: 450px;
+    }
+
     .product-information {
       order: 3;
+
       min-height: auto;
     }
 
@@ -562,18 +718,25 @@
   }
 
   @media (max-width: 520px) {
+
     .product-main-image,
-    .product-main-image img {
+    .product-main-image img,
+    .product-no-image {
       min-height: 350px;
     }
 
     .product-information {
       padding: 19px;
+
       border-radius: 22px;
     }
 
     .product-title {
       font-size: 35px;
+    }
+
+    .product-price-row {
+      align-items: flex-start;
     }
 
     .product-actions {
@@ -600,95 +763,236 @@
 
   <div class="product-main">
 
-    <!-- MINIATURES -->
+
+    <!-- =====================================================
+         MINIATURES - MAXIMUM 6 IMAGES MYSQL
+    ====================================================== -->
+
     <div class="product-thumbnails">
 
-      <button
-        type="button"
-        class="product-thumbnail active"
-        onclick="changeProductImage(this, '/media/products/pain-1.jpg')"
-      >
-        <img src="/media/products/pain-1.jpg" alt="Pain céréale">
-      </button>
+      <% if (product.images && product.images.length > 0) { %>
 
-      <button
-        type="button"
-        class="product-thumbnail"
-        onclick="changeProductImage(this, '/media/products/pain-2.jpg')"
-      >
-        <img src="/media/products/pain-2.jpg" alt="Pain céréale">
-      </button>
+        <% product.images.forEach((image, index) => { %>
 
-      <button
-        type="button"
-        class="product-thumbnail"
-        onclick="changeProductImage(this, '/media/products/pain-3.jpg')"
-      >
-        <img src="/media/products/pain-3.jpg" alt="Pain céréale">
-      </button>
+          <button
+            type="button"
+            class="product-thumbnail <%= index === 0 ? 'active' : '' %>"
+            onclick='changeProductImage(
+              this,
+              <%- JSON.stringify(image.image_url) %>
+            )'
+          >
+
+            <img
+              src="<%= image.image_url %>"
+              alt="<%= image.alt_text || product.name %>"
+            >
+
+          </button>
+
+        <% }) %>
+
+      <% } %>
 
     </div>
 
 
-    <!-- IMAGE PRINCIPALE -->
+    <!-- =====================================================
+         GRANDE IMAGE
+    ====================================================== -->
+
     <div class="product-main-image">
 
-      <img
-        id="mainProductImage"
-        src="/media/products/pain-1.jpg"
-        alt="Pain céréale"
-      >
+      <% if (product.main_image) { %>
+
+        <img
+          id="mainProductImage"
+          src="<%= product.main_image %>"
+          alt="<%= product.name %>"
+        >
+
+      <% } else { %>
+
+        <div class="product-no-image">
+          🍽️
+        </div>
+
+      <% } %>
 
     </div>
 
 
-    <!-- =================================================
-         INFORMATIONS
-    ================================================== -->
+    <!-- =====================================================
+         INFORMATIONS PRODUIT
+    ====================================================== -->
 
     <article class="product-information">
 
+
+      <!-- CATEGORIE -->
+
       <span class="product-category">
-        🍽️ Tradition
+
+        <%= product.category_icon || "🍽️" %>
+
+        <%= product.category_name %>
+
       </span>
 
+
+      <!-- NOM -->
+
       <h1 class="product-title">
-        Pain céréale
+        <%= product.name %>
       </h1>
 
+
+      <!-- DESCRIPTION COURTE -->
+
+      <% if (product.short_description) { %>
+
+        <p class="product-short-description">
+          <%= product.short_description %>
+        </p>
+
+      <% } %>
+
+
+      <!-- =====================================================
+           BADGES
+      ====================================================== -->
 
       <div class="product-badges">
 
         <span class="product-badge">
-          ⭐ 4.8
+          ⏱ <%= product.preparation_minutes || 15 %> min
         </span>
 
-        <span class="product-badge">
-          ⏱ 15 min
-        </span>
 
         <span class="product-badge">
           📦 Disponible
         </span>
 
-        <span class="product-badge">
-          ⚠ À préciser
-        </span>
+
+        <% if (product.calories !== null && product.calories !== undefined) { %>
+
+          <span class="product-badge">
+            🔥 <%= product.calories %> kcal
+          </span>
+
+        <% } %>
+
+
+        <% if (Number(product.is_halal) === 1) { %>
+
+          <span class="product-badge halal">
+            ✓ Halal
+          </span>
+
+        <% } %>
+
+
+        <% if (Number(product.is_vegetarian) === 1) { %>
+
+          <span class="product-badge vegetarian">
+            🌱 Végétarien
+          </span>
+
+        <% } %>
+
+
+        <% if (Number(product.is_breakfast) === 1) { %>
+
+          <span class="product-badge">
+            ☕ Petit-déjeuner
+          </span>
+
+        <% } %>
+
+
+        <% if (Number(product.is_featured) === 1) { %>
+
+          <span class="product-badge featured">
+            ⭐ Produit vedette
+          </span>
+
+        <% } %>
 
       </div>
 
 
-      <!-- PRIX -->
+      <!-- =====================================================
+           NIVEAU EPICE
+      ====================================================== -->
+
+      <% if (
+        product.spice_level !== null &&
+        product.spice_level !== undefined &&
+        Number(product.spice_level) > 0
+      ) { %>
+
+        <div class="product-spice">
+
+          <strong>
+            Niveau épicé :
+          </strong>
+
+          <% for (let i = 1; i <= 5; i++) { %>
+
+            <span>
+              <%= i <= Number(product.spice_level) ? "🌶️" : "○" %>
+            </span>
+
+          <% } %>
+
+        </div>
+
+      <% } %>
+
+
+      <!-- =====================================================
+           PRIX
+      ====================================================== -->
 
       <div class="product-price-row">
 
-        <strong
-          class="product-price"
-          id="productPrice"
-          data-base-price="12"
-        >
-          12,00 €
-        </strong>
+        <div class="product-price-container">
+
+
+          <% if (
+            product.compare_at_price !== null &&
+            product.compare_at_price !== undefined &&
+            Number(product.compare_at_price) > Number(product.price)
+          ) { %>
+
+            <span class="product-old-price">
+
+              <%= Number(product.compare_at_price)
+                    .toLocaleString("fr-FR") %>
+
+              <%= product.currency || "XAF" %>
+
+            </span>
+
+          <% } %>
+
+
+          <strong
+            class="product-price"
+            id="productPrice"
+            data-base-price="<%= Number(product.price) %>"
+            data-currency="<%= product.currency || 'XAF' %>"
+          >
+
+            <%= Number(product.price)
+                  .toLocaleString("fr-FR") %>
+
+            <%= product.currency || "XAF" %>
+
+          </strong>
+
+        </div>
+
 
         <button
           type="button"
@@ -701,187 +1005,215 @@
       </div>
 
 
-      <!-- =================================================
-           FORMULAIRE PERSONNALISATION
-      ================================================== -->
+      <!-- =====================================================
+           INGREDIENTS / ALLERGENES / PETIT DEJEUNER
+      ====================================================== -->
+
+      <div class="product-details">
+
+
+        <% if (product.ingredients) { %>
+
+          <div class="product-detail-item">
+
+            <strong>
+              🥘 Ingrédients
+            </strong>
+
+            <p>
+              <%= product.ingredients %>
+            </p>
+
+          </div>
+
+        <% } %>
+
+
+        <% if (product.allergens) { %>
+
+          <div class="product-detail-item">
+
+            <strong>
+              ⚠️ Allergènes
+            </strong>
+
+            <p>
+              <%= product.allergens %>
+            </p>
+
+          </div>
+
+        <% } %>
+
+
+        <% if (
+          Number(product.is_breakfast) === 1 &&
+          product.breakfast_start &&
+          product.breakfast_end
+        ) { %>
+
+          <div class="product-detail-item">
+
+            <strong>
+              ☕ Horaires petit-déjeuner
+            </strong>
+
+            <p>
+
+              Disponible de
+
+              <%= String(product.breakfast_start).substring(0, 5) %>
+
+              à
+
+              <%= String(product.breakfast_end).substring(0, 5) %>
+
+            </p>
+
+          </div>
+
+        <% } %>
+
+      </div>
+
+
+      <!-- =====================================================
+           DESCRIPTION COMPLETE
+      ====================================================== -->
+
+      <% if (product.description) { %>
+
+        <div class="product-option-box">
+
+          <h2 class="product-option-title">
+            📖 Description
+          </h2>
+
+          <p class="product-description">
+            <%= product.description %>
+          </p>
+
+        </div>
+
+      <% } %>
+
+
+      <!-- =====================================================
+           FORMULAIRE
+
+           IMPORTANT :
+           Les accompagnements et suppléments seront branchés
+           sur MySQL à l'étape 7.
+      ====================================================== -->
 
       <form
         id="productForm"
-        action="/panier/ajouter"
+        action="#"
         method="POST"
+        onsubmit="return false;"
       >
 
         <input
           type="hidden"
           name="product_id"
-          value="1"
+          value="<%= product.id %>"
         >
 
+        <% if (
+          typeof optionGroups !== "undefined" &&
+          optionGroups &&
+          optionGroups.length > 0
+      ) { %>
 
-        <!-- ===============================================
-             ACCOMPAGNEMENT
-        ================================================ -->
+          <% optionGroups.forEach(group => { %>
 
-        <div class="product-option-box">
-
-          <h2 class="product-option-title">
-            🍚 Accompagnement
-          </h2>
-
-
-          <div class="product-option-row">
-
-            <label class="product-option-label">
-
-              <input
-                type="radio"
-                name="accompaniment"
-                value="riz-parfume"
-                data-price="0"
-                checked
-                onchange="updateProductPrice()"
+              <div
+                  class="product-option-box"
+                  data-group-id="<%= group.id %>"
+                  data-selection-type="<%= group.selection_type %>"
+                  data-min-choices="<%= group.min_choices %>"
+                  data-max-choices="<%= group.max_choices || '' %>"
               >
 
-              Riz parfumé
+                  <h2 class="product-option-title">
 
-            </label>
+                      <% if (group.selection_type === "single") { %>
+                          🍚
+                      <% } else { %>
+                          ✨
+                      <% } %>
 
-            <strong class="product-option-price">
-              Inclus
-            </strong>
+                      <%= group.name %>
 
-          </div>
+                      <% if (Number(group.is_required) === 1) { %>
+                          <small>
+                              (obligatoire)
+                          </small>
+                      <% } %>
 
-
-          <div class="product-option-row">
-
-            <label class="product-option-label">
-
-              <input
-                type="radio"
-                name="accompaniment"
-                value="foufou"
-                data-price="0"
-                onchange="updateProductPrice()"
-              >
-
-              Foufou
-
-            </label>
-
-            <strong class="product-option-price">
-              Inclus
-            </strong>
-
-          </div>
+                  </h2>
 
 
-          <div class="product-option-row">
+                  <% group.options.forEach(option => { %>
 
-            <label class="product-option-label">
+                      <div class="product-option-row">
 
-              <input
-                type="radio"
-                name="accompaniment"
-                value="plantain"
-                data-price="1.50"
-                onchange="updateProductPrice()"
-              >
+                          <label class="product-option-label">
 
-              Plantain
+                              <input
+                                  type="<%= group.selection_type === 'single'
+                                      ? 'radio'
+                                      : 'checkbox'
+                                  %>"
 
-            </label>
+                                  name="<%= group.selection_type === 'single'
+                                      ? 'option_group_' + group.id
+                                      : 'option_group_' + group.id + '[]'
+                                  %>"
 
-            <strong class="product-option-price">
-              +1,50 €
-            </strong>
+                                  value="<%= option.id %>"
 
-          </div>
+                                  data-price="<%= Number(option.price_delta) %>"
 
-        </div>
+                                  <%= Number(option.is_default) === 1
+                                      ? "checked"
+                                        : ""
+                                    %>
 
+                                    onchange="updateProductPrice()"
+                                >
 
-        <!-- ===============================================
-             PERSONNALISATION
-        ================================================ -->
+                                <%= option.name %>
 
-        <div class="product-option-box">
-
-          <h2 class="product-option-title">
-            ✨ Personnalisation
-          </h2>
+                            </label>
 
 
-          <div class="product-option-row">
+                            <strong class="product-option-price">
 
-            <label class="product-option-label">
+                                <% if (Number(option.price_delta) === 0) { %>
 
-              <input
-                type="checkbox"
-                name="extras"
-                value="extra-plantain"
-                data-price="2"
-                onchange="updateProductPrice()"
-              >
+                                    Inclus
 
-              Extra plantain
+                                <% } else { %>
 
-            </label>
+                                    +<%= Number(option.price_delta)
+                                        .toLocaleString("fr-FR") %>
 
-            <strong class="product-option-price">
-              +2,00 €
-            </strong>
+                                    <%= product.currency || "XAF" %>
 
-          </div>
+                                <% } %>
 
+                            </strong>
 
-          <div class="product-option-row">
+                        </div>
 
-            <label class="product-option-label">
+                    <% }) %>
 
-              <input
-                type="checkbox"
-                name="extras"
-                value="sauce-maison"
-                data-price=".50"
-                onchange="updateProductPrice()"
-              >
+                </div>
 
-              Sauce maison
+            <% }) %>
 
-            </label>
-
-            <strong class="product-option-price">
-              +0,50 €
-            </strong>
-
-          </div>
-
-
-          <div class="product-option-row">
-
-            <label class="product-option-label">
-
-              <input
-                type="checkbox"
-                name="extras"
-                value="sans-piment"
-                data-price="0"
-                onchange="updateProductPrice()"
-              >
-
-              Sans piment
-
-            </label>
-
-            <strong class="product-option-price">
-              0 €
-            </strong>
-
-          </div>
-
-        </div>
-
+        <% } %>
 
         <!-- INSTRUCTIONS -->
 
@@ -892,19 +1224,25 @@
         ></textarea>
 
 
-        <!-- ===============================================
-             ACTIONS
-        ================================================ -->
+        <!-- ACTIONS -->
 
         <div class="product-actions">
 
           <button
-            type="submit"
+            type="button"
             class="product-add-cart"
             id="addToCartButton"
           >
-            🛒 Ajouter · 12,00 €
+
+            🛒 Ajouter ·
+
+            <%= Number(product.price)
+                  .toLocaleString("fr-FR") %>
+
+            <%= product.currency || "XAF" %>
+
           </button>
+
 
           <a
             href="/panier"
@@ -923,20 +1261,25 @@
 
 
   <!-- =====================================================
-       MOTIF AFRICAIN DISCRET
+       MOTIF AFRICAIN
   ====================================================== -->
 
-  <div class="african-separator" aria-hidden="true">
+  <div
+    class="african-separator"
+    aria-hidden="true"
+  >
 
-    <% for(let i = 0; i < 35; i++) { %>
+    <% for (let i = 0; i < 35; i++) { %>
+
       <span></span>
+
     <% } %>
 
   </div>
 
 
   <!-- =====================================================
-       SUGGESTIONS
+       SUGGESTIONS DYNAMIQUES
   ====================================================== -->
 
   <section class="product-suggestions">
@@ -950,222 +1293,133 @@
     </h2>
 
 
-    <div class="suggestions-grid">
+    <% if (
+      typeof suggestions !== "undefined" &&
+      suggestions &&
+      suggestions.length > 0
+    ) { %>
 
 
-      <!-- SAKA-SAKA -->
+      <div class="suggestions-grid">
 
-      <article class="suggestion-card">
 
-        <a href="/produit/2" class="suggestion-image">
-          🌿
-        </a>
+        <% suggestions.forEach(item => { %>
 
-        <div class="suggestion-content">
 
-          <div class="suggestion-header">
+          <article class="suggestion-card">
 
-            <h3 class="suggestion-name">
-              Saka-Saka Royal
-            </h3>
 
-            <strong class="suggestion-price">
-              8,90 €
-            </strong>
+            <!-- IMAGE -->
 
-          </div>
-
-          <p class="suggestion-description">
-            Feuilles de manioc, pâte d'arachide,
-            riz parfumé.
-          </p>
-
-          <div class="suggestion-actions">
-
-            <button
-              type="button"
-              class="suggestion-favorite"
+            <a
+              href="/produit/<%= item.id %>"
+              class="suggestion-image"
             >
-              ♡
-            </button>
 
-            <button
-              type="button"
-              class="suggestion-add"
-            >
-              Ajouter +
-            </button>
+              <% if (item.image_url) { %>
 
-          </div>
+                <img
+                  src="<%= item.image_url %>"
+                  alt="<%= item.name %>"
+                >
 
-        </div>
+              <% } else { %>
 
-      </article>
+                🍽️
 
+              <% } %>
 
-      <!-- POULET -->
-
-      <article class="suggestion-card">
-
-        <a href="/produit/3" class="suggestion-image">
-          🔥
-        </a>
-
-        <div class="suggestion-content">
-
-          <div class="suggestion-header">
-
-            <h3 class="suggestion-name">
-              Poulet Braisé Tiop
-            </h3>
-
-            <strong class="suggestion-price">
-              12,90 €
-            </strong>
-
-          </div>
-
-          <p class="suggestion-description">
-            Poulet mariné, braisé au feu,
-            plantain.
-          </p>
-
-          <div class="suggestion-actions">
-
-            <button
-              type="button"
-              class="suggestion-favorite"
-            >
-              ♡
-            </button>
-
-            <button
-              type="button"
-              class="suggestion-add"
-            >
-              Ajouter +
-            </button>
-
-          </div>
-
-        </div>
-
-      </article>
+            </a>
 
 
-      <!-- HARICOTS -->
+            <!-- CONTENU -->
 
-      <article class="suggestion-card">
-
-        <a href="/produit/4" class="suggestion-image">
-          🍲
-        </a>
-
-        <div class="suggestion-content">
-
-          <div class="suggestion-header">
-
-            <h3 class="suggestion-name">
-              Haricots Madesu
-            </h3>
-
-            <strong class="suggestion-price">
-              7,90 €
-            </strong>
-
-          </div>
-
-          <p class="suggestion-description">
-            Haricots mijotés, épices maison,
-            riz.
-          </p>
-
-          <div class="suggestion-actions">
-
-            <button
-              type="button"
-              class="suggestion-favorite"
-            >
-              ♡
-            </button>
-
-            <button
-              type="button"
-              class="suggestion-add"
-            >
-              Ajouter +
-            </button>
-
-          </div>
-
-        </div>
-
-      </article>
+            <div class="suggestion-content">
 
 
-      <!-- POISSON -->
+              <div class="suggestion-header">
 
-      <article class="suggestion-card">
+                <h3 class="suggestion-name">
+                  <%= item.name %>
+                </h3>
 
-        <a href="/produit/5" class="suggestion-image">
-          🐟
-        </a>
 
-        <div class="suggestion-content">
+                <strong class="suggestion-price">
 
-          <div class="suggestion-header">
+                  <%= Number(item.price)
+                        .toLocaleString("fr-FR") %>
 
-            <h3 class="suggestion-name">
-              Maboké de Poisson
-            </h3>
+                  <%= item.currency || "XAF" %>
 
-            <strong class="suggestion-price">
-              13,50 €
-            </strong>
+                </strong>
 
-          </div>
+              </div>
 
-          <p class="suggestion-description">
-            Poisson en papillote,
-            citron, aromates.
-          </p>
 
-          <div class="suggestion-actions">
+              <!-- DESCRIPTION -->
 
-            <button
-              type="button"
-              class="suggestion-favorite"
-            >
-              ♡
-            </button>
+              <p class="suggestion-description">
 
-            <button
-              type="button"
-              class="suggestion-add"
-            >
-              Ajouter +
-            </button>
+                <%= item.short_description || "Découvrez ce produit TiopTiop." %>
 
-          </div>
+              </p>
 
-        </div>
 
-      </article>
+              <!-- ACTIONS -->
 
-    </div>
+              <div class="suggestion-actions">
+
+                <button
+                  type="button"
+                  class="suggestion-favorite"
+                  onclick="toggleSuggestionFavorite(this)"
+                >
+                  ♡
+                </button>
+
+
+                <a
+                  href="/produit/<%= item.id %>"
+                  class="suggestion-add"
+                >
+                  Voir
+                </a>
+
+              </div>
+
+            </div>
+
+          </article>
+
+
+        <% }) %>
+
+
+      </div>
+
+
+    <% } else { %>
+
+
+      <div class="no-suggestions">
+
+        Aucun autre produit de cette catégorie
+        n'est disponible pour le moment.
+
+      </div>
+
+
+    <% } %>
 
   </section>
 
 </section>
-  </div>
-</section>
-
-
 
 
 <script>
+
   /* =========================================================
-     GALERIE
+     GALERIE PRODUIT
   ========================================================= */
 
   function changeProductImage(button, imageUrl) {
@@ -1173,94 +1427,153 @@
     const mainImage =
       document.getElementById("mainProductImage");
 
+
+    if (!mainImage) {
+      return;
+    }
+
+
     mainImage.src = imageUrl;
+
 
     document
       .querySelectorAll(".product-thumbnail")
       .forEach(item => {
+
         item.classList.remove("active");
+
       });
+
 
     button.classList.add("active");
   }
 
 
   /* =========================================================
-     FAVORI
+     FAVORI PRODUIT
+     Temporaire : étape Auth / favoris plus tard
   ========================================================= */
 
   function toggleProductFavorite(button) {
 
     button.classList.toggle("active");
 
+
     if (button.classList.contains("active")) {
-      button.innerHTML = "♥ Favori";
+
+      button.innerHTML =
+        "♥ Favori";
+
     }
     else {
-      button.innerHTML = "♡ Favori";
+
+      button.innerHTML =
+        "♡ Favori";
+
     }
   }
 
 
   /* =========================================================
-     CALCUL AUTOMATIQUE DU PRIX
+     FAVORI SUGGESTION
   ========================================================= */
+
+  function toggleSuggestionFavorite(button) {
+
+    button.classList.toggle("active");
+
+
+    if (button.classList.contains("active")) {
+
+      button.innerHTML = "♥";
+
+    }
+    else {
+
+      button.innerHTML = "♡";
+
+    }
+  }
 
   function updateProductPrice() {
 
     const priceElement =
-      document.getElementById("productPrice");
+        document.getElementById("productPrice");
 
     const button =
-      document.getElementById("addToCartButton");
-
-    let total =
-      parseFloat(priceElement.dataset.basePrice);
+        document.getElementById("addToCartButton");
 
 
-    /* ACCOMPAGNEMENT */
-
-    const accompaniment =
-      document.querySelector(
-        'input[name="accompaniment"]:checked'
-      );
-
-    if (accompaniment) {
-      total += parseFloat(
-        accompaniment.dataset.price || 0
-      );
+    if (!priceElement || !button) {
+        return;
     }
 
 
-    /* EXTRAS */
-
-    document
-      .querySelectorAll(
-        'input[name="extras"]:checked'
-      )
-      .forEach(extra => {
-
-        total += parseFloat(
-          extra.dataset.price || 0
+    const basePrice =
+        Number(
+            priceElement.dataset.basePrice || 0
         );
 
-      });
+
+    const currency =
+        priceElement.dataset.currency || "XAF";
+
+
+    let total = basePrice;
+
+
+    /*
+     * On récupère toutes les options sélectionnées :
+     *
+     * - radio
+     * - checkbox
+     */
+    document
+        .querySelectorAll(
+            '.product-option-box input:checked'
+        )
+        .forEach(input => {
+
+            const additionalPrice =
+                Number(
+                    input.dataset.price || 0
+                );
+
+
+            total += additionalPrice;
+
+        });
 
 
     const formatted =
-      total.toLocaleString(
-        "fr-FR",
-        {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        }
-      );
+        total.toLocaleString("fr-FR");
 
 
     priceElement.textContent =
-      formatted + " €";
+        formatted + " " + currency;
+
 
     button.innerHTML =
-      "🛒 Ajouter · " + formatted + " €";
-  }
+        "🛒 Ajouter · "
+        + formatted
+        + " "
+        + currency;
+}
+
+
+/*
+ * Calcule immédiatement le prix
+ * lorsque la page est chargée.
+ *
+ * Important si une option par défaut
+ * possède un supplément.
+ */
+document.addEventListener(
+    "DOMContentLoaded",
+    updateProductPrice
+);
+
 </script>
+
+  </div>
+</section>
