@@ -1,4 +1,6 @@
 const Product = require("../../models/product.model");
+const Formula = require("../../models/formula.model");
+
 const Category =
     require("../../models/category.model");
 const ProductOption =
@@ -275,4 +277,171 @@ exports.staticPage = (view, title) => {
             page.options
         );
     };
+};
+
+/* =========================================================
+   FORMULES
+   /formules
+========================================================= */
+
+exports.formulas = async (req, res, next) => {
+
+    try {
+
+        const formulas =
+            await Formula.findAllForClient();
+
+
+        /*
+         * On récupère les produits et images
+         * associés à chaque formule.
+         */
+
+        for (const formula of formulas) {
+
+            formula.products =
+                await Formula.getProducts(
+                    formula.id
+                );
+
+
+            formula.images =await Formula.getImages(
+                    formula.id
+                );
+        }
+
+
+        const page = render(
+            "client/catalog/formulas",
+            "Formules",
+            {
+                formulas
+            }
+        );
+
+
+        res.render(
+            page.view,
+            page.options
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Erreur chargement formules client :",
+            error
+        );
+
+        next(error);
+    }
+};
+
+/* =========================================================
+   DETAIL D'UNE FORMULE
+========================================================= */
+
+exports.formulaDetail = async (req, res, next) => {
+
+    try {
+
+        const formulaId =
+            Number(req.params.id);
+
+
+        /* =============================================
+           VALIDATION ID
+        ============================================= */
+
+        if (
+            !Number.isInteger(formulaId) ||
+            formulaId <= 0
+        ) {
+
+            return res.status(404).send(
+                "Formule introuvable."
+            );
+        }
+
+
+        /* =============================================
+           FORMULE
+        ============================================= */
+
+        const formula =
+            await Formula.findByIdForClient(
+                formulaId
+            );
+
+
+        if (!formula) {
+
+            return res.status(404).send(
+                "Formule introuvable."
+            );
+        }
+
+
+        /* =============================================
+           IMAGES
+        ============================================= */
+
+        formula.images =
+            await Formula.getImages(
+                formulaId
+            );
+
+
+        /* =============================================
+           PRODUITS DE LA FORMULE
+        ============================================= */
+
+        formula.products =
+            await Formula.getProducts(
+                formulaId
+            );
+
+
+        /* =============================================
+           IMAGE PRINCIPALE
+        ============================================= */
+
+        formula.mainImage =
+            formula.images.find(
+                image =>
+                    Number(image.is_primary) === 1
+            )
+            ||
+            formula.images[0]
+            ||
+            null;
+
+
+        /* =============================================
+           RENDER
+        ============================================= */
+
+        const page = render(
+            "client/catalog/formula-detail",
+            formula.name,
+            {
+                formula
+            }
+        );
+
+
+        return res.render(
+            page.view,
+            page.options
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            "Erreur chargement détail formule :",
+            error
+        );
+
+        next(error);
+    }
 };

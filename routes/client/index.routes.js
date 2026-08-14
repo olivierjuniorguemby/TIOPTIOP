@@ -37,10 +37,12 @@ router.get(
 
 router.get(
     "/formules",
-    page.staticPage(
-        "client/catalog/formulas",
-        "Formules"
-    )
+    page.formulas
+);
+
+router.get(
+    "/formule/:id",
+    page.formulaDetail
 );
 
 router.get(

@@ -1,4 +1,93 @@
 const router = require("express").Router();
+
+// FORMULAS PLUGINS
+
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
+
+const formulaController =
+    require("../../controllers/admin/formula.controller");
+
+
+const formulaUploadDir =
+    path.join(
+        process.cwd(),
+        "public",
+        "uploads",
+        "formulas"
+    );
+
+
+if (!fs.existsSync(formulaUploadDir)) {
+
+    fs.mkdirSync(
+        formulaUploadDir,
+        {
+            recursive: true
+        }
+    );
+}
+
+
+const formulaStorage =
+    multer.diskStorage({
+
+        destination: (
+            req,
+            file,
+            cb
+        ) => {
+
+            cb(
+                null,
+                formulaUploadDir
+            );
+        },
+
+
+        filename: (
+            req,
+            file,
+            cb
+        ) => {
+
+            const extension =
+                path.extname(
+                    file.originalname
+                );
+
+
+            const filename =
+                "formula-" +
+                Date.now() +
+                "-" +
+                Math.round(
+                    Math.random() *
+                    1E9
+                ) +
+                extension;
+
+
+            cb(
+                null,
+                filename
+            );
+        }
+    });
+
+
+const formulaUpload =
+    multer({
+        storage: formulaStorage,
+        limits: {
+            files: 6,
+            fileSize:
+                5 * 1024 * 1024
+        }
+    });
+// FIN FORMULAS PLUGINS
+
 const dashboard = require("../../controllers/admin/dashboard.controller");
 const applications = require("../../controllers/admin/application.controller");
 const page = require("../../controllers/admin/page.controller");
@@ -11,6 +100,11 @@ const productController =
     require("../../controllers/admin/product.controller");
 const productOptionController =
     require("../../controllers/admin/product-option.controller");
+
+
+
+
+
 
 router.get("/connexion", (req, res) => {
   res.render("admin/login", {
@@ -100,7 +194,6 @@ router.post("/categories/:id/delete", category.remove);
 router.post("/categories/:id/toggle", category.toggleActive);
 
 
-router.get("/formules", page.render("admin/catalog/formulas", "Formules"));
 router.get("/promotions", page.render("admin/catalog/promotions", "Promotions"));
 router.get("/tiopplus", page.render("admin/catalog/loyalty", "Tiop+"));
 
@@ -156,6 +249,81 @@ router.post(
 router.post(
     "/produits/options/:optionId/delete",
     productOptionController.deleteOption
+);
+
+/* =========================================================
+   FORMULES
+========================================================= */
+
+router.get(
+    "/formules",
+    formulaController.index
+);
+
+
+router.post(
+    "/formules",
+    formulaUpload.array("images", 6),
+    formulaController.create
+);
+
+
+router.post(
+    "/formules/:id/update",
+    formulaUpload.array("images", 6),
+    formulaController.update
+);
+
+
+router.post(
+    "/formules/:id/delete",
+    formulaController.remove
+);
+
+
+/* IMAGES */
+
+router.get(
+    "/formules/:id/images",
+    formulaController.getImages
+);
+
+
+router.post(
+    "/formules/:formulaId/images/:imageId/delete",
+    formulaController.deleteImage
+);
+
+
+router.post(
+    "/formules/:formulaId/images/:imageId/primary",
+    formulaController.setPrimaryImage
+);
+
+
+/* PRODUITS */
+
+router.get(
+    "/formules/:id/products",
+    formulaController.getProducts
+);
+
+
+router.post(
+    "/formules/:id/products",
+    formulaController.addProduct
+);
+
+
+router.post(
+    "/formules/:formulaId/products/:relationId/update",
+    formulaController.updateProduct
+);
+
+
+router.post(
+    "/formules/:formulaId/products/:relationId/delete",
+    formulaController.removeProduct
 );
 
 module.exports = router;

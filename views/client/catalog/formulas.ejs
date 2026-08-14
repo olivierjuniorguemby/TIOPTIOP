@@ -1,12 +1,765 @@
-<section class="page-hero">
-  <div class="container">
-    <span class="eyebrow">🍱 Formules</span>
-    <h1>🍱 Formules</h1>
-    <p>Menus et formules TiopTiop</p>
-  </div>
-</section>
-<section class="section">
-  <div class="container panel">
-    <p>Page EJS structurée, prête à recevoir le contenu de TiopTiop Signature 2.4.4.</p>
-  </div>
+<style>
+
+.formulas-client-page {
+
+    --orange: #ff7900;
+    --dark: #171310;
+    --muted: #746d66;
+    --border: #eadfd3;
+    --cream: #fff8ef;
+}
+
+
+.formulas-client-header {
+
+    margin-bottom: 35px;
+}
+
+
+.formulas-client-header .eyebrow {
+
+    display: inline-flex;
+
+    padding: 7px 13px;
+
+    border-radius: 999px;
+
+    background: #fff0df;
+
+    color: var(--orange);
+
+    font-size: 12px;
+    font-weight: 900;
+}
+
+
+.formulas-client-header h1 {
+
+    margin: 12px 0 8px;
+
+    font-size:
+        clamp(38px, 6vw, 65px);
+
+    line-height: .95;
+
+    letter-spacing: -3px;
+}
+
+
+.formulas-client-header p {
+
+    color: var(--muted);
+
+    font-size: 16px;
+}
+
+
+.formulas-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 22px;
+}
+
+
+.formula-client-card {
+
+    overflow: hidden;
+
+    background: #fff;
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 24px;
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+
+.formula-client-card:hover {
+
+    transform:
+        translateY(-4px);
+
+    box-shadow:
+        0 18px 50px
+        rgba(23,19,15,.10);
+}
+
+
+.formula-client-image {
+
+    position: relative;
+
+    height: 245px;
+
+    overflow: hidden;
+
+    background: #ffe8c5;
+}
+
+
+.formula-client-image img {
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    display: block;
+}
+
+
+.formula-client-no-image {
+
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 70px;
+}
+
+
+.formula-featured {
+
+    position: absolute;
+
+    top: 14px;
+    left: 14px;
+
+    padding: 7px 11px;
+
+    border-radius: 999px;
+
+    background: var(--orange);
+
+    color: white;
+
+    font-size: 11px;
+    font-weight: 900;
+}
+
+
+.formula-client-content {
+
+    padding: 21px;
+}
+
+
+.formula-client-content h2 {
+
+    margin: 0 0 9px;
+
+    font-size: 24px;
+
+    line-height: 1.05;
+}
+
+
+.formula-client-description {
+
+    min-height: 42px;
+
+    margin: 0 0 18px;
+
+    color: var(--muted);
+
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+
+.formula-products-title {
+
+    margin-bottom: 9px;
+
+    font-size: 12px;
+    font-weight: 900;
+
+    color: var(--dark);
+}
+
+
+.formula-products-list {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 7px;
+
+    margin-bottom: 20px;
+}
+
+
+.formula-product-line {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding-bottom: 7px;
+
+    border-bottom:
+        1px dashed #e6dfd8;
+
+    color: var(--muted);
+
+    font-size: 12px;
+}
+
+
+.formula-product-line:last-child {
+
+    border-bottom: 0;
+}
+
+
+.formula-product-mini {
+
+    width: 32px;
+    height: 32px;
+
+    flex: 0 0 32px;
+
+    border-radius: 7px;
+
+    object-fit: cover;
+
+    background: #f4f1ed;
+}
+
+
+.formula-client-footer {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content:
+        space-between;
+
+    gap: 15px;
+
+    padding-top: 15px;
+
+    border-top:
+        1px solid #eee7e0;
+}
+
+
+.formula-price {
+
+    display: flex;
+
+    flex-direction: column;
+}
+
+
+.formula-current-price {
+
+    color: var(--orange);
+
+    font-size: 21px;
+    font-weight: 1000;
+}
+
+
+.formula-old-price {
+
+    color: #999;
+
+    font-size: 12px;
+}
+
+
+.formula-order-button {
+
+    min-height: 42px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 17px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: var(--orange);
+
+    color: white;
+
+    font-size: 12px;
+    font-weight: 900;
+
+    text-decoration: none;
+
+    cursor: pointer;
+}
+
+
+.formula-images-mini {
+
+    display: flex;
+
+    gap: 5px;
+
+    margin-top: 15px;
+}
+
+
+.formula-images-mini img {
+
+    width: 40px;
+    height: 40px;
+
+    border-radius: 8px;
+
+    object-fit: cover;
+}
+
+
+.formulas-empty {
+
+    grid-column: 1 / -1;
+
+    padding: 50px;
+
+    text-align: center;
+
+    background: #fff;
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 24px;
+}
+
+
+@media(max-width:1000px) {
+
+    .formulas-grid {
+
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+}
+
+
+@media(max-width:650px) {
+
+    .formulas-grid {
+
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .formula-client-image {
+
+        height: 220px;
+    }
+}
+
+.formula-client-actions {
+
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+
+.formula-detail-button {
+
+    min-height: 42px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 15px;
+
+    border: 1px solid var(--border);
+    border-radius: 999px;
+
+    background: #fff;
+
+    color: var(--dark);
+
+    font-size: 12px;
+    font-weight: 900;
+
+    text-decoration: none;
+
+    transition:
+        border-color .2s ease,
+        color .2s ease,
+        background .2s ease;
+}
+
+
+.formula-detail-button:hover {
+
+    border-color: var(--orange);
+
+    background: #fff8ef;
+
+    color: var(--orange);
+}
+
+</style>
+
+
+
+<section class="section formulas-client-page">
+
+<div class="container">
+
+
+    <header class="formulas-client-header">
+
+        <span class="eyebrow">
+
+            🍱 Nos formules
+
+        </span>
+
+
+        <h1>
+            Formules TiopTiop
+        </h1>
+
+
+        <p>
+
+            Découvrez nos menus complets
+            composés de plusieurs spécialités.
+
+        </p>
+
+    </header>
+
+
+
+    <div class="formulas-grid">
+
+
+        <% if (
+            !formulas ||
+            formulas.length === 0
+        ) { %>
+
+
+            <div class="formulas-empty">
+
+                <h2>
+                    🍱 Aucune formule
+                </h2>
+
+                <p>
+
+                    Les formules TiopTiop
+                    seront bientôt disponibles.
+
+                </p>
+
+            </div>
+
+
+        <% } %>
+
+
+
+        <% (formulas || [])
+            .forEach(formula => {
+
+            const mainImage =
+
+                formula.images &&
+                formula.images.length
+
+                    ? (
+                        formula.images.find(
+                            image =>
+                                Number(
+                                    image.is_primary
+                                ) === 1
+                        )
+                        ||
+                        formula.images[0]
+                    )
+
+                    : null;
+
+        %>
+
+
+            <article
+                class="formula-client-card">
+
+
+                <div
+                    class="formula-client-image">
+
+
+                    <% if (mainImage) { %>
+
+                        <img
+                            src="<%= mainImage.image_url %>"
+                            alt="<%= formula.name %>">
+
+                    <% } else { %>
+
+                        <div
+                            class="formula-client-no-image">
+
+                            🍱
+
+                        </div>
+
+                    <% } %>
+
+
+                    <% if (
+                        Number(
+                            formula.is_featured
+                        ) === 1
+                    ) { %>
+
+                        <span
+                            class="formula-featured">
+
+                            ⭐ Populaire
+
+                        </span>
+
+                    <% } %>
+
+
+                </div>
+
+
+
+                <div
+                    class="formula-client-content">
+
+
+                    <h2>
+
+                        <%= formula.name %>
+
+                    </h2>
+
+
+                    <p
+                        class="formula-client-description">
+
+                        <%=
+
+                            formula.short_description
+                            ||
+                            formula.description
+                            ||
+                            "Une formule TiopTiop généreuse et savoureuse."
+
+                        %>
+
+                    </p>
+
+
+
+                    <% if (
+                        formula.products &&
+                        formula.products.length
+                    ) { %>
+
+
+                        <div
+                            class="formula-products-title">
+
+                            🍽 Cette formule contient
+
+                        </div>
+
+
+                        <div
+                            class="formula-products-list">
+
+
+                            <% formula.products
+                                .forEach(product => { %>
+
+
+                                <div
+                                    class="formula-product-line">
+
+
+                                    <% if (
+                                        product.primary_image
+                                    ) { %>
+
+                                        <img
+                                            src="<%= product.primary_image %>"
+                                            alt="<%= product.name %>"
+                                            class="formula-product-mini">
+
+                                    <% } %>
+
+
+                                    <span>
+
+                                        <strong>
+
+                                            <%= product.quantity %>×
+
+                                        </strong>
+
+                                        <%= product.name %>
+
+                                    </span>
+
+
+                                </div>
+
+
+                            <% }) %>
+
+
+                        </div>
+
+                    <% } %>
+
+
+
+                    <% if (
+                        formula.images &&
+                        formula.images.length > 1
+                    ) { %>
+
+
+                        <div
+                            class="formula-images-mini">
+
+
+                            <% formula.images
+                                .slice(0, 6)
+                                .forEach(image => { %>
+
+
+                                <img
+                                    src="<%= image.image_url %>"
+                                    alt="<%= formula.name %>">
+
+
+                            <% }) %>
+
+
+                        </div>
+
+                    <% } %>
+
+
+
+                    <div
+                        class="formula-client-footer">
+
+
+                        <div
+                            class="formula-price">
+
+
+                            <% if (
+                                formula.compare_at_price
+                            ) { %>
+
+                                <span
+                                    class="formula-old-price">
+
+                                    <s>
+
+                                        <%= Number(
+                                            formula.compare_at_price
+                                        ).toLocaleString(
+                                            "fr-FR"
+                                        ) %>
+
+                                        <%= formula.currency %>
+
+                                    </s>
+
+                                </span>
+
+                            <% } %>
+
+
+                            <span
+                                class="formula-current-price">
+
+                                <%= Number(
+                                    formula.price
+                                ).toLocaleString(
+                                    "fr-FR"
+                                ) %>
+
+                                <%= formula.currency %>
+
+                            </span>
+
+
+                        </div>
+
+                        <div class="formula-client-actions">
+
+                            <a
+                                href="/formule/<%= formula.id %>"
+                                class="formula-detail-button">
+
+                                👁 Voir
+
+                            </a>
+
+
+                            <button
+                                type="button"
+                                class="formula-order-button">
+
+                                🛒 Ajouter
+
+                            </button>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </article>
+
+
+        <% }) %>
+
+
+    </div>
+
+</div>
+
 </section>

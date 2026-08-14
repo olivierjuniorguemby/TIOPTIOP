@@ -1,0 +1,1029 @@
+<style>
+
+.formula-detail-page {
+
+    --orange: #ff7900;
+    --orange-dark: #e86e00;
+    --dark: #171310;
+    --text: #201c19;
+    --muted: #746d66;
+    --border: #eadfd3;
+    --soft: #faf7f3;
+    --cream: #fff8ef;
+
+    color: var(--text);
+}
+
+
+/* =========================================================
+   RETOUR
+========================================================= */
+
+.formula-back {
+
+    margin-bottom: 22px;
+}
+
+.formula-back a {
+
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    color: var(--muted);
+
+    font-size: 13px;
+    font-weight: 800;
+
+    text-decoration: none;
+}
+
+.formula-back a:hover {
+
+    color: var(--orange);
+}
+
+
+/* =========================================================
+   STRUCTURE PRINCIPALE
+========================================================= */
+
+.formula-main {
+
+    display: grid;
+
+    grid-template-columns:
+        65px
+        minmax(320px, .95fr)
+        minmax(380px, 1.05fr);
+
+    gap: 18px;
+
+    align-items: stretch;
+}
+
+
+/* =========================================================
+   MINIATURES
+========================================================= */
+
+.formula-thumbnails {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 9px;
+}
+
+
+.formula-thumbnail {
+
+    width: 65px;
+    height: 65px;
+
+    padding: 0;
+
+    overflow: hidden;
+
+    border: 2px solid transparent;
+    border-radius: 12px;
+
+    background: #fff;
+
+    cursor: pointer;
+}
+
+
+.formula-thumbnail.active {
+
+    border-color: var(--orange);
+}
+
+
+.formula-thumbnail img {
+
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+}
+
+
+/* =========================================================
+   IMAGE PRINCIPALE
+========================================================= */
+
+.formula-main-image {
+
+    min-height: 650px;
+
+    overflow: hidden;
+
+    border-radius: 26px;
+
+    background: #f3eee9;
+}
+
+
+.formula-main-image img {
+
+    width: 100%;
+    height: 100%;
+
+    min-height: 650px;
+
+    display: block;
+
+    object-fit: cover;
+}
+
+
+.formula-no-image {
+
+    min-height: 650px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 100px;
+
+    background: #ffe8c5;
+}
+
+
+/* =========================================================
+   INFORMATIONS
+========================================================= */
+
+.formula-information {
+
+    min-height: 650px;
+
+    padding: 30px;
+
+    border: 1px solid var(--border);
+    border-radius: 27px;
+
+    background: #fff;
+}
+
+
+.formula-label {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    padding: 8px 13px;
+
+    margin-bottom: 18px;
+
+    border-radius: 999px;
+
+    background: #fff0df;
+
+    color: var(--orange);
+
+    font-size: 11px;
+    font-weight: 900;
+}
+
+
+.formula-title {
+
+    margin: 0 0 14px;
+
+    font-size: clamp(
+        34px,
+        4vw,
+        50px
+    );
+
+    line-height: .98;
+
+    letter-spacing: -2px;
+
+    font-weight: 1000;
+}
+
+
+.formula-description {
+
+    margin: 0 0 22px;
+
+    color: var(--muted);
+
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+
+/* =========================================================
+   BADGES
+========================================================= */
+
+.formula-badges {
+
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 7px;
+
+    margin-bottom: 25px;
+}
+
+
+.formula-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    min-height: 29px;
+
+    padding: 0 11px;
+
+    border-radius: 999px;
+
+    background: #f7f3ef;
+
+    font-size: 11px;
+    font-weight: 800;
+}
+
+
+.formula-badge.featured {
+
+    background: #fff0df;
+
+    color: var(--orange);
+}
+
+
+/* =========================================================
+   PRIX
+========================================================= */
+
+.formula-price-zone {
+
+    display: flex;
+
+    align-items: flex-end;
+
+    gap: 12px;
+
+    margin-bottom: 25px;
+
+    padding-bottom: 22px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+
+.formula-current-price {
+
+    color: var(--orange);
+
+    font-size: 29px;
+    font-weight: 1000;
+}
+
+
+.formula-old-price {
+
+    margin-bottom: 4px;
+
+    color: #999;
+
+    font-size: 14px;
+
+    text-decoration: line-through;
+}
+
+
+/* =========================================================
+   COMPOSITION
+========================================================= */
+
+.formula-composition {
+
+    padding: 20px;
+
+    border: 1px solid var(--border);
+    border-radius: 18px;
+
+    background: var(--soft);
+}
+
+
+.formula-composition-title {
+
+    margin: 0 0 15px;
+
+    font-size: 17px;
+    font-weight: 1000;
+}
+
+
+.formula-products {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 9px;
+}
+
+
+.formula-product {
+
+    display: grid;
+
+    grid-template-columns:
+        55px
+        1fr
+        auto;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 10px;
+
+    border-radius: 13px;
+
+    background: #fff;
+
+    text-decoration: none;
+
+    color: inherit;
+
+    transition:
+        transform .15s ease,
+        box-shadow .15s ease;
+}
+
+
+.formula-product:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 8px 25px
+        rgba(23,19,15,.07);
+}
+
+
+.formula-product-image {
+
+    width: 55px;
+    height: 55px;
+
+    overflow: hidden;
+
+    border-radius: 11px;
+
+    background: #eee;
+}
+
+
+.formula-product-image img {
+
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+}
+
+
+.formula-product-placeholder {
+
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 23px;
+}
+
+
+.formula-product-name {
+
+    display: block;
+
+    margin-bottom: 4px;
+
+    font-size: 13px;
+    font-weight: 900;
+}
+
+
+.formula-product-description {
+
+    display: block;
+
+    color: var(--muted);
+
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+
+.formula-product-quantity {
+
+    min-width: 35px;
+
+    padding: 6px 8px;
+
+    border-radius: 999px;
+
+    background: #fff0df;
+
+    color: var(--orange);
+
+    text-align: center;
+
+    font-size: 11px;
+    font-weight: 1000;
+}
+
+
+/* =========================================================
+   VIDE
+========================================================= */
+
+.formula-empty-composition {
+
+    padding: 20px;
+
+    text-align: center;
+
+    color: var(--muted);
+
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.formula-actions {
+
+    display: flex;
+
+    gap: 10px;
+
+    margin-top: 22px;
+}
+
+
+.formula-add-button {
+
+    min-height: 48px;
+
+    flex: 1;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 20px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: var(--orange);
+
+    color: #fff;
+
+    font-size: 13px;
+    font-weight: 1000;
+
+    cursor: pointer;
+}
+
+
+.formula-add-button:hover {
+
+    background: var(--orange-dark);
+}
+
+
+.formula-menu-button {
+
+    min-height: 48px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 20px;
+
+    border-radius: 999px;
+
+    background: var(--dark);
+
+    color: #fff;
+
+    font-size: 13px;
+    font-weight: 900;
+
+    text-decoration: none;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media(max-width:1000px) {
+
+    .formula-main {
+
+        grid-template-columns:
+            60px 1fr 1fr;
+    }
+}
+
+
+@media(max-width:800px) {
+
+    .formula-main {
+
+        grid-template-columns: 1fr;
+    }
+
+
+    .formula-thumbnails {
+
+        flex-direction: row;
+
+        order: 2;
+
+        overflow-x: auto;
+    }
+
+
+    .formula-main-image {
+
+        order: 1;
+
+        min-height: 450px;
+    }
+
+
+    .formula-main-image img,
+    .formula-no-image {
+
+        min-height: 450px;
+    }
+
+
+    .formula-information {
+
+        order: 3;
+
+        min-height: auto;
+    }
+}
+
+
+@media(max-width:520px) {
+
+    .formula-main-image,
+    .formula-main-image img,
+    .formula-no-image {
+
+        min-height: 340px;
+    }
+
+
+    .formula-information {
+
+        padding: 20px;
+    }
+
+
+    .formula-actions {
+
+        flex-direction: column;
+    }
+
+
+    .formula-product {
+
+        grid-template-columns:
+            48px 1fr auto;
+    }
+
+
+    .formula-product-image {
+
+        width: 48px;
+        height: 48px;
+    }
+}
+
+</style>
+
+
+<section class="section formula-detail-page">
+
+<div class="container">
+
+
+    <!-- RETOUR -->
+
+    <div class="formula-back">
+
+        <a href="/formules">
+
+            ← Retour aux formules
+
+        </a>
+
+    </div>
+
+
+    <div class="formula-main">
+
+
+        <!-- =========================================
+             MINIATURES
+        ========================================== -->
+
+        <div class="formula-thumbnails">
+
+            <% (formula.images || [])
+                .slice(0, 6)
+                .forEach((image, index) => { %>
+
+
+                <button
+                    type="button"
+                    class="formula-thumbnail <%= index === 0 ? 'active' : '' %>"
+                    onclick="changeFormulaImage(this, '<%= image.image_url %>')">
+
+                    <img
+                        src="<%= image.image_url %>"
+                        alt="<%= formula.name %>">
+
+                </button>
+
+
+            <% }) %>
+
+        </div>
+
+
+
+        <!-- =========================================
+             IMAGE PRINCIPALE
+        ========================================== -->
+
+        <div class="formula-main-image">
+
+
+            <% if (formula.mainImage) { %>
+
+                <img
+                    id="mainFormulaImage"
+                    src="<%= formula.mainImage.image_url %>"
+                    alt="<%= formula.name %>">
+
+            <% } else { %>
+
+                <div class="formula-no-image">
+
+                    🍱
+
+                </div>
+
+            <% } %>
+
+
+        </div>
+
+
+
+        <!-- =========================================
+             INFORMATIONS
+        ========================================== -->
+
+        <article class="formula-information">
+
+
+            <span class="formula-label">
+
+                🍱 Formule TiopTiop
+
+            </span>
+
+
+            <h1 class="formula-title">
+
+                <%= formula.name %>
+
+            </h1>
+
+
+            <p class="formula-description">
+
+                <%= formula.description
+                    || formula.short_description
+                    || "Une formule complète TiopTiop." %>
+
+            </p>
+
+
+
+            <!-- BADGES -->
+
+            <div class="formula-badges">
+
+
+                <span class="formula-badge">
+
+                    🍽
+                    <%= (formula.products || []).length %>
+                    produit(s)
+
+                </span>
+
+
+                <% if (
+                    Number(formula.is_featured) === 1
+                ) { %>
+
+                    <span class="formula-badge featured">
+
+                        ⭐ Formule populaire
+
+                    </span>
+
+                <% } %>
+
+
+                <span class="formula-badge">
+
+                    📦 Disponible
+
+                </span>
+
+
+            </div>
+
+
+
+            <!-- PRIX -->
+
+            <div class="formula-price-zone">
+
+
+                <strong class="formula-current-price">
+
+                    <%= Number(
+                        formula.price || 0
+                    ).toLocaleString("fr-FR") %>
+
+                    <%= formula.currency || "XAF" %>
+
+                </strong>
+
+
+                <% if (
+                    formula.compare_at_price &&
+                    Number(formula.compare_at_price) >
+                    Number(formula.price)
+                ) { %>
+
+                    <span class="formula-old-price">
+
+                        <%= Number(
+                            formula.compare_at_price
+                        ).toLocaleString("fr-FR") %>
+
+                        <%= formula.currency || "XAF" %>
+
+                    </span>
+
+                <% } %>
+
+
+            </div>
+
+
+
+            <!-- =========================================
+                 COMPOSITION
+            ========================================== -->
+
+            <div class="formula-composition">
+
+
+                <h2 class="formula-composition-title">
+
+                    🍽 Composition de la formule
+
+                </h2>
+
+
+                <% if (
+                    formula.products &&
+                    formula.products.length > 0
+                ) { %>
+
+
+                    <div class="formula-products">
+
+
+                        <% formula.products
+                            .forEach(product => { %>
+
+
+                            <a
+                                href="/produit/<%= product.product_id %>"
+                                class="formula-product">
+
+
+                                <div class="formula-product-image">
+
+
+                                    <% if (product.primary_image) { %>
+
+                                        <img
+                                            src="<%= product.primary_image %>"
+                                            alt="<%= product.name %>">
+
+                                    <% } else { %>
+
+                                        <div class="formula-product-placeholder">
+
+                                            🍽
+
+                                        </div>
+
+                                    <% } %>
+
+
+                                </div>
+
+
+                                <div>
+
+
+                                    <strong class="formula-product-name">
+
+                                        <%= product.name %>
+
+                                    </strong>
+
+
+                                    <% if (
+                                        product.short_description
+                                    ) { %>
+
+                                        <span class="formula-product-description">
+
+                                            <%= product.short_description %>
+
+                                        </span>
+
+                                    <% } %>
+
+
+                                </div>
+
+
+                                <span class="formula-product-quantity">
+
+                                    ×<%= product.quantity %>
+
+                                </span>
+
+
+                            </a>
+
+
+                        <% }) %>
+
+
+                    </div>
+
+
+                <% } else { %>
+
+
+                    <div class="formula-empty-composition">
+
+                        Aucun produit renseigné
+                        pour cette formule.
+
+                    </div>
+
+
+                <% } %>
+
+
+            </div>
+
+
+
+            <!-- ACTIONS -->
+
+            <div class="formula-actions">
+
+
+                <button
+                    type="button"
+                    class="formula-add-button">
+
+                    🛒 Ajouter la formule ·
+
+                    <%= Number(
+                        formula.price || 0
+                    ).toLocaleString("fr-FR") %>
+
+                    <%= formula.currency || "XAF" %>
+
+                </button>
+
+
+                <a
+                    href="/formules"
+                    class="formula-menu-button">
+
+                    🍱 Formules
+
+                </a>
+
+
+            </div>
+
+
+        </article>
+
+
+    </div>
+
+
+</div>
+
+</section>
+
+
+
+<script>
+
+/* =========================================================
+   GALERIE FORMULE
+========================================================= */
+
+function changeFormulaImage(
+    button,
+    imageUrl
+) {
+
+    const mainImage =
+        document.getElementById(
+            "mainFormulaImage"
+        );
+
+
+    if (!mainImage) {
+        return;
+    }
+
+
+    mainImage.src = imageUrl;
+
+
+    document
+        .querySelectorAll(
+            ".formula-thumbnail"
+        )
+        .forEach(item => {
+
+            item.classList.remove(
+                "active"
+            );
+
+        });
+
+
+    button.classList.add(
+        "active"
+    );
+}
+
+</script>
