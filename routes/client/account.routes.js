@@ -16,9 +16,16 @@ const {
     );
 
 
+const {
+    profileUpload
+} =
+    require(
+        "../../middleware/profile-upload"
+    );
+
+
 /* =========================================================
-   TABLEAU DE BORD CLIENT
-   GET /compte
+   TABLEAU DE BORD
 ========================================================= */
 
 router.get(
@@ -29,8 +36,7 @@ router.get(
 
 
 /* =========================================================
-   PROFIL CLIENT
-   GET /profil
+   PROFIL
 ========================================================= */
 
 router.get(
@@ -40,9 +46,50 @@ router.get(
 );
 
 
+router.post(
+    "/profil",
+    requireUser,
+    profileUpload.single(
+        "profilePhoto"
+    ),
+    account.updateProfile
+);
+
+
 /* =========================================================
-   PARAMETRES CLIENT
-   GET /parametres
+   ADRESSES
+========================================================= */
+
+router.post(
+    "/profil/adresses",
+    requireUser,
+    account.createAddress
+);
+
+
+router.post(
+    "/profil/adresses/:id/update",
+    requireUser,
+    account.updateAddress
+);
+
+
+router.post(
+    "/profil/adresses/:id/default",
+    requireUser,
+    account.setDefaultAddress
+);
+
+
+router.post(
+    "/profil/adresses/:id/delete",
+    requireUser,
+    account.deleteAddress
+);
+
+
+/* =========================================================
+   PARAMETRES
 ========================================================= */
 
 router.get(
@@ -52,9 +99,28 @@ router.get(
 );
 
 
+router.post(
+    "/parametres",
+    requireUser,
+    account.updateSettings
+);
+
+
 /* =========================================================
-   MOYENS DE PAIEMENT CLIENT
-   GET /paiements-client
+   MOT DE PASSE
+========================================================= */
+
+router.post(
+    "/parametres/mot-de-passe",
+    requireUser,
+    account.changePassword
+);
+
+
+/* =========================================================
+   PAIEMENTS
+
+   Dynamisation réservée étape 13.
 ========================================================= */
 
 router.get(

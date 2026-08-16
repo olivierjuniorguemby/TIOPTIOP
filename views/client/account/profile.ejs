@@ -1,68 +1,1231 @@
-<section class="page-hero">
-  <div class="container">
-    <span class="eyebrow">Espace client</span>
-    <h1>👤 Profil</h1>
-    <p>Informations personnelles et photo</p>
-  </div>
-</section>
+<!-- =========================================================
+     TIOPTIOP
+     PROFIL CLIENT DYNAMIQUE
+     views/client/account/profile.ejs
+========================================================= -->
 
+<section class="account-page">
 
-    <div class="container profileGrid">
+    <div class="account-layout">
 
-        <aside class="panel profileNav">
+        <!-- =================================================
+             SIDEBAR
+        ================================================== -->
 
-            <a href="/compte">
-                ← Vue d’ensemble
+        <aside class="account-sidebar">
+
+            <a href="/compte" class="account-nav-item">
+                <span>🏠</span>
+                Vue d’ensemble
             </a>
 
-            <a href="/profil">
-                👤 Profil
-            </a>
-            <a href="/tiopplus">⭐ Tiop+</a>
-            <a href="/commandes">🧾 Commandes & factures</a>
-            <a href="/parametres">
-                ⚙️ Paramètres
+            <a href="/profil" class="account-nav-item active">
+                <span>👤</span>
+                Profil
             </a>
 
-            <a href="/paiements-client">
-                💳 Paiements
+            <a href="/commandes" class="account-nav-item">
+                <span>🧾</span>
+                Commandes
+            </a>
+
+            <a href="/favoris" class="account-nav-item">
+                <span>❤️</span>
+                Favoris
+            </a>
+
+            <a href="/tiopplus" class="account-nav-item">
+                <span>⭐</span>
+                Tiop+
+            </a>
+
+            <a href="/paiements-client" class="account-nav-item">
+                <span>💳</span>
+                Paiements
+            </a>
+
+            <a href="/parametres" class="account-nav-item">
+                <span>⚙️</span>
+                Paramètres
             </a>
 
         </aside>
 
-<!-- ==========================================
-     BLOC PROFIL CLIENT - TIOPTIOP
-=========================================== -->
+
+        <!-- =================================================
+             CONTENU
+        ================================================== -->
+
+        <main class="account-content">
+
+            <div class="account-heading">
+
+                <span class="account-eyebrow">
+                    👤 Mon espace
+                </span>
+
+                <h1>Mon profil</h1>
+
+                <p>
+                    Gérez vos informations personnelles,
+                    votre photo et vos adresses de livraison.
+                </p>
+
+            </div>
+
+
+            <!-- =================================================
+                 MESSAGES
+            ================================================== -->
+
+            <% if (success) { %>
+
+                <div class="account-alert success">
+                    ✓ <%= success %>
+                </div>
+
+            <% } %>
+
+
+            <% if (error) { %>
+
+                <div class="account-alert error">
+                    ⚠ <%= error %>
+                </div>
+
+            <% } %>
+
+
+            <!-- =================================================
+                 INFORMATIONS PERSONNELLES
+            ================================================== -->
+
+            <section class="account-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <span class="card-icon">
+                            👤
+                        </span>
+
+                        <div>
+                            <h2>Informations personnelles</h2>
+
+                            <p>
+                                Modifiez les informations liées à votre compte.
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <form
+                    action="/profil"
+                    method="POST"
+                    enctype="multipart/form-data"
+                    class="profile-form"
+                >
+
+                    <!-- =========================================
+                         AVATAR
+                    ========================================== -->
+
+                    <div class="profile-avatar-section">
+
+                        <div
+                            class="profile-avatar"
+                            id="profileAvatarPreview"
+                        >
+
+                            <% if (account && account.avatar_url) { %>
+
+                                <img
+                                    src="<%= account.avatar_url %>"
+                                    alt="Photo de profil"
+                                    id="profileAvatarImage"
+                                >
+
+                            <% } else { %>
+
+                                <span id="profileAvatarFallback">
+
+                                    <%= (
+                                        account &&
+                                        account.first_name
+                                            ? account.first_name.charAt(0)
+                                            : "T"
+                                    ).toUpperCase() %>
+
+                                </span>
+
+                            <% } %>
+
+                        </div>
+
+
+                        <div class="profile-avatar-information">
+
+                            <strong>
+                                Photo de profil
+                            </strong>
+
+                            <p>
+                                JPG, PNG ou WEBP.
+                                Taille maximale : 5 Mo.
+                            </p>
+
+
+                            <label
+                                for="profilePhoto"
+                                class="secondary-button"
+                            >
+                                📷 Modifier la photo
+                            </label>
+
+
+                            <input
+                                type="file"
+                                name="profilePhoto"
+                                id="profilePhoto"
+                                accept="image/jpeg,image/png,image/webp"
+                                hidden
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =========================================
+                         CHAMPS
+                    ========================================== -->
+
+                    <div class="form-grid">
+
+
+                        <!-- PRENOM -->
+
+                        <div class="form-group">
+
+                            <label for="first_name">
+                                Prénom *
+                            </label>
+
+                            <input
+                                type="text"
+                                id="first_name"
+                                name="first_name"
+                                value="<%= account && account.first_name ? account.first_name : '' %>"
+                                required
+                                autocomplete="given-name"
+                            >
+
+                        </div>
+
+
+                        <!-- NOM -->
+
+                        <div class="form-group">
+
+                            <label for="last_name">
+                                Nom *
+                            </label>
+
+                            <input
+                                type="text"
+                                id="last_name"
+                                name="last_name"
+                                value="<%= account && account.last_name ? account.last_name : '' %>"
+                                required
+                                autocomplete="family-name"
+                            >
+
+                        </div>
+
+
+                        <!-- NOM AFFICHE -->
+
+                        <div class="form-group full">
+
+                            <label for="display_name">
+                                Nom affiché
+                            </label>
+
+                            <input
+                                type="text"
+                                id="display_name"
+                                name="display_name"
+                                value="<%= account && account.display_name ? account.display_name : '' %>"
+                                placeholder="Nom visible sur TiopTiop"
+                            >
+
+                        </div>
+
+
+                        <!-- EMAIL -->
+
+                        <div class="form-group">
+
+                            <label for="email">
+                                Adresse e-mail *
+                            </label>
+
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                value="<%= account && account.email ? account.email : '' %>"
+                                required
+                                autocomplete="email"
+                            >
+
+                        </div>
+
+
+                        <!-- TELEPHONE -->
+
+                        <div class="form-group">
+
+                            <label for="phone">
+                                Téléphone
+                            </label>
+
+                            <input
+                                type="tel"
+                                id="phone"
+                                name="phone"
+                                value="<%= account && account.phone ? account.phone : '' %>"
+                                placeholder="+242 06 000 00 00"
+                                autocomplete="tel"
+                            >
+
+                        </div>
+
+
+                        <!-- DATE NAISSANCE -->
+
+                        <div class="form-group">
+
+                            <label for="birth_date">
+                                Date de naissance
+                            </label>
+
+                            <input
+                                type="date"
+                                id="birth_date"
+                                name="birth_date"
+                                value="<%=
+                                    account &&
+                                    account.birth_date
+                                        ? new Date(account.birth_date)
+                                            .toISOString()
+                                            .split('T')[0]
+                                        : ''
+                                %>"
+                            >
+
+                        </div>
+
+
+                        <!-- STATUT -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Statut du compte
+                            </label>
+
+                            <div class="readonly-field">
+
+                                <span class="status-dot"></span>
+
+                                <%= account && account.status
+                                    ? account.status
+                                    : 'ACTIVE'
+                                %>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-actions">
+
+                        <button
+                            type="submit"
+                            class="primary-button"
+                        >
+                            Enregistrer les modifications
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </section>
+
+
+            <!-- =================================================
+                 ADRESSES
+            ================================================== -->
+
+            <section class="account-card">
+
+                <div class="card-heading address-heading">
+
+                    <div>
+
+                        <span class="card-icon">
+                            📍
+                        </span>
+
+                        <div>
+
+                            <h2>Mes adresses</h2>
+
+                            <p>
+                                Gérez vos adresses de livraison.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        class="primary-button small"
+                        id="openAddressModal"
+                    >
+                        + Ajouter une adresse
+                    </button>
+
+                </div>
+
+
+                <!-- =============================================
+                     LISTE
+                ============================================== -->
+
+                <div
+                    class="addresses-grid"
+                    id="addressesGrid"
+                >
+
+                    <% if (addresses && addresses.length > 0) { %>
+
+
+                        <% addresses.forEach(function(address) { %>
+
+
+                            <article
+                                class="address-card <%= address.is_default ? 'default' : '' %>"
+                                data-address-id="<%= address.id %>"
+                            >
+
+                                <div class="address-card-top">
+
+                                    <div>
+
+                                        <strong class="address-label">
+                                            <%= address.label %>
+                                        </strong>
+
+
+                                        <% if (address.is_default) { %>
+
+                                            <span class="default-badge">
+                                                Par défaut
+                                            </span>
+
+                                        <% } %>
+
+                                    </div>
+
+
+                                    <span class="address-icon">
+                                        <%= address.label === 'Travail'
+                                            ? '🏢'
+                                            : '🏠'
+                                        %>
+                                    </span>
+
+                                </div>
+
+
+                                <div class="address-content">
+
+                                    <% if (address.recipient_name) { %>
+
+                                        <strong>
+                                            <%= address.recipient_name %>
+                                        </strong>
+
+                                    <% } %>
+
+
+                                    <p>
+                                        <%= address.address_line1 %>
+
+                                        <% if (address.address_line2) { %>
+                                            <br>
+                                            <%= address.address_line2 %>
+                                        <% } %>
+
+                                        <% if (address.district) { %>
+                                            <br>
+                                            <%= address.district %>
+                                        <% } %>
+
+                                        <br>
+
+                                        <%= address.city %>
+                                    </p>
+
+
+                                    <% if (address.phone) { %>
+
+                                        <small>
+                                            📞 <%= address.phone %>
+                                        </small>
+
+                                    <% } %>
+
+
+                                    <% if (address.delivery_instructions) { %>
+
+                                        <small class="address-instructions">
+                                            📝
+                                            <%= address.delivery_instructions %>
+                                        </small>
+
+                                    <% } %>
+
+                                </div>
+
+
+                                <div class="address-actions">
+
+
+                                    <button
+                                        type="button"
+                                        class="address-action edit-address"
+
+                                        data-id="<%= address.id %>"
+
+                                        data-label="<%= address.label || '' %>"
+
+                                        data-recipient-name="<%= address.recipient_name || '' %>"
+
+                                        data-phone="<%= address.phone || '' %>"
+
+                                        data-address-line1="<%= address.address_line1 || '' %>"
+
+                                        data-address-line2="<%= address.address_line2 || '' %>"
+
+                                        data-district="<%= address.district || '' %>"
+
+                                        data-city="<%= address.city || 'Brazzaville' %>"
+
+                                        data-country-code="<%= address.country_code || 'CG' %>"
+
+                                        data-delivery-instructions="<%= address.delivery_instructions || '' %>"
+
+                                        data-latitude="<%= address.latitude || '' %>"
+
+                                        data-longitude="<%= address.longitude || '' %>"
+
+                                        data-is-default="<%= address.is_default ? '1' : '0' %>"
+                                    >
+                                        ✏️ Modifier
+                                    </button>
+
+
+                                    <% if (!address.is_default) { %>
+
+                                        <button
+                                            type="button"
+                                            class="address-action set-default-address"
+                                            data-id="<%= address.id %>"
+                                        >
+                                            ⭐ Par défaut
+                                        </button>
+
+                                    <% } %>
+
+
+                                    <button
+                                        type="button"
+                                        class="address-action danger delete-address"
+                                        data-id="<%= address.id %>"
+                                    >
+                                        🗑 Supprimer
+                                    </button>
+
+                                </div>
+
+                            </article>
+
+
+                        <% }); %>
+
+
+                    <% } else { %>
+
+
+                        <div class="empty-addresses">
+
+                            <div class="empty-address-icon">
+                                📍
+                            </div>
+
+                            <h3>
+                                Aucune adresse enregistrée
+                            </h3>
+
+                            <p>
+                                Ajoutez votre première adresse
+                                pour faciliter vos prochaines commandes.
+                            </p>
+
+                            <button
+                                type="button"
+                                class="primary-button"
+                                id="emptyAddAddress"
+                            >
+                                Ajouter une adresse
+                            </button>
+
+                        </div>
+
+
+                    <% } %>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     MODAL ADRESSE
+========================================================= -->
+
+<div
+    class="address-modal"
+    id="addressModal"
+    aria-hidden="true"
+>
+
+    <div
+        class="address-modal-overlay"
+        id="addressModalOverlay"
+    ></div>
+
+
+    <div class="address-modal-dialog">
+
+        <div class="address-modal-header">
+
+            <div>
+
+                <span class="account-eyebrow">
+                    📍 Adresse
+                </span>
+
+                <h2 id="addressModalTitle">
+                    Ajouter une adresse
+                </h2>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="modal-close"
+                id="closeAddressModal"
+                aria-label="Fermer"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="addressForm">
+
+            <input
+                type="hidden"
+                id="addressId"
+                value=""
+            >
+
+
+            <div class="form-grid">
+
+
+                <!-- LABEL -->
+
+                <div class="form-group">
+
+                    <label for="addressLabel">
+                        Type d’adresse *
+                    </label>
+
+                    <select
+                        id="addressLabel"
+                        name="label"
+                        required
+                    >
+                        <option value="Maison">
+                            Maison
+                        </option>
+
+                        <option value="Travail">
+                            Travail
+                        </option>
+
+                        <option value="Autre">
+                            Autre
+                        </option>
+                    </select>
+
+                </div>
+
+
+                <!-- DESTINATAIRE -->
+
+                <div class="form-group">
+
+                    <label for="recipientName">
+                        Nom du destinataire
+                    </label>
+
+                    <input
+                        type="text"
+                        id="recipientName"
+                        name="recipient_name"
+                    >
+
+                </div>
+
+
+                <!-- TELEPHONE -->
+
+                <div class="form-group full">
+
+                    <label for="addressPhone">
+                        Téléphone
+                    </label>
+
+                    <input
+                        type="tel"
+                        id="addressPhone"
+                        name="phone"
+                        placeholder="+242 06 000 00 00"
+                    >
+
+                </div>
+
+
+                <!-- ADRESSE 1 -->
+
+                <div class="form-group full">
+
+                    <label for="addressLine1">
+                        Adresse *
+                    </label>
+
+                    <input
+                        type="text"
+                        id="addressLine1"
+                        name="address_line1"
+                        placeholder="Rue, avenue, numéro..."
+                        required
+                    >
+
+                </div>
+
+
+                <!-- ADRESSE 2 -->
+
+                <div class="form-group full">
+
+                    <label for="addressLine2">
+                        Complément d’adresse
+                    </label>
+
+                    <input
+                        type="text"
+                        id="addressLine2"
+                        name="address_line2"
+                        placeholder="Appartement, bâtiment..."
+                    >
+
+                </div>
+
+
+                <!-- QUARTIER -->
+
+                <div class="form-group">
+
+                    <label for="district">
+                        Quartier
+                    </label>
+
+                    <input
+                        type="text"
+                        id="district"
+                        name="district"
+                        placeholder="Centre-ville"
+                    >
+
+                </div>
+
+
+                <!-- VILLE -->
+
+                <div class="form-group">
+
+                    <label for="city">
+                        Ville *
+                    </label>
+
+                    <input
+                        type="text"
+                        id="city"
+                        name="city"
+                        value="Brazzaville"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- PAYS -->
+
+                <div class="form-group">
+
+                    <label for="countryCode">
+                        Pays
+                    </label>
+
+                    <select
+                        id="countryCode"
+                        name="country_code"
+                    >
+                        <option value="CG">
+                            Congo-Brazzaville
+                        </option>
+                    </select>
+
+                </div>
+
+
+                <!-- DEFAUT -->
+
+                <div class="form-group">
+
+                    <label class="checkbox-field">
+
+                        <input
+                            type="checkbox"
+                            id="isDefault"
+                            name="is_default"
+                            value="1"
+                        >
+
+                        <span>
+                            Adresse par défaut
+                        </span>
+
+                    </label>
+
+                </div>
+
+
+                <!-- INSTRUCTIONS -->
+
+                <div class="form-group full">
+
+                    <label for="deliveryInstructions">
+                        Instructions pour le livreur
+                    </label>
+
+                    <textarea
+                        id="deliveryInstructions"
+                        name="delivery_instructions"
+                        rows="4"
+                        placeholder="Portail, étage, point de repère..."
+                    ></textarea>
+
+                </div>
+
+
+                <!-- GPS -->
+
+                <input
+                    type="hidden"
+                    name="latitude"
+                    id="addressLatitude"
+                >
+
+                <input
+                    type="hidden"
+                    name="longitude"
+                    id="addressLongitude"
+                >
+
+            </div>
+
+
+            <div
+                class="modal-message"
+                id="addressMessage"
+            ></div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    id="cancelAddressModal"
+                >
+                    Annuler
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                    id="saveAddressButton"
+                >
+                    Enregistrer l’adresse
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
 
 <style>
-  .tiop-profile-block {
-    --tiop-orange: #ff7900;
-    --tiop-orange-hover: #eb7000;
-    --tiop-text: #1b1917;
-    --tiop-border: #dedede;
+
+/* =========================================================
+   VARIABLES
+========================================================= */
+
+.account-page {
+
+    --orange: #ff7900;
+    --orange-dark: #e96e00;
+
+    --ink: #17130f;
+    --cream: #fff8ef;
+
+    --muted: #746d66;
+    --line: #eadfd3;
+
+    --success: #198754;
+    --danger: #c0392b;
+
+    padding: 42px 20px 80px;
+
+    background: var(--cream);
+
+    color: var(--ink);
+}
+
+
+/* =========================================================
+   LAYOUT
+========================================================= */
+
+.account-layout {
+
+    width: min(1180px, 100%);
+
+    margin: 0 auto;
+
+    display: grid;
+
+    grid-template-columns:
+        240px
+        minmax(0, 1fr);
+
+    gap: 28px;
+}
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.account-sidebar {
+
+    position: sticky;
+    top: 20px;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+
+    height: fit-content;
+
+    padding: 14px;
 
     background: #fff;
-    border-radius: 27px;
-    padding: 28px 23px;
-    color: var(--tiop-text);
-    font-family: Arial, Helvetica, sans-serif;
-  }
 
-  /* ==========================
-     PHOTO DE PROFIL
-  ========================== */
+    border: 1px solid var(--line);
+    border-radius: 25px;
+}
 
-  .profile-photo-section {
+
+.account-nav-item {
+
+    min-height: 48px;
+
     display: flex;
     align-items: center;
-    gap: 18px;
-    margin-bottom: 12px;
-  }
 
-  .profile-avatar {
-    width: 82px;
-    height: 82px;
-    min-width: 82px;
+    gap: 11px;
+
+    padding: 0 15px;
+
+    border-radius: 15px;
+
+    color: var(--ink);
+
+    text-decoration: none;
+
+    font-size: 14px;
+    font-weight: 800;
+
+    transition: .2s ease;
+}
+
+
+.account-nav-item:hover {
+
+    background: #fff5e9;
+}
+
+
+.account-nav-item.active {
+
+    background: var(--orange);
+    color: #fff;
+}
+
+
+/* =========================================================
+   HEADING
+========================================================= */
+
+.account-heading {
+
+    margin-bottom: 30px;
+}
+
+
+.account-eyebrow {
+
+    display: inline-flex;
+
+    margin-bottom: 10px;
+
+    padding: 7px 12px;
+
+    border-radius: 999px;
+
+    background: #fff0df;
+    color: #b65d00;
+
+    font-size: 12px;
+    font-weight: 900;
+}
+
+
+.account-heading h1 {
+
+    margin: 0 0 12px;
+
+    font-size: clamp(42px, 5vw, 68px);
+
+    line-height: .95;
+
+    letter-spacing: -3px;
+}
+
+
+.account-heading p {
+
+    max-width: 650px;
+
+    margin: 0;
+
+    color: var(--muted);
+
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   ALERTES
+========================================================= */
+
+.account-alert {
+
+    margin-bottom: 18px;
+
+    padding: 15px 18px;
+
+    border-radius: 15px;
+
+    font-weight: 800;
+
+    font-size: 14px;
+}
+
+
+.account-alert.success {
+
+    background: #e8f7ee;
+    color: #24754a;
+}
+
+
+.account-alert.error {
+
+    background: #fff0ef;
+    color: #a6372d;
+}
+
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.account-card {
+
+    margin-bottom: 22px;
+
+    padding: 30px;
+
+    background: #fff;
+
+    border: 1px solid var(--line);
+
+    border-radius: 27px;
+}
+
+
+.card-heading {
+
+    margin-bottom: 30px;
+}
+
+
+.card-heading > div {
+
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+}
+
+
+.card-icon {
+
+    width: 48px;
+    height: 48px;
+
+    flex: 0 0 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 15px;
+
+    background: #fff0df;
+
+    font-size: 21px;
+}
+
+
+.card-heading h2 {
+
+    margin: 0 0 5px;
+
+    font-size: 21px;
+}
+
+
+.card-heading p {
+
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 14px;
+}
+
+
+.address-heading {
+
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 20px;
+}
+
+
+/* =========================================================
+   AVATAR
+========================================================= */
+
+.profile-avatar-section {
+
+    display: flex;
+    align-items: center;
+
+    gap: 20px;
+
+    margin-bottom: 32px;
+
+    padding-bottom: 30px;
+
+    border-bottom: 1px solid var(--line);
+}
+
+
+.profile-avatar {
+
+    width: 105px;
+    height: 105px;
+
+    flex: 0 0 105px;
+
+    overflow: hidden;
 
     display: flex;
     align-items: center;
@@ -70,283 +1233,1445 @@
 
     border-radius: 50%;
 
-    background:
-      linear-gradient(
-        135deg,
-        #ff7900,
-        #ffb52b
-      );
-
+    background: var(--orange);
     color: #fff;
 
-    font-size: 30px;
+    font-size: 42px;
     font-weight: 900;
-  }
+}
 
-  .profile-upload {
-    flex: 1;
-    max-width: 438px;
-  }
 
-  .profile-upload label {
-    display: block;
-    margin-bottom: 0;
+.profile-avatar img {
 
-    font-size: 16px;
-    font-weight: 800;
-  }
-
-  .profile-file-box {
-    min-height: 52px;
-
-    display: flex;
-    align-items: center;
-
-    padding: 0 14px;
-
-    border: 1px solid var(--tiop-border);
-    border-radius: 17px;
-
-    background: #fff;
-  }
-
-  .profile-file-box input[type="file"] {
     width: 100%;
-    font-size: 14px;
-  }
+    height: 100%;
 
-  /* ==========================
-     FORMULAIRE
-  ========================== */
+    object-fit: cover;
+}
 
-  .profile-form {
+
+.profile-avatar-information strong {
+
+    display: block;
+
+    margin-bottom: 5px;
+}
+
+
+.profile-avatar-information p {
+
+    margin: 0 0 13px;
+
+    color: var(--muted);
+
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   FORMULAIRE
+========================================================= */
+
+.form-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 18px;
+}
+
+
+.form-group {
+
     display: flex;
     flex-direction: column;
-    gap: 12px;
-  }
 
-  .profile-field {
+    gap: 8px;
+}
+
+
+.form-group.full {
+
+    grid-column: 1 / -1;
+}
+
+
+.form-group label {
+
+    font-size: 13px;
+    font-weight: 900;
+}
+
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+
     width: 100%;
-    min-height: 49px;
-
-    padding: 0 14px;
-
-    border: 1px solid var(--tiop-border);
-    border-radius: 17px;
-
-    background: #fff;
-
-    color: var(--tiop-text);
-    font-size: 15px;
-
-    outline: none;
 
     box-sizing: border-box;
 
-    transition:
-      border-color .2s ease,
-      box-shadow .2s ease;
-  }
+    border: 1px solid #ded8d2;
 
-  .profile-field:focus {
-    border-color: var(--tiop-orange);
+    border-radius: 14px;
+
+    background: #fff;
+
+    color: var(--ink);
+
+    font: inherit;
+
+    outline: none;
+}
+
+
+.form-group input,
+.form-group select {
+
+    min-height: 50px;
+
+    padding: 0 14px;
+}
+
+
+.form-group textarea {
+
+    padding: 14px;
+
+    resize: vertical;
+}
+
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+
+    border-color: var(--orange);
 
     box-shadow:
-      0 0 0 3px rgba(255, 121, 0, .10);
-  }
+        0 0 0 3px rgba(255, 121, 0, .08);
+}
 
-  /* ==========================
-     BOUTON
-  ========================== */
 
-  .profile-save-btn {
-    width: 100%;
-    min-height: 45px;
+.readonly-field {
+
+    min-height: 50px;
 
     display: flex;
     align-items: center;
+
+    gap: 9px;
+
+    padding: 0 14px;
+
+    border: 1px solid var(--line);
+
+    border-radius: 14px;
+
+    background: #faf8f6;
+
+    font-size: 13px;
+    font-weight: 900;
+}
+
+
+.status-dot {
+
+    width: 9px;
+    height: 9px;
+
+    border-radius: 50%;
+
+    background: #198754;
+}
+
+
+.form-actions {
+
+    display: flex;
+    justify-content: flex-end;
+
+    margin-top: 25px;
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.primary-button,
+.secondary-button {
+
+    min-height: 43px;
+
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
 
-    gap: 7px;
-
-    margin-top: 1px;
+    padding: 0 18px;
 
     border: 0;
     border-radius: 999px;
 
-    background: var(--tiop-orange);
-    color: #fff;
-
-    font-size: 15px;
-    font-weight: 800;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 900;
 
     cursor: pointer;
 
-    transition:
-      background .2s ease,
-      transform .2s ease;
-  }
+    text-decoration: none;
+}
 
-  .profile-save-btn:hover {
-    background: var(--tiop-orange-hover);
-    transform: translateY(-1px);
-  }
 
-  /* ==========================
-     RESPONSIVE
-  ========================== */
+.primary-button {
 
-  @media (max-width: 600px) {
+    background: var(--orange);
+    color: #fff;
+}
 
-    .tiop-profile-block {
-      padding: 20px 16px;
-      border-radius: 22px;
+
+.primary-button:hover {
+
+    background: var(--orange-dark);
+}
+
+
+.primary-button.small {
+
+    min-height: 39px;
+}
+
+
+.secondary-button {
+
+    background: #fff;
+
+    color: var(--ink);
+
+    border: 1px solid var(--line);
+}
+
+
+/* =========================================================
+   ADRESSES
+========================================================= */
+
+.addresses-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 15px;
+}
+
+
+.address-card {
+
+    padding: 20px;
+
+    border: 1px solid var(--line);
+    border-radius: 20px;
+
+    background: #fff;
+}
+
+
+.address-card.default {
+
+    border-color: #ffb66f;
+
+    box-shadow:
+        0 0 0 3px rgba(255,121,0,.06);
+}
+
+
+.address-card-top {
+
+    display: flex;
+
+    justify-content: space-between;
+    align-items: flex-start;
+
+    gap: 15px;
+
+    margin-bottom: 18px;
+}
+
+
+.address-label {
+
+    font-size: 16px;
+}
+
+
+.default-badge {
+
+    display: inline-flex;
+
+    margin-left: 6px;
+
+    padding: 5px 8px;
+
+    border-radius: 999px;
+
+    background: #fff0df;
+    color: #b75d00;
+
+    font-size: 10px;
+    font-weight: 900;
+}
+
+
+.address-icon {
+
+    font-size: 21px;
+}
+
+
+.address-content strong {
+
+    display: block;
+
+    margin-bottom: 6px;
+
+    font-size: 14px;
+}
+
+
+.address-content p {
+
+    margin: 0 0 9px;
+
+    color: var(--muted);
+
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+
+.address-content small {
+
+    display: block;
+
+    margin-top: 5px;
+
+    color: var(--muted);
+}
+
+
+.address-instructions {
+
+    font-style: italic;
+}
+
+
+.address-actions {
+
+    display: flex;
+
+    gap: 7px;
+
+    flex-wrap: wrap;
+
+    margin-top: 18px;
+
+    padding-top: 15px;
+
+    border-top: 1px solid var(--line);
+}
+
+
+.address-action {
+
+    padding: 8px 10px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: #f8f5f2;
+
+    color: var(--ink);
+
+    font-size: 11px;
+    font-weight: 900;
+
+    cursor: pointer;
+}
+
+
+.address-action:hover {
+
+    background: #fff0df;
+}
+
+
+.address-action.danger {
+
+    color: var(--danger);
+}
+
+
+/* =========================================================
+   EMPTY
+========================================================= */
+
+.empty-addresses {
+
+    grid-column: 1 / -1;
+
+    padding: 55px 20px;
+
+    text-align: center;
+
+    border: 2px dashed var(--line);
+
+    border-radius: 22px;
+}
+
+
+.empty-address-icon {
+
+    margin-bottom: 12px;
+
+    font-size: 38px;
+}
+
+
+.empty-addresses h3 {
+
+    margin: 0 0 8px;
+}
+
+
+.empty-addresses p {
+
+    max-width: 420px;
+
+    margin: 0 auto 18px;
+
+    color: var(--muted);
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.address-modal {
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 9999;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+}
+
+
+.address-modal.open {
+
+    display: flex;
+}
+
+
+.address-modal-overlay {
+
+    position: absolute;
+
+    inset: 0;
+
+    background: rgba(18, 14, 10, .60);
+
+    backdrop-filter: blur(4px);
+}
+
+
+.address-modal-dialog {
+
+    position: relative;
+
+    z-index: 2;
+
+    width: min(720px, 100%);
+
+    max-height: calc(100vh - 40px);
+
+    overflow-y: auto;
+
+    padding: 28px;
+
+    box-sizing: border-box;
+
+    border-radius: 27px;
+
+    background: #fff;
+}
+
+
+.address-modal-header {
+
+    display: flex;
+
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 25px;
+}
+
+
+.address-modal-header h2 {
+
+    margin: 0;
+
+    font-size: 28px;
+}
+
+
+.modal-close {
+
+    width: 42px;
+    height: 42px;
+
+    flex: 0 0 42px;
+
+    border: 0;
+    border-radius: 50%;
+
+    background: #f5f2ef;
+
+    font-size: 26px;
+
+    cursor: pointer;
+}
+
+
+.checkbox-field {
+
+    min-height: 50px;
+
+    display: flex !important;
+    flex-direction: row !important;
+
+    align-items: center;
+
+    gap: 10px !important;
+
+    cursor: pointer;
+}
+
+
+.checkbox-field input {
+
+    width: 17px !important;
+    height: 17px !important;
+
+    min-height: 0 !important;
+
+    accent-color: var(--orange);
+}
+
+
+.modal-actions {
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    margin-top: 24px;
+}
+
+
+.modal-message {
+
+    display: none;
+
+    margin-top: 15px;
+
+    padding: 12px;
+
+    border-radius: 12px;
+
+    font-size: 13px;
+    font-weight: 800;
+}
+
+
+.modal-message.error {
+
+    display: block;
+
+    background: #fff0ef;
+
+    color: #a6372d;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .account-layout {
+
+        grid-template-columns: 1fr;
     }
 
-    .profile-photo-section {
-      align-items: flex-start;
+
+    .account-sidebar {
+
+        position: static;
+
+        flex-direction: row;
+
+        overflow-x: auto;
     }
 
-    .profile-avatar {
-      width: 70px;
-      height: 70px;
-      min-width: 70px;
-      font-size: 25px;
+
+    .account-nav-item {
+
+        white-space: nowrap;
+    }
+}
+
+
+@media (max-width: 700px) {
+
+    .form-grid,
+    .addresses-grid {
+
+        grid-template-columns: 1fr;
     }
 
-    .profile-upload {
-      width: 100%;
+
+    .form-group.full {
+
+        grid-column: auto;
     }
 
-    .profile-file-box {
-      min-height: 48px;
+
+    .address-heading {
+
+        align-items: flex-start;
+        flex-direction: column;
     }
 
-    .profile-field {
-      min-height: 48px;
-    }
-  }
 
-  @media (max-width: 430px) {
+    .profile-avatar-section {
 
-    .profile-photo-section {
-      flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+
+@media (max-width: 520px) {
+
+    .account-page {
+
+        padding:
+            25px 13px
+            55px;
     }
 
-    .profile-upload {
-      max-width: 100%;
+
+    .account-card {
+
+        padding: 20px;
+
+        border-radius: 22px;
     }
-  }
+
+
+    .profile-avatar-section {
+
+        flex-direction: column;
+    }
+
+
+    .modal-actions {
+
+        flex-direction: column-reverse;
+    }
+
+
+    .modal-actions button {
+
+        width: 100%;
+    }
+}
+
 </style>
 
 
-<!-- ==========================================
-     PROFIL
-=========================================== -->
+<script>
 
-<section class="tiop-profile-block">
-
-  <form
-    class="profile-form"
-    action="/profil"
-    method="POST"
-    enctype="multipart/form-data"
-  >
-
-    <!-- PHOTO DE PROFIL -->
-    <div class="profile-photo-section">
-
-      <div class="profile-avatar">
-        C
-      </div>
-
-      <div class="profile-upload">
-
-        <label for="profilePhoto">
-          Photo de profil
-        </label>
-
-        <div class="profile-file-box">
-
-          <input
-            type="file"
-            id="profilePhoto"
-            name="profilePhoto"
-            accept="image/png,image/jpeg,image/webp"
-          >
-
-        </div>
-
-      </div>
-
-    </div>
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
 
-    <!-- NOM -->
-    <input
-      class="profile-field"
-      type="text"
-      name="name"
-      value="Client Démo"
-      placeholder="Nom complet"
-      required
-    >
+        /* =====================================================
+           AVATAR PREVIEW
+        ===================================================== */
+
+        const profilePhoto =
+            document.getElementById(
+                "profilePhoto"
+            );
 
 
-    <!-- EMAIL -->
-    <input
-      class="profile-field"
-      type="email"
-      name="email"
-      value="client@tioptiop.cg"
-      placeholder="Adresse e-mail"
-      required
-    >
+        if (profilePhoto) {
+
+            profilePhoto.addEventListener(
+                "change",
+                function () {
+
+                    const file =
+                        this.files &&
+                        this.files[0];
 
 
-    <!-- TÉLÉPHONE -->
-    <input
-      class="profile-field"
-      type="tel"
-      name="phone"
-      value="+242 06 000 00 00"
-      placeholder="Téléphone"
-    >
+                    if (!file) {
+                        return;
+                    }
 
 
-    <!-- VILLE -->
-    <input
-      class="profile-field"
-      type="text"
-      name="city"
-      value="Brazzaville"
-      placeholder="Ville"
-    >
+                    if (
+                        ![
+                            "image/jpeg",
+                            "image/png",
+                            "image/webp"
+                        ].includes(file.type)
+                    ) {
+
+                        alert(
+                            "Format non autorisé. Utilisez JPG, PNG ou WEBP."
+                        );
+
+                        this.value = "";
+
+                        return;
+                    }
 
 
-    <!-- QUARTIER / ADRESSE -->
-    <input
-      class="profile-field"
-      type="text"
-      name="address"
-      value="Centre-ville"
-      placeholder="Quartier / Adresse"
-    >
+                    if (
+                        file.size >
+                        5 * 1024 * 1024
+                    ) {
+
+                        alert(
+                            "L'image ne doit pas dépasser 5 Mo."
+                        );
+
+                        this.value = "";
+
+                        return;
+                    }
 
 
-    <!-- ENREGISTRER -->
-    <button
-      type="submit"
-      class="profile-save-btn"
-    >
-      💾
-      <span>Enregistrer mes informations</span>
-    </button>
+                    const reader =
+                        new FileReader();
 
-  </form>
 
-</section>
-        
+                    reader.onload =
+                        function (event) {
 
-    </div>
+                            const container =
+                                document.getElementById(
+                                    "profileAvatarPreview"
+                                );
 
+
+                            container.innerHTML = `
+                                <img
+                                    src="${event.target.result}"
+                                    alt="Nouvelle photo de profil"
+                                >
+                            `;
+                        };
+
+
+                    reader.readAsDataURL(
+                        file
+                    );
+                }
+            );
+        }
+
+
+        /* =====================================================
+           MODAL
+        ===================================================== */
+
+        const modal =
+            document.getElementById(
+                "addressModal"
+            );
+
+        const form =
+            document.getElementById(
+                "addressForm"
+            );
+
+        const title =
+            document.getElementById(
+                "addressModalTitle"
+            );
+
+        const message =
+            document.getElementById(
+                "addressMessage"
+            );
+
+
+        function openModal() {
+
+            modal.classList.add(
+                "open"
+            );
+
+            modal.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+            document.body.style.overflow =
+                "hidden";
+        }
+
+
+        function closeModal() {
+
+            modal.classList.remove(
+                "open"
+            );
+
+            modal.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+            document.body.style.overflow =
+                "";
+
+            resetAddressForm();
+        }
+
+
+        function resetAddressForm() {
+
+            form.reset();
+
+            document.getElementById(
+                "addressId"
+            ).value = "";
+
+
+            document.getElementById(
+                "city"
+            ).value =
+                "Brazzaville";
+
+
+            document.getElementById(
+                "countryCode"
+            ).value =
+                "CG";
+
+
+            title.textContent =
+                "Ajouter une adresse";
+
+
+            message.className =
+                "modal-message";
+
+            message.textContent =
+                "";
+        }
+
+
+        document
+            .getElementById(
+                "openAddressModal"
+            )
+            ?.addEventListener(
+                "click",
+                function () {
+
+                    resetAddressForm();
+
+                    openModal();
+                }
+            );
+
+
+        document
+            .getElementById(
+                "emptyAddAddress"
+            )
+            ?.addEventListener(
+                "click",
+                function () {
+
+                    resetAddressForm();
+
+                    openModal();
+                }
+            );
+
+
+        document
+            .getElementById(
+                "closeAddressModal"
+            )
+            ?.addEventListener(
+                "click",
+                closeModal
+            );
+
+
+        document
+            .getElementById(
+                "cancelAddressModal"
+            )
+            ?.addEventListener(
+                "click",
+                closeModal
+            );
+
+
+        document
+            .getElementById(
+                "addressModalOverlay"
+            )
+            ?.addEventListener(
+                "click",
+                closeModal
+            );
+
+
+        /* =====================================================
+   EDITION ADRESSE
+===================================================== */
+
+document
+    .querySelectorAll(".edit-address")
+    .forEach(function (button) {
+
+        button.addEventListener(
+            "click",
+            function () {
+
+                const data = this.dataset;
+
+
+                /* =============================================
+                   ID
+                ============================================= */
+
+                document.getElementById(
+                    "addressId"
+                ).value =
+                    data.id || "";
+
+
+                /* =============================================
+                   TYPE
+                ============================================= */
+
+                document.getElementById(
+                    "addressLabel"
+                ).value =
+                    data.label || "Maison";
+
+
+                /* =============================================
+                   DESTINATAIRE
+                ============================================= */
+
+                document.getElementById(
+                    "recipientName"
+                ).value =
+                    data.recipientName || "";
+
+
+                /* =============================================
+                   TELEPHONE
+                ============================================= */
+
+                document.getElementById(
+                    "addressPhone"
+                ).value =
+                    data.phone || "";
+
+
+                /* =============================================
+                   ADRESSE
+                ============================================= */
+
+                document.getElementById(
+                    "addressLine1"
+                ).value =
+                    data.addressLine1 || "";
+
+
+                document.getElementById(
+                    "addressLine2"
+                ).value =
+                    data.addressLine2 || "";
+
+
+                /* =============================================
+                   QUARTIER
+                ============================================= */
+
+                document.getElementById(
+                    "district"
+                ).value =
+                    data.district || "";
+
+
+                /* =============================================
+                   VILLE
+                ============================================= */
+
+                document.getElementById(
+                    "city"
+                ).value =
+                    data.city || "Brazzaville";
+
+
+                /* =============================================
+                   PAYS
+                ============================================= */
+
+                document.getElementById(
+                    "countryCode"
+                ).value =
+                    data.countryCode || "CG";
+
+
+                /* =============================================
+                   INSTRUCTIONS
+                ============================================= */
+
+                document.getElementById(
+                    "deliveryInstructions"
+                ).value =
+                    data.deliveryInstructions || "";
+
+
+                /* =============================================
+                   GPS
+                ============================================= */
+
+                document.getElementById(
+                    "addressLatitude"
+                ).value =
+                    data.latitude || "";
+
+
+                document.getElementById(
+                    "addressLongitude"
+                ).value =
+                    data.longitude || "";
+
+
+                /* =============================================
+                   PAR DEFAUT
+                ============================================= */
+
+                document.getElementById(
+                    "isDefault"
+                ).checked =
+                    data.isDefault === "1";
+
+
+                /* =============================================
+                   TITRE
+                ============================================= */
+
+                title.textContent =
+                    "Modifier l’adresse";
+
+
+                /* =============================================
+                   NETTOYER MESSAGE
+                ============================================= */
+
+                message.className =
+                    "modal-message";
+
+                message.textContent =
+                    "";
+
+
+                /* =============================================
+                   OUVERTURE
+                ============================================= */
+
+                openModal();
+            }
+        );
+    });
+
+        /* =====================================================
+           CREATION / MODIFICATION
+        ===================================================== */
+
+        form.addEventListener(
+            "submit",
+            async function (event) {
+
+                event.preventDefault();
+
+
+                const addressId =
+                    document.getElementById(
+                        "addressId"
+                    ).value;
+
+
+                const submitButton =
+                    document.getElementById(
+                        "saveAddressButton"
+                    );
+
+
+                submitButton.disabled =
+                    true;
+
+                submitButton.textContent =
+                    "Enregistrement...";
+
+
+                message.className =
+                    "modal-message";
+
+                message.textContent =
+                    "";
+
+
+                try {
+
+                    const formData =
+                        new FormData(
+                            form
+                        );
+
+
+                    const data =
+                        Object.fromEntries(
+                            formData.entries()
+                        );
+
+
+                    data.is_default =
+                        document.getElementById(
+                            "isDefault"
+                        ).checked;
+
+
+                    const url =
+                        addressId
+                            ? `/profil/adresses/${addressId}/update`
+                            : "/profil/adresses";
+
+
+                    const response =
+                        await fetch(
+                            url,
+                            {
+                                method:
+                                    "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body:
+                                    JSON.stringify(
+                                        data
+                                    )
+                            }
+                        );
+
+
+                    const contentType =
+                        response.headers.get("content-type") || "";
+
+                    if (!contentType.includes("application/json")) {
+
+                        const text =
+                            await response.text();
+
+                        console.error(
+                            "Réponse serveur non JSON :",
+                            text
+                        );
+
+                        throw new Error(
+                            "Le serveur n'a pas retourné une réponse valide."
+                        );
+                    }
+
+                    const result =
+                        await response.json();
+
+
+                    if (
+                        !response.ok ||
+                        !result.success
+                    ) {
+
+                        throw new Error(
+                            result.message
+                            ||
+                            "Une erreur est survenue."
+                        );
+                    }
+
+
+                    window.location.reload();
+
+                }
+                catch (error) {
+
+                    message.textContent =
+                        error.message;
+
+
+                    message.className =
+                        "modal-message error";
+
+                }
+                finally {
+
+                    submitButton.disabled =
+                        false;
+
+                    submitButton.textContent =
+                        "Enregistrer l’adresse";
+                }
+            }
+        );
+
+
+        /* =====================================================
+           ADRESSE PAR DEFAUT
+        ===================================================== */
+
+        document
+            .querySelectorAll(
+                ".set-default-address"
+            )
+            .forEach(
+                function (button) {
+
+                    button.addEventListener(
+                        "click",
+                        async function () {
+
+                            const id =
+                                this.dataset.id;
+
+
+                            if (!id) {
+                                return;
+                            }
+
+
+                            try {
+
+                                const response =
+                                    await fetch(
+                                        `/profil/adresses/${id}/default`,
+                                        {
+                                            method:
+                                                "POST"
+                                        }
+                                    );
+
+
+                                const contentType =
+                                    response.headers.get("content-type") || "";
+
+                                if (!contentType.includes("application/json")) {
+
+                                    const text =
+                                        await response.text();
+
+                                    console.error(
+                                        "Réponse serveur non JSON :",
+                                        text
+                                    );
+
+                                    throw new Error(
+                                        "Le serveur n'a pas retourné une réponse valide."
+                                    );
+                                }
+
+                                const result =
+                                    await response.json();
+
+
+                                if (
+                                    !response.ok ||
+                                    !result.success
+                                ) {
+
+                                    throw new Error(
+                                        result.message
+                                    );
+                                }
+
+
+                                window.location.reload();
+
+                            }
+                            catch (error) {
+
+                                alert(
+                                    error.message
+                                    ||
+                                    "Impossible de modifier l'adresse."
+                                );
+                            }
+                        }
+                    );
+                }
+            );
+
+
+        /* =====================================================
+           SUPPRESSION
+        ===================================================== */
+
+        document
+            .querySelectorAll(
+                ".delete-address"
+            )
+            .forEach(
+                function (button) {
+
+                    button.addEventListener(
+                        "click",
+                        async function () {
+
+                            const id =
+                                this.dataset.id;
+
+
+                            const confirmation =
+                                window.confirm(
+                                    "Voulez-vous vraiment supprimer cette adresse ?"
+                                );
+
+
+                            if (!confirmation) {
+                                return;
+                            }
+
+
+                            try {
+
+                                const response =
+                                    await fetch(
+                                        `/profil/adresses/${id}/delete`,
+                                        {
+                                            method:
+                                                "POST"
+                                        }
+                                    );
+
+
+                                const contentType =
+                                    response.headers.get("content-type") || "";
+
+                                if (!contentType.includes("application/json")) {
+
+                                    const text =
+                                        await response.text();
+
+                                    console.error(
+                                        "Réponse serveur non JSON :",
+                                        text
+                                    );
+
+                                    throw new Error(
+                                        "Le serveur n'a pas retourné une réponse valide."
+                                    );
+                                }
+
+                                const result =
+                                    await response.json();
+
+
+                                if (
+                                    !response.ok ||
+                                    !result.success
+                                ) {
+
+                                    throw new Error(
+                                        result.message
+                                    );
+                                }
+
+
+                                window.location.reload();
+
+                            }
+                            catch (error) {
+
+                                alert(
+                                    error.message
+                                    ||
+                                    "Impossible de supprimer cette adresse."
+                                );
+                            }
+                        }
+                    );
+                }
+            );
+
+
+        /* =====================================================
+           ESC
+        ===================================================== */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key ===
+                    "Escape"
+                ) {
+
+                    closeModal();
+                }
+            }
+        );
+
+    }
+);
+
+</script>

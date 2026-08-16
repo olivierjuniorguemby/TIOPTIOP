@@ -1,755 +1,1311 @@
-<section class="page-hero">
-  <div class="container">
-    <span class="eyebrow">Espace client</span>
-    <h1>⚙️ Paramètres</h1>
-    <p>Notifications, langue et sécurité</p>
-  </div>
-</section>
-  <div class="container account-grid">
-    <aside class="panel profileNav">
+<!-- =========================================================
+     TIOPTIOP
+     PARAMETRES CLIENT DYNAMIQUES
+========================================================= -->
 
-            <a href="/compte">
-                ← Vue d’ensemble
+<section class="settings-page">
+
+    <div class="settings-layout">
+
+
+        <!-- =================================================
+             SIDEBAR
+        ================================================== -->
+
+        <aside class="settings-sidebar">
+
+            <a href="/compte" class="settings-nav-item">
+                🏠 Vue d’ensemble
             </a>
 
-            <a href="/profil">
+            <a href="/profil" class="settings-nav-item">
                 👤 Profil
             </a>
-            <a href="/tiopplus">⭐ Tiop+</a>
-            <a href="/commandes">🧾 Commandes & factures</a>
-            <a href="/parametres">
-                ⚙️ Paramètres
+
+            <a href="/commandes" class="settings-nav-item">
+                🧾 Commandes
             </a>
 
-            <a href="/paiements-client">
+            <a href="/favoris" class="settings-nav-item">
+                ❤️ Favoris
+            </a>
+
+            <a href="/tiopplus" class="settings-nav-item">
+                ⭐ Tiop+
+            </a>
+
+            <a href="/paiements-client" class="settings-nav-item">
                 💳 Paiements
             </a>
 
+            <a href="/parametres" class="settings-nav-item active">
+                ⚙️ Paramètres
+            </a>
+
         </aside>
-    
-    <!-- =========================================================
-     TIOPTIOP - BLOC PARAMÈTRES CLIENT
-========================================================= -->
+
+
+        <!-- =================================================
+             CONTENU
+        ================================================== -->
+
+        <main class="settings-content">
+
+
+            <header class="settings-heading">
+
+                <span class="settings-eyebrow">
+                    ⚙️ Mon espace
+                </span>
+
+                <h1>
+                    Paramètres
+                </h1>
+
+                <p>
+                    Personnalisez votre expérience TiopTiop
+                    et gérez la sécurité de votre compte.
+                </p>
+
+            </header>
+
+
+            <% if (success) { %>
+
+                <div class="settings-alert success">
+                    ✓ <%= success %>
+                </div>
+
+            <% } %>
+
+
+            <% if (error) { %>
+
+                <div class="settings-alert error">
+                    ⚠ <%= error %>
+                </div>
+
+            <% } %>
+
+
+            <!-- =================================================
+                 PREFERENCES
+            ================================================== -->
+
+            <form
+                action="/parametres"
+                method="POST"
+            >
+
+                <section class="settings-card">
+
+                    <div class="settings-card-heading">
+
+                        <span class="settings-card-icon">
+                            🌍
+                        </span>
+
+                        <div>
+
+                            <h2>
+                                Préférences
+                            </h2>
+
+                            <p>
+                                Langue, notifications et personnalisation.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =========================================
+                         LANGUE
+                    ========================================== -->
+
+                    <div class="settings-row">
+
+                        <div>
+
+                            <strong>
+                                Langue
+                            </strong>
+
+                            <p>
+                                Choisissez la langue préférée
+                                de votre compte.
+                            </p>
+
+                        </div>
+
+
+                        <select
+                            name="preferred_language"
+                            class="settings-select"
+                        >
+
+                            <option
+                                value="fr"
+                                <%= account.preferred_language === 'fr'
+                                    ? 'selected'
+                                    : ''
+                                %>
+                            >
+                                Français
+                            </option>
+
+                            <option
+                                value="ln"
+                                <%= account.preferred_language === 'ln'
+                                    ? 'selected'
+                                    : ''
+                                %>
+                            >
+                                Lingala
+                            </option>
+
+                            <option
+                                value="en"
+                                <%= account.preferred_language === 'en'
+                                    ? 'selected'
+                                    : ''
+                                %>
+                            >
+                                English
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- =========================================
+                         EMAIL
+                    ========================================== -->
+
+                    <div class="settings-row">
+
+                        <div>
+
+                            <strong>
+                                Notifications par e-mail
+                            </strong>
+
+                            <p>
+                                Recevoir les informations importantes
+                                concernant votre compte et vos commandes.
+                            </p>
+
+                        </div>
+
+
+                        <label class="switch">
+
+                            <input
+                                type="checkbox"
+                                name="email_consent"
+                                value="1"
+                                <%= Number(account.email_consent) === 1
+                                    ? 'checked'
+                                    : ''
+                                %>
+                            >
+
+                            <span class="slider"></span>
+
+                        </label>
+
+                    </div>
+
+
+                    <!-- =========================================
+                         PUSH
+                    ========================================== -->
+
+                    <div class="settings-row">
+
+                        <div>
+
+                            <strong>
+                                Notifications push
+                            </strong>
+
+                            <p>
+                                Recevoir des notifications TiopTiop
+                                sur les appareils compatibles.
+                            </p>
+
+                        </div>
+
+
+                        <label class="switch">
+
+                            <input
+                                type="checkbox"
+                                name="push_consent"
+                                value="1"
+                                <%= Number(account.push_consent) === 1
+                                    ? 'checked'
+                                    : ''
+                                %>
+                            >
+
+                            <span class="slider"></span>
+
+                        </label>
+
+                    </div>
+
+
+                    <!-- =========================================
+                         MARKETING
+                    ========================================== -->
+
+                    <div class="settings-row">
+
+                        <div>
+
+                            <strong>
+                                Promotions et nouveautés
+                            </strong>
+
+                            <p>
+                                Recevoir les offres,
+                                promotions et nouveautés TiopTiop.
+                            </p>
+
+                        </div>
+
+
+                        <label class="switch">
+
+                            <input
+                                type="checkbox"
+                                name="marketing_consent"
+                                value="1"
+                                <%= Number(account.marketing_consent) === 1
+                                    ? 'checked'
+                                    : ''
+                                %>
+                            >
+
+                            <span class="slider"></span>
+
+                        </label>
+
+                    </div>
+
+
+                    <!-- =========================================
+                         MOTIF
+                    ========================================== -->
+
+                    <div class="settings-theme">
+
+                        <div class="settings-theme-heading">
+
+                            <strong>
+                                Motif TiopTiop
+                            </strong>
+
+                            <p>
+                                Choisissez l’identité visuelle
+                                de votre espace personnel.
+                            </p>
+
+                        </div>
+
+
+                        <div class="theme-options">
+
+
+                            <label class="theme-option">
+
+                                <input
+                                    type="radio"
+                                    name="motif_theme"
+                                    value="KONGO_AUTHENTIQUE"
+                                    <%= account.motif_theme === 'KONGO_AUTHENTIQUE'
+                                        ? 'checked'
+                                        : ''
+                                    %>
+                                >
+
+                                <span class="theme-preview kongo">
+                                    <span></span>
+                                </span>
+
+                                <strong>
+                                    Kongo Authentique
+                                </strong>
+
+                            </label>
+
+
+                            <label class="theme-option">
+
+                                <input
+                                    type="radio"
+                                    name="motif_theme"
+                                    value="URBAN_ORANGE"
+                                    <%= account.motif_theme === 'URBAN_ORANGE'
+                                        ? 'checked'
+                                        : ''
+                                    %>
+                                >
+
+                                <span class="theme-preview urban">
+                                    <span></span>
+                                </span>
+
+                                <strong>
+                                    Urban Orange
+                                </strong>
+
+                            </label>
+
+
+                            <label class="theme-option">
+
+                                <input
+                                    type="radio"
+                                    name="motif_theme"
+                                    value="MINIMAL"
+                                    <%= account.motif_theme === 'MINIMAL'
+                                        ? 'checked'
+                                        : ''
+                                    %>
+                                >
+
+                                <span class="theme-preview minimal">
+                                    <span></span>
+                                </span>
+
+                                <strong>
+                                    Minimal
+                                </strong>
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="settings-actions">
+
+                        <button
+                            type="submit"
+                            class="settings-primary-button"
+                        >
+                            Enregistrer les préférences
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </form>
+
+
+            <!-- =================================================
+                 MOT DE PASSE
+            ================================================== -->
+
+            <form
+                action="/parametres/mot-de-passe"
+                method="POST"
+            >
+
+                <section class="settings-card">
+
+                    <div class="settings-card-heading">
+
+                        <span class="settings-card-icon">
+                            🔐
+                        </span>
+
+                        <div>
+
+                            <h2>
+                                Mot de passe
+                            </h2>
+
+                            <p>
+                                Protégez votre compte avec
+                                un mot de passe sécurisé.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="password-grid">
+
+
+                        <div class="settings-field full">
+
+                            <label for="current_password">
+                                Mot de passe actuel
+                            </label>
+
+                            <div class="password-input">
+
+                                <input
+                                    type="password"
+                                    id="current_password"
+                                    name="current_password"
+                                    required
+                                    autocomplete="current-password"
+                                >
+
+                                <button
+                                    type="button"
+                                    class="toggle-password"
+                                    data-target="current_password"
+                                >
+                                    👁
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="settings-field">
+
+                            <label for="new_password">
+                                Nouveau mot de passe
+                            </label>
+
+                            <div class="password-input">
+
+                                <input
+                                    type="password"
+                                    id="new_password"
+                                    name="new_password"
+                                    minlength="8"
+                                    required
+                                    autocomplete="new-password"
+                                >
+
+                                <button
+                                    type="button"
+                                    class="toggle-password"
+                                    data-target="new_password"
+                                >
+                                    👁
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="settings-field">
+
+                            <label for="password_confirmation">
+                                Confirmer le mot de passe
+                            </label>
+
+                            <div class="password-input">
+
+                                <input
+                                    type="password"
+                                    id="password_confirmation"
+                                    name="password_confirmation"
+                                    minlength="8"
+                                    required
+                                    autocomplete="new-password"
+                                >
+
+                                <button
+                                    type="button"
+                                    class="toggle-password"
+                                    data-target="password_confirmation"
+                                >
+                                    👁
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="password-security">
+
+                        <span>
+                            🛡️
+                        </span>
+
+                        <p>
+                            Utilisez au minimum 8 caractères.
+                            Évitez de réutiliser un mot de passe
+                            provenant d’un autre service.
+                        </p>
+
+                    </div>
+
+
+                    <div class="settings-actions">
+
+                        <button
+                            type="submit"
+                            class="settings-primary-button"
+                        >
+                            Modifier le mot de passe
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </form>
+
+        </main>
+
+    </div>
+
+</section>
+
 
 <style>
-  .tiop-settings {
+
+.settings-page {
+
     --orange: #ff7900;
-    --text: #1d1a17;
-    --muted: #77716c;
-    --border: #e4e0dc;
+    --orange-dark: #e96e00;
+
+    --ink: #17130f;
+    --cream: #fff8ef;
+
+    --muted: #746d66;
+    --line: #eadfd3;
+
+    padding: 42px 20px 80px;
+
+    background: var(--cream);
+
+    color: var(--ink);
+}
+
+
+.settings-layout {
+
+    width: min(1180px, 100%);
+
+    margin: auto;
+
+    display: grid;
+
+    grid-template-columns:
+        240px
+        minmax(0, 1fr);
+
+    gap: 28px;
+}
+
+
+/* SIDEBAR */
+
+.settings-sidebar {
+
+    position: sticky;
+    top: 20px;
+
+    height: fit-content;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+
+    padding: 14px;
+
+    border: 1px solid var(--line);
+    border-radius: 25px;
 
     background: #fff;
-    border-radius: 28px;
-    padding: 26px 22px 22px;
-    color: var(--text);
-    font-family: Arial, Helvetica, sans-serif;
-  }
+}
 
-  /* =========================
-     SECTIONS
-  ========================== */
 
-  .settings-section {
-    padding: 12px 0 16px;
-    border-bottom: 1px solid var(--border);
-  }
+.settings-nav-item {
 
-  .settings-section:first-child {
-    padding-top: 4px;
-  }
+    min-height: 48px;
 
-  .settings-section:last-child {
-    border-bottom: 0;
-    padding-bottom: 0;
-  }
-
-  .settings-title {
     display: flex;
     align-items: center;
-    gap: 8px;
 
-    margin: 0 0 20px;
-    font-size: 21px;
+    padding: 0 15px;
+
+    border-radius: 15px;
+
+    color: var(--ink);
+
+    text-decoration: none;
+
+    font-size: 14px;
     font-weight: 800;
-  }
+}
 
-  .settings-description {
-    margin: -5px 0 12px;
+
+.settings-nav-item:hover {
+
+    background: #fff5e9;
+}
+
+
+.settings-nav-item.active {
+
+    background: var(--orange);
+    color: #fff;
+}
+
+
+/* HEADING */
+
+.settings-heading {
+
+    margin-bottom: 30px;
+}
+
+
+.settings-eyebrow {
+
+    display: inline-flex;
+
+    margin-bottom: 10px;
+
+    padding: 7px 12px;
+
+    background: #fff0df;
+    color: #b65d00;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+    font-weight: 900;
+}
+
+
+.settings-heading h1 {
+
+    margin: 0 0 12px;
+
+    font-size: clamp(42px,5vw,68px);
+
+    line-height: .95;
+
+    letter-spacing: -3px;
+}
+
+
+.settings-heading p {
+
+    max-width: 650px;
+
+    margin: 0;
+
     color: var(--muted);
+
+    line-height: 1.6;
+}
+
+
+/* ALERT */
+
+.settings-alert {
+
+    margin-bottom: 18px;
+
+    padding: 15px 18px;
+
+    border-radius: 15px;
+
+    font-size: 14px;
+    font-weight: 800;
+}
+
+
+.settings-alert.success {
+
+    background: #e8f7ee;
+    color: #24754a;
+}
+
+
+.settings-alert.error {
+
+    background: #fff0ef;
+    color: #a6372d;
+}
+
+
+/* CARD */
+
+.settings-card {
+
+    margin-bottom: 22px;
+
+    padding: 30px;
+
+    background: #fff;
+
+    border: 1px solid var(--line);
+    border-radius: 27px;
+}
+
+
+.settings-card-heading {
+
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+
+    margin-bottom: 25px;
+}
+
+
+.settings-card-icon {
+
+    width: 48px;
+    height: 48px;
+
+    flex: 0 0 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 15px;
+
+    background: #fff0df;
+
+    font-size: 21px;
+}
+
+
+.settings-card-heading h2 {
+
+    margin: 0 0 5px;
+
+    font-size: 21px;
+}
+
+
+.settings-card-heading p,
+.settings-row p,
+.settings-theme-heading p {
+
+    margin: 0;
+
+    color: var(--muted);
+
     font-size: 13px;
     line-height: 1.5;
-  }
+}
 
-  /* =========================
-     LIGNES
-  ========================== */
 
-  .settings-row {
-    min-height: 58px;
+/* ROW */
+
+.settings-row {
+
+    min-height: 82px;
 
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 20px;
 
-    padding: 8px 2px;
+    gap: 25px;
 
-    border-bottom: 1px solid var(--border);
-  }
+    padding: 15px 0;
 
-  .settings-row:last-child {
-    border-bottom: 0;
-  }
+    border-bottom: 1px solid var(--line);
+}
 
-  .settings-row-text {
-    min-width: 0;
-  }
 
-  .settings-row-text strong {
+.settings-row strong {
+
     display: block;
 
-    margin-bottom: 2px;
+    margin-bottom: 5px;
+}
 
-    font-size: 13px;
-    font-weight: 800;
-  }
 
-  .settings-row-text small {
-    display: block;
+.settings-select {
 
-    color: var(--muted);
+    min-width: 170px;
+    min-height: 45px;
 
-    font-size: 12px;
-    line-height: 1.4;
-  }
+    padding: 0 13px;
 
-  /* =========================
-     SWITCH
-  ========================== */
+    border: 1px solid var(--line);
+    border-radius: 13px;
 
-  .tiop-switch {
+    background: #fff;
+
+    font: inherit;
+
+    outline: none;
+}
+
+
+/* SWITCH */
+
+.switch {
+
     position: relative;
 
-    width: 38px;
-    height: 22px;
+    width: 50px;
+    height: 28px;
 
-    flex: 0 0 38px;
-  }
+    flex: 0 0 50px;
+}
 
-  .tiop-switch input {
+
+.switch input {
+
     opacity: 0;
     width: 0;
     height: 0;
-  }
+}
 
-  .switch-slider {
+
+.slider {
+
     position: absolute;
+
     inset: 0;
 
-    background: #d9d9d9;
-
     border-radius: 999px;
+
+    background: #d8d3ce;
 
     cursor: pointer;
 
     transition: .2s;
-  }
+}
 
-  .switch-slider::before {
+
+.slider::before {
+
     content: "";
 
     position: absolute;
 
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
 
-    left: 2px;
-    top: 2px;
-
-    background: #fff;
+    left: 4px;
+    top: 4px;
 
     border-radius: 50%;
 
-    box-shadow: 0 1px 4px rgba(0,0,0,.15);
+    background: #fff;
 
     transition: .2s;
-  }
+}
 
-  .tiop-switch input:checked + .switch-slider {
+
+.switch input:checked + .slider {
+
     background: var(--orange);
-  }
+}
 
-  .tiop-switch input:checked + .switch-slider::before {
-    transform: translateX(16px);
-  }
 
-  /* =========================
-     LANGUE
-  ========================== */
+.switch input:checked + .slider::before {
 
-  .settings-select {
-    min-width: 88px;
-    min-height: 42px;
+    transform: translateX(22px);
+}
 
-    padding: 0 12px;
 
-    border: 1px solid var(--border);
-    border-radius: 13px;
+/* THEMES */
 
-    background: #fff;
-    color: var(--text);
+.settings-theme {
+
+    padding-top: 27px;
+}
+
+
+.settings-theme-heading {
+
+    margin-bottom: 18px;
+}
+
+
+.settings-theme-heading strong {
+
+    display: block;
+
+    margin-bottom: 5px;
+}
+
+
+.theme-options {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 12px;
+}
+
+
+.theme-option {
+
+    cursor: pointer;
+}
+
+
+.theme-option input {
+
+    position: absolute;
+
+    opacity: 0;
+}
+
+
+.theme-preview {
+
+    height: 90px;
+
+    display: block;
+
+    margin-bottom: 8px;
+
+    overflow: hidden;
+
+    border: 3px solid transparent;
+    border-radius: 16px;
+
+    transition: .2s;
+}
+
+
+.theme-option input:checked +
+.theme-preview {
+
+    border-color: var(--orange);
+}
+
+
+.theme-preview.kongo {
+
+    background:
+        repeating-linear-gradient(
+            45deg,
+            #17130f 0,
+            #17130f 14px,
+            #ff7900 14px,
+            #ff7900 28px,
+            #fff0df 28px,
+            #fff0df 42px
+        );
+}
+
+
+.theme-preview.urban {
+
+    background:
+        linear-gradient(
+            135deg,
+            #ff7900,
+            #ffb05e
+        );
+}
+
+
+.theme-preview.minimal {
+
+    background:
+        linear-gradient(
+            135deg,
+            #fff8ef,
+            #fff,
+            #f3eee8
+        );
+
+    border: 1px solid var(--line);
+}
+
+
+.theme-option strong {
+
+    font-size: 12px;
+}
+
+
+/* PASSWORD */
+
+.password-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2,1fr);
+
+    gap: 17px;
+}
+
+
+.settings-field {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+
+.settings-field.full {
+
+    grid-column: 1 / -1;
+}
+
+
+.settings-field label {
+
+    font-size: 13px;
+    font-weight: 900;
+}
+
+
+.password-input {
+
+    position: relative;
+}
+
+
+.password-input input {
+
+    width: 100%;
+    min-height: 50px;
+
+    padding:
+        0 52px
+        0 14px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #ded8d2;
+    border-radius: 14px;
+
+    font: inherit;
 
     outline: none;
-    cursor: pointer;
-  }
+}
 
-  .settings-select:focus {
+
+.password-input input:focus {
+
     border-color: var(--orange);
-  }
 
-  /* =========================
-     BOUTON MOT DE PASSE
-  ========================== */
+    box-shadow:
+        0 0 0 3px rgba(255,121,0,.08);
+}
 
-  .password-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
 
-    min-height: 38px;
+.toggle-password {
 
-    padding: 0 15px;
+    position: absolute;
 
-    background: #fff;
+    right: 7px;
+    top: 50%;
+
+    width: 38px;
+    height: 38px;
+
+    transform: translateY(-50%);
+
+    border: 0;
+    border-radius: 50%;
+
+    background: transparent;
+
+    cursor: pointer;
+}
+
+
+.password-security {
+
+    display: flex;
+
+    gap: 10px;
+
+    margin-top: 18px;
+
+    padding: 15px;
+
+    border-radius: 14px;
+
+    background: #fff8ef;
+}
+
+
+.password-security p {
+
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+/* ACTIONS */
+
+.settings-actions {
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    margin-top: 25px;
+}
+
+
+.settings-primary-button {
+
+    min-height: 43px;
+
+    padding: 0 18px;
 
     border: 0;
     border-radius: 999px;
 
-    color: var(--text);
+    background: var(--orange);
+    color: #fff;
 
-    box-shadow: 0 5px 18px rgba(0,0,0,.05);
+    font: inherit;
 
     font-size: 13px;
-    font-weight: 800;
+    font-weight: 900;
 
     cursor: pointer;
+}
 
-    transition: .2s ease;
-  }
 
-  .password-button:hover {
-    color: var(--orange);
-    transform: translateY(-1px);
-  }
+.settings-primary-button:hover {
 
-  /* =========================
-     MOTIFS AFRICAINS
-  ========================== */
+    background: var(--orange-dark);
+}
 
-  .african-patterns {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 18px;
 
-    margin-top: 10px;
-  }
+/* RESPONSIVE */
 
-  .pattern-option {
-    position: relative;
-  }
+@media (max-width: 900px) {
 
-  .pattern-option input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-  }
+    .settings-layout {
 
-  .pattern-card {
-    display: block;
-
-    padding: 10px;
-
-    border: 1.5px solid transparent;
-    border-radius: 15px;
-
-    cursor: pointer;
-
-    transition:
-      border-color .2s ease,
-      background .2s ease,
-      transform .2s ease;
-  }
-
-  .pattern-card:hover {
-    background: #fff8f1;
-  }
-
-  .pattern-option input:checked + .pattern-card {
-    border-color: var(--orange);
-    background: #fff8f1;
-  }
-
-  .pattern-preview {
-    width: 100%;
-    height: 42px;
-
-    border-radius: 10px;
-
-    margin-bottom: 7px;
-  }
-
-  .pattern-name {
-    display: block;
-
-    color: #151310;
-
-    font-size: 12px;
-    font-weight: 800;
-  }
-
-  /* KONGO AUTHENTIQUE */
-
-  .pattern-kongo {
-    background:
-      repeating-linear-gradient(
-        45deg,
-        #0c0b0a 0px,
-        #0c0b0a 8px,
-        #ff7900 8px,
-        #ff7900 12px,
-        #3a1c0a 12px,
-        #3a1c0a 18px
-      );
-  }
-
-  /* AFRO ÉLÉGANT */
-
-  .pattern-elegant {
-    background:
-      linear-gradient(
-        135deg,
-        #3a160b 0%,
-        #6d2d12 42%,
-        #ff7900 48%,
-        #f6ead5 51%,
-        #7fa584 100%
-      );
-  }
-
-  /* CONGO BRAZZAVILLE */
-
-  .pattern-congo {
-    background:
-      repeating-linear-gradient(
-        90deg,
-        #22633e 0px,
-        #22633e 15px,
-        #d79035 15px,
-        #d79035 23px,
-        #f4dfaa 23px,
-        #f4dfaa 31px,
-        #8c431f 31px,
-        #8c431f 39px
-      );
-  }
-
-  /* AFRO FUTURISTE */
-
-  .pattern-futurist {
-    background:
-      linear-gradient(
-        135deg,
-        #064f4b 0%,
-        #0a6661 43%,
-        #c28a25 48%,
-        #f2c766 52%,
-        #16120f 58%,
-        #050505 100%
-      );
-  }
-
-  /* =========================
-     RESPONSIVE
-  ========================== */
-
-  @media (max-width: 800px) {
-
-    .african-patterns {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  @media (max-width: 520px) {
-
-    .tiop-settings {
-      padding: 20px 16px;
-      border-radius: 22px;
+        grid-template-columns: 1fr;
     }
 
-    .settings-title {
-      font-size: 19px;
+
+    .settings-sidebar {
+
+        position: static;
+
+        flex-direction: row;
+
+        overflow-x: auto;
     }
+
+
+    .settings-nav-item {
+
+        white-space: nowrap;
+    }
+}
+
+
+@media (max-width: 650px) {
+
+    .settings-page {
+
+        padding: 25px 13px 55px;
+    }
+
+
+    .settings-card {
+
+        padding: 20px;
+
+        border-radius: 22px;
+    }
+
 
     .settings-row {
-      gap: 12px;
+
+        align-items: flex-start;
     }
 
-    .african-patterns {
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+
+    .theme-options,
+    .password-grid {
+
+        grid-template-columns: 1fr;
     }
 
-    .pattern-card {
-      padding: 7px;
-    }
 
-    .pattern-name {
-      font-size: 11px;
+    .settings-field.full {
+
+        grid-column: auto;
     }
-  }
+}
 
 </style>
 
 
-<section class="tiop-settings">
-
-  <!-- =====================================================
-       NOTIFICATIONS
-  ====================================================== -->
-
-  <section class="settings-section">
-
-    <h2 class="settings-title">
-      🔔 Notifications
-    </h2>
-
-
-    <!-- Notifications commande -->
-
-    <div class="settings-row">
-
-      <div class="settings-row-text">
-
-        <strong>Notifications de commande</strong>
-
-        <small>
-          Confirmation, préparation, livreur et livraison.
-        </small>
-
-      </div>
-
-
-      <label class="tiop-switch">
-
-        <input
-          type="checkbox"
-          name="orderNotifications"
-          checked
-        >
-
-        <span class="switch-slider"></span>
-
-      </label>
-
-    </div>
-
-
-    <!-- Promotions -->
-
-    <div class="settings-row">
-
-      <div class="settings-row-text">
-
-        <strong>Offres & nouveautés</strong>
-
-        <small>
-          Promotions, nouveautés et avantages Tiop+.
-        </small>
-
-      </div>
-
-
-      <label class="tiop-switch">
-
-        <input
-          type="checkbox"
-          name="promotionNotifications"
-          checked
-        >
-
-        <span class="switch-slider"></span>
-
-      </label>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       EXPÉRIENCE
-  ====================================================== -->
-
-  <section class="settings-section">
-
-    <h2 class="settings-title">
-      🌍 Expérience
-    </h2>
-
-
-    <!-- Localisation -->
-
-    <div class="settings-row">
-
-      <div class="settings-row-text">
-
-        <strong>Localisation</strong>
-
-        <small>
-          Permettre la localisation pour améliorer la livraison.
-        </small>
-
-      </div>
-
-
-      <label class="tiop-switch">
-
-        <input
-          type="checkbox"
-          name="locationEnabled"
-          checked
-        >
-
-        <span class="switch-slider"></span>
-
-      </label>
-
-    </div>
-
-
-    <!-- Langue -->
-
-    <div class="settings-row">
-
-      <div class="settings-row-text">
-
-        <strong>Langue</strong>
-
-        <small>
-          Langue de l'interface.
-        </small>
-
-      </div>
-
-
-      <select
-        class="settings-select"
-        name="language"
-      >
-
-        <option value="fr" selected>
-          Français
-        </option>
-
-        <option value="ln">
-          Lingala
-        </option>
-
-        <option value="en">
-          English
-        </option>
-
-      </select>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       SÉCURITÉ
-  ====================================================== -->
-
-  <section class="settings-section">
-
-    <h2 class="settings-title">
-      🔐 Sécurité
-    </h2>
-
-
-    <button
-      type="button"
-      class="password-button"
-      onclick="openPasswordModal()"
-    >
-      🔑 Modifier mon mot de passe
-    </button>
-
-  </section>
-
-
-  <!-- =====================================================
-       MOTIF AFRICAIN
-  ====================================================== -->
-
-  <section class="settings-section">
-
-    <h2 class="settings-title">
-      🎨 Motif africain
-    </h2>
-
-    <p class="settings-description">
-      Choisissez une signature discrète sans modifier
-      l’ergonomie validée de la 2.2.
-    </p>
-
-
-    <div class="african-patterns">
-
-
-      <!-- KONGO AUTHENTIQUE -->
-
-      <div class="pattern-option">
-
-        <input
-          type="radio"
-          id="patternKongo"
-          name="africanPattern"
-          value="kongo"
-        >
-
-        <label
-          class="pattern-card"
-          for="patternKongo"
-        >
-
-          <div
-            class="pattern-preview pattern-kongo">
-          </div>
-
-          <span class="pattern-name">
-            Kongo Authentique
-          </span>
-
-        </label>
-
-      </div>
-
-
-      <!-- AFRO ÉLÉGANT -->
-
-      <div class="pattern-option">
-
-        <input
-          type="radio"
-          id="patternElegant"
-          name="africanPattern"
-          value="elegant"
-          checked
-        >
-
-        <label
-          class="pattern-card"
-          for="patternElegant"
-        >
-
-          <div
-            class="pattern-preview pattern-elegant">
-          </div>
-
-          <span class="pattern-name">
-            Afro Élégant
-          </span>
-
-        </label>
-
-      </div>
-
-
-      <!-- CONGO BRAZZAVILLE -->
-
-      <div class="pattern-option">
-
-        <input
-          type="radio"
-          id="patternCongo"
-          name="africanPattern"
-          value="congo"
-        >
-
-        <label
-          class="pattern-card"
-          for="patternCongo"
-        >
-
-          <div
-            class="pattern-preview pattern-congo">
-          </div>
-
-          <span class="pattern-name">
-            Congo-Brazzaville
-          </span>
-
-        </label>
-
-      </div>
-
-
-      <!-- AFRO FUTURISTE -->
-
-      <div class="pattern-option">
-
-        <input
-          type="radio"
-          id="patternFuturist"
-          name="africanPattern"
-          value="futurist"
-        >
-
-        <label
-          class="pattern-card"
-          for="patternFuturist"
-        >
-
-          <div
-            class="pattern-preview pattern-futurist">
-          </div>
-
-          <span class="pattern-name">
-            Afro-futuriste discret
-          </span>
-
-        </label>
-
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       MOT DE PASSE
-  ====================================================== -->
-
-  <section class="settings-section">
-
-    <h2 class="settings-title">
-      🔐 Mot de passe
-    </h2>
-
-
-    <button
-      type="button"
-      class="password-button"
-      onclick="openPasswordModal()"
-    >
-      🔑 Modifier mon mot de passe
-    </button>
-
-  </section>
-
-</section>
-
-  </div>
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        document
+            .querySelectorAll(
+                ".toggle-password"
+            )
+            .forEach(
+                function (button) {
+
+                    button.addEventListener(
+                        "click",
+                        function () {
+
+                            const input =
+                                document.getElementById(
+                                    this.dataset.target
+                                );
+
+
+                            if (!input) {
+                                return;
+                            }
+
+
+                            input.type =
+                                input.type === "password"
+                                    ? "text"
+                                    : "password";
+
+
+                            this.textContent =
+                                input.type === "password"
+                                    ? "👁"
+                                    : "🙈";
+                        }
+                    );
+                }
+            );
+    }
+);
+
+</script>

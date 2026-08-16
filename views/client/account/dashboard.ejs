@@ -1,288 +1,1000 @@
-<section class="page-hero">
-  <div class="container">
-    <span class="eyebrow">Espace client</span>
-    <h1>📊 Vue d’ensemble</h1>
-    <p>Points, commandes, favoris et statut</p>
-  </div>
-</section>
-  <div class="container account-grid">
-    <aside class="panel profileNav">
+<!-- =========================================================
+     TIOPTIOP
+     DASHBOARD CLIENT
+========================================================= -->
 
-            <a href="/compte">
-                ← Vue d’ensemble
+<section class="dashboard-page">
+
+    <div class="dashboard-layout">
+
+
+        <!-- SIDEBAR -->
+
+        <aside class="dashboard-sidebar">
+
+            <a href="/compte" class="dashboard-nav active">
+                🏠 Vue d’ensemble
             </a>
 
-            <a href="/profil">
+            <a href="/profil" class="dashboard-nav">
                 👤 Profil
             </a>
-            <a href="/tiopplus">⭐ Tiop+</a>
-            <a href="/commandes">🧾 Commandes & factures</a>
-            <a href="/parametres">
-                ⚙️ Paramètres
+
+            <a href="/commandes" class="dashboard-nav">
+                🧾 Commandes
             </a>
 
-            <a href="/paiements-client">
+            <a href="/favoris" class="dashboard-nav">
+                ❤️ Favoris
+            </a>
+
+            <a href="/tiopplus" class="dashboard-nav">
+                ⭐ Tiop+
+            </a>
+
+            <a href="/paiements-client" class="dashboard-nav">
                 💳 Paiements
             </a>
 
+            <a href="/parametres" class="dashboard-nav">
+                ⚙️ Paramètres
+            </a>
+
         </aside>
-    
-    <!-- ==========================================
-     VUE D'ENSEMBLE - PAGE COMPTE
-=========================================== -->
+
+
+        <!-- CONTENU -->
+
+        <main class="dashboard-content">
+
+
+            <!-- =================================================
+                 HERO
+            ================================================== -->
+
+            <section class="dashboard-hero">
+
+                <div class="dashboard-user">
+
+                    <div class="dashboard-avatar">
+
+                        <% if (account.avatar_url) { %>
+
+                            <img
+                                src="<%= account.avatar_url %>"
+                                alt="Photo de profil"
+                            >
+
+                        <% } else { %>
+
+                            <span>
+                                <%= (
+                                    account.first_name
+                                        ? account.first_name.charAt(0)
+                                        : "T"
+                                ).toUpperCase() %>
+                            </span>
+
+                        <% } %>
+
+                    </div>
+
+
+                    <div>
+
+                        <span class="dashboard-eyebrow">
+                            👋 Bienvenue
+                        </span>
+
+
+                        <h1>
+
+                            Bonjour
+
+                            <%= 
+                                account.display_name
+                                ||
+                                [
+                                    account.first_name,
+                                    account.last_name
+                                ]
+                                .filter(Boolean)
+                                .join(" ")
+                                ||
+                                "Client"
+                            %>
+
+                        </h1>
+
+
+                        <p>
+                            Retrouvez votre activité,
+                            vos commandes et votre espace TiopTiop.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <a
+                    href="/profil"
+                    class="dashboard-profile-button"
+                >
+                    Modifier mon profil
+                </a>
+
+            </section>
+
+
+            <!-- =================================================
+                 STATISTIQUES
+            ================================================== -->
+
+            <section class="dashboard-stats">
+
+
+                <a
+                    href="/tiopplus"
+                    class="dashboard-stat"
+                >
+
+                    <span class="stat-icon">
+                        ⭐
+                    </span>
+
+                    <strong>
+                        <%= stats.points %>
+                    </strong>
+
+                    <span>
+                        Points
+                    </span>
+
+                </a>
+
+
+                <a
+                    href="/commandes"
+                    class="dashboard-stat"
+                >
+
+                    <span class="stat-icon">
+                        🧾
+                    </span>
+
+                    <strong>
+                        <%= stats.orders %>
+                    </strong>
+
+                    <span>
+                        Commandes
+                    </span>
+
+                </a>
+
+
+                <a
+                    href="/favoris"
+                    class="dashboard-stat"
+                >
+
+                    <span class="stat-icon">
+                        ❤️
+                    </span>
+
+                    <strong>
+                        <%= stats.favorites %>
+                    </strong>
+
+                    <span>
+                        Favoris
+                    </span>
+
+                </a>
+
+
+                <div class="dashboard-stat">
+
+                    <span class="stat-icon">
+                        🏆
+                    </span>
+
+                    <strong>
+                        <%= stats.status %>
+                    </strong>
+
+                    <span>
+                        Statut
+                    </span>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 INFORMATIONS COMPTE
+            ================================================== -->
+
+            <section class="dashboard-grid">
+
+
+                <article class="dashboard-card">
+
+                    <div class="dashboard-card-heading">
+
+                        <span>
+                            👤
+                        </span>
+
+                        <h2>
+                            Mon profil
+                        </h2>
+
+                    </div>
+
+
+                    <div class="dashboard-information">
+
+                        <div>
+
+                            <span>
+                                Nom
+                            </span>
+
+                            <strong>
+
+                                <%= [
+                                    account.first_name,
+                                    account.last_name
+                                ]
+                                .filter(Boolean)
+                                .join(" ")
+                                || "Non renseigné"
+                                %>
+
+                            </strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>
+                                E-mail
+                            </span>
+
+                            <strong>
+                                <%= account.email || "Non renseigné" %>
+                            </strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>
+                                Téléphone
+                            </span>
+
+                            <strong>
+                                <%= account.phone || "Non renseigné" %>
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <a
+                        href="/profil"
+                        class="dashboard-card-link"
+                    >
+                        Gérer mon profil →
+                    </a>
+
+                </article>
+
+
+                <!-- =============================================
+                     COMMANDES
+                ============================================== -->
+
+                <article class="dashboard-card">
+
+                    <div class="dashboard-card-heading">
+
+                        <span>
+                            🧾
+                        </span>
+
+                        <h2>
+                            Mes commandes
+                        </h2>
+
+                    </div>
+
+
+                    <div class="dashboard-placeholder">
+
+                        <strong>
+                            <%= stats.orders %>
+                        </strong>
+
+                        <p>
+                            commande(s) enregistrée(s)
+                        </p>
+
+                        <small>
+                            L’historique détaillé sera connecté
+                            à l’étape Commandes.
+                        </small>
+
+                    </div>
+
+
+                    <a
+                        href="/commandes"
+                        class="dashboard-card-link"
+                    >
+                        Voir mes commandes →
+                    </a>
+
+                </article>
+
+
+                <!-- =============================================
+                     TIOP+
+                ============================================== -->
+
+                <article class="dashboard-card tiopplus-card">
+
+                    <div class="dashboard-card-heading">
+
+                        <span>
+                            ⭐
+                        </span>
+
+                        <h2>
+                            Tiop+
+                        </h2>
+
+                    </div>
+
+
+                    <div class="dashboard-placeholder">
+
+                        <strong>
+                            <%= stats.points %>
+                        </strong>
+
+                        <p>
+                            points disponibles
+                        </p>
+
+                        <small>
+                            Votre programme fidélité sera
+                            connecté à l’étape Tiop+.
+                        </small>
+
+                    </div>
+
+
+                    <a
+                        href="/tiopplus"
+                        class="dashboard-card-link"
+                    >
+                        Découvrir Tiop+ →
+                    </a>
+
+                </article>
+
+
+                <!-- =============================================
+                     PARAMETRES
+                ============================================== -->
+
+                <article class="dashboard-card">
+
+                    <div class="dashboard-card-heading">
+
+                        <span>
+                            ⚙️
+                        </span>
+
+                        <h2>
+                            Préférences
+                        </h2>
+
+                    </div>
+
+
+                    <div class="dashboard-information">
+
+                        <div>
+
+                            <span>
+                                Langue
+                            </span>
+
+                            <strong>
+
+                                <% if (account.preferred_language === "ln") { %>
+                                    Lingala
+                                <% } else if (account.preferred_language === "en") { %>
+                                    English
+                                <% } else { %>
+                                    Français
+                                <% } %>
+
+                            </strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>
+                                Motif
+                            </span>
+
+                            <strong>
+                                <%= account.motif_theme || "KONGO_AUTHENTIQUE" %>
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <a
+                        href="/parametres"
+                        class="dashboard-card-link"
+                    >
+                        Modifier mes paramètres →
+                    </a>
+
+                </article>
+
+            </section>
+
+        </main>
+
+    </div>
+
+</section>
+
 
 <style>
-  .account-overview {
-    --overview-orange: #ff7900;
-    --overview-text: #191714;
-    --overview-muted: #746f69;
-    --overview-card: #ffffff;
 
-    padding: 8px 0 42px;
-    font-family: Arial, Helvetica, sans-serif;
-    color: var(--overview-text);
-  }
+.dashboard-page {
 
-  /* =========================
-     KPI
-  ========================== */
+    --orange: #ff7900;
+    --orange-dark: #e96e00;
 
-  .overview-kpis {
+    --ink: #17130f;
+    --cream: #fff8ef;
+
+    --muted: #746d66;
+    --line: #eadfd3;
+
+    padding: 42px 20px 80px;
+
+    background: var(--cream);
+
+    color: var(--ink);
+}
+
+
+.dashboard-layout {
+
+    width: min(1180px,100%);
+
+    margin: auto;
+
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
-    margin-bottom: 18px;
-  }
 
-  .overview-kpi {
-    background: var(--overview-card);
-    border-radius: 24px;
-    padding: 20px 18px;
-    min-height: 96px;
+    grid-template-columns:
+        240px
+        minmax(0,1fr);
+
+    gap: 28px;
+}
+
+
+/* SIDEBAR */
+
+.dashboard-sidebar {
+
+    position: sticky;
+    top: 20px;
+
+    height: fit-content;
 
     display: flex;
     flex-direction: column;
-    justify-content: center;
 
-    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
-  }
+    gap: 7px;
 
-  .overview-kpi-label {
+    padding: 14px;
+
+    background: #fff;
+
+    border: 1px solid var(--line);
+    border-radius: 25px;
+}
+
+
+.dashboard-nav {
+
+    min-height: 48px;
+
     display: flex;
     align-items: center;
-    gap: 8px;
 
-    font-size: 15px;
-    font-weight: 500;
-    margin-bottom: 5px;
-  }
+    padding: 0 15px;
 
-  .overview-kpi-icon {
-    font-size: 16px;
-    line-height: 1;
-  }
+    border-radius: 15px;
 
-  .overview-kpi-value {
+    color: var(--ink);
+
+    text-decoration: none;
+
+    font-size: 14px;
+    font-weight: 800;
+}
+
+
+.dashboard-nav:hover {
+
+    background: #fff5e9;
+}
+
+
+.dashboard-nav.active {
+
+    background: var(--orange);
+    color: #fff;
+}
+
+
+/* HERO */
+
+.dashboard-hero {
+
+    min-height: 230px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 30px;
+
+    padding: 35px;
+
+    margin-bottom: 20px;
+
+    box-sizing: border-box;
+
+    background:
+        linear-gradient(
+            135deg,
+            #17130f,
+            #2c2119
+        );
+
+    color: #fff;
+
+    border-radius: 30px;
+}
+
+
+.dashboard-user {
+
+    display: flex;
+    align-items: center;
+
+    gap: 22px;
+}
+
+
+.dashboard-avatar {
+
+    width: 100px;
+    height: 100px;
+
+    flex: 0 0 100px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    border-radius: 50%;
+
+    background: var(--orange);
+
+    font-size: 40px;
+    font-weight: 900;
+}
+
+
+.dashboard-avatar img {
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+
+.dashboard-eyebrow {
+
+    display: inline-flex;
+
+    margin-bottom: 10px;
+
+    padding: 6px 10px;
+
+    border-radius: 999px;
+
+    background: rgba(255,255,255,.10);
+
+    font-size: 11px;
+    font-weight: 900;
+}
+
+
+.dashboard-hero h1 {
+
+    margin: 0 0 9px;
+
+    font-size: clamp(32px,4vw,54px);
+
+    line-height: .95;
+
+    letter-spacing: -2px;
+}
+
+
+.dashboard-hero p {
+
+    max-width: 550px;
+
     margin: 0;
-    font-size: 30px;
-    line-height: 1.1;
-    font-weight: 800;
-    color: #171512;
-  }
 
-  /* =========================
-     CARTE BIENVENUE
-  ========================== */
+    color: #d8d0ca;
 
-  .overview-welcome {
-    background: #ffffff;
-    border-radius: 26px;
-    padding: 46px 22px 17px;
-    min-height: 185px;
+    line-height: 1.5;
+}
 
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
 
-    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
-  }
+.dashboard-profile-button {
 
-  .overview-welcome h2 {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    min-height: 44px;
 
-    margin: 0 0 20px;
-    font-size: 25px;
-    line-height: 1.2;
-    font-weight: 800;
-    color: #1c1916;
-  }
+    flex: 0 0 auto;
 
-  .overview-welcome p {
-    margin: 0 0 7px;
-    color: var(--overview-muted);
-    font-size: 15.5px;
-    line-height: 1.6;
-  }
-
-  .overview-profile-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    min-height: 44px;
-    margin-top: 0;
-    padding: 0 17px;
+    padding: 0 18px;
 
-    background: var(--overview-orange);
-    color: #ffffff;
-
-    border: none;
     border-radius: 999px;
 
-    font-size: 16px;
-    font-weight: 800;
+    background: var(--orange);
+    color: #fff;
+
     text-decoration: none;
 
-    cursor: pointer;
+    font-size: 13px;
+    font-weight: 900;
+}
 
-    transition:
-      transform 0.2s ease,
-      background 0.2s ease;
-  }
 
-  .overview-profile-btn:hover {
-    background: #e96e00;
-    transform: translateY(-1px);
-  }
+/* STATS */
 
-  /* =========================
-     RESPONSIVE
-  ========================== */
+.dashboard-stats {
 
-  @media (max-width: 900px) {
-    .overview-kpis {
-      grid-template-columns: repeat(2, 1fr);
+    display: grid;
+
+    grid-template-columns:
+        repeat(4,1fr);
+
+    gap: 12px;
+
+    margin-bottom: 20px;
+}
+
+
+.dashboard-stat {
+
+    min-height: 125px;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+
+    padding: 20px;
+
+    box-sizing: border-box;
+
+    background: #fff;
+
+    border: 1px solid var(--line);
+    border-radius: 21px;
+
+    color: var(--ink);
+
+    text-decoration: none;
+}
+
+
+.stat-icon {
+
+    margin-bottom: 10px;
+}
+
+
+.dashboard-stat strong {
+
+    margin-bottom: 3px;
+
+    font-size: 23px;
+    font-weight: 900;
+}
+
+
+.dashboard-stat > span:last-child {
+
+    color: var(--muted);
+
+    font-size: 12px;
+}
+
+
+/* CARDS */
+
+.dashboard-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2,minmax(0,1fr));
+
+    gap: 15px;
+}
+
+
+.dashboard-card {
+
+    min-height: 270px;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 25px;
+
+    background: #fff;
+
+    border: 1px solid var(--line);
+    border-radius: 24px;
+}
+
+
+.dashboard-card-heading {
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 22px;
+}
+
+
+.dashboard-card-heading h2 {
+
+    margin: 0;
+
+    font-size: 18px;
+}
+
+
+.dashboard-information {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 14px;
+}
+
+
+.dashboard-information div {
+
+    display: flex;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding-bottom: 10px;
+
+    border-bottom: 1px solid var(--line);
+}
+
+
+.dashboard-information span {
+
+    color: var(--muted);
+
+    font-size: 12px;
+}
+
+
+.dashboard-information strong {
+
+    text-align: right;
+
+    font-size: 12px;
+}
+
+
+.dashboard-placeholder {
+
+    flex: 1;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+}
+
+
+.dashboard-placeholder strong {
+
+    font-size: 34px;
+}
+
+
+.dashboard-placeholder p {
+
+    margin: 4px 0 8px;
+
+    font-weight: 900;
+}
+
+
+.dashboard-placeholder small {
+
+    max-width: 330px;
+
+    color: var(--muted);
+
+    line-height: 1.5;
+}
+
+
+.dashboard-card-link {
+
+    margin-top: auto;
+
+    padding-top: 18px;
+
+    color: var(--orange);
+
+    text-decoration: none;
+
+    font-size: 12px;
+    font-weight: 900;
+}
+
+
+.tiopplus-card {
+
+    background:
+        linear-gradient(
+            145deg,
+            #fff,
+            #fff7ed
+        );
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 1000px) {
+
+    .dashboard-stats {
+
+        grid-template-columns:
+            repeat(2,1fr);
     }
-  }
+}
 
-  @media (max-width: 520px) {
-    .overview-kpis {
-      grid-template-columns: 1fr;
-      gap: 10px;
+
+@media (max-width: 900px) {
+
+    .dashboard-layout {
+
+        grid-template-columns: 1fr;
     }
 
-    .overview-kpi {
-      min-height: 85px;
-      border-radius: 20px;
-      padding: 17px;
+
+    .dashboard-sidebar {
+
+        position: static;
+
+        flex-direction: row;
+
+        overflow-x: auto;
     }
 
-    .overview-kpi-value {
-      font-size: 27px;
+
+    .dashboard-nav {
+
+        white-space: nowrap;
+    }
+}
+
+
+@media (max-width: 700px) {
+
+    .dashboard-hero {
+
+        align-items: flex-start;
+
+        flex-direction: column;
     }
 
-    .overview-welcome {
-      min-height: auto;
-      padding: 30px 20px;
-      border-radius: 22px;
+
+    .dashboard-grid {
+
+        grid-template-columns: 1fr;
+    }
+}
+
+
+@media (max-width: 520px) {
+
+    .dashboard-page {
+
+        padding: 25px 13px 55px;
     }
 
-    .overview-welcome h2 {
-      font-size: 22px;
+
+    .dashboard-user {
+
+        align-items: flex-start;
+
+        flex-direction: column;
     }
 
-    .overview-profile-btn {
-      width: 100%;
+
+    .dashboard-avatar {
+
+        width: 80px;
+        height: 80px;
+
+        flex-basis: 80px;
     }
-  }
+
+
+    .dashboard-stats {
+
+        grid-template-columns: 1fr 1fr;
+    }
+
+
+    .dashboard-hero {
+
+        padding: 24px;
+
+        border-radius: 23px;
+    }
+}
+
 </style>
-
-
-<section class="account-overview">
-
-  <!-- ==============================
-       STATISTIQUES DU COMPTE
-  =============================== -->
-  <div class="overview-kpis">
-
-    <!-- Points -->
-    <article class="overview-kpi">
-      <div class="overview-kpi-label">
-        <span class="overview-kpi-icon">⭐</span>
-        <span>Points</span>
-      </div>
-
-      <strong class="overview-kpi-value">
-        1280
-      </strong>
-    </article>
-
-
-    <!-- Commandes -->
-    <article class="overview-kpi">
-      <div class="overview-kpi-label">
-        <span class="overview-kpi-icon">🧾</span>
-        <span>Commandes</span>
-      </div>
-
-      <strong class="overview-kpi-value">
-        1
-      </strong>
-    </article>
-
-
-    <!-- Favoris -->
-    <article class="overview-kpi">
-      <div class="overview-kpi-label">
-        <span class="overview-kpi-icon">💗</span>
-        <span>Favoris</span>
-      </div>
-
-      <strong class="overview-kpi-value">
-        0
-      </strong>
-    </article>
-
-
-    <!-- Statut -->
-    <article class="overview-kpi">
-      <div class="overview-kpi-label">
-        <span class="overview-kpi-icon">🎁</span>
-        <span>Statut</span>
-      </div>
-
-      <strong class="overview-kpi-value">
-        Standard
-      </strong>
-    </article>
-
-  </div>
-
-
-  <!-- ==============================
-       BIENVENUE
-  =============================== -->
-  <article class="overview-welcome">
-
-    <h2>
-      <span>👋</span>
-      Bonjour Client Démo
-    </h2>
-
-    <p>
-      Gérez vos données et préférences depuis les rubriques de votre compte.
-    </p>
-
-    <a href="/profil" class="overview-profile-btn">
-      Modifier mon profil
-    </a>
-
-  </article>
-
-</section>
-
-  </div>
-
