@@ -1,13 +1,297 @@
 <section class="section">
-  <div class="container narrow panel">
-    <span class="eyebrow">✨ Bienvenue</span>
-    <h1>Créer un compte</h1>
-    <form class="form">
-      <input class="field" placeholder="Prénom">
-      <input class="field" placeholder="Nom">
-      <input class="field" type="email" placeholder="Email">
-      <input class="field" type="password" placeholder="Mot de passe">
-      <button class="button primary" type="button">Créer le compte</button>
-    </form>
-  </div>
+
+    <div class="container narrow panel">
+
+        <span class="eyebrow">
+            ✨ Bienvenue
+        </span>
+
+
+        <h1>
+            Créer un compte
+        </h1>
+
+
+        <p class="auth-intro">
+
+            Créez votre espace TiopTiop
+            pour retrouver vos commandes,
+            vos préférences et vos avantages.
+
+        </p>
+
+
+        <% if (
+            typeof error !== "undefined"
+            &&
+            error
+        ) { %>
+
+            <div class="auth-error">
+
+                ⚠️
+                <%= error %>
+
+            </div>
+
+        <% } %>
+
+
+        <form
+            class="form"
+            method="POST"
+            action="/inscription"
+        >
+
+
+            <div class="auth-name-grid">
+
+
+                <label>
+
+                    Prénom *
+
+                    <input
+                        class="field"
+                        name="first_name"
+                        type="text"
+                        value="<%= values?.first_name || '' %>"
+                        autocomplete="given-name"
+                        required
+                    >
+
+                </label>
+
+
+                <label>
+
+                    Nom *
+
+                    <input
+                        class="field"
+                        name="last_name"
+                        type="text"
+                        value="<%= values?.last_name || '' %>"
+                        autocomplete="family-name"
+                        required
+                    >
+
+                </label>
+
+
+            </div>
+
+
+            <label>
+
+                Adresse email *
+
+                <input
+                    class="field"
+                    name="email"
+                    type="email"
+                    value="<%= values?.email || '' %>"
+                    autocomplete="email"
+                    required
+                >
+
+            </label>
+
+
+            <label>
+
+                Téléphone
+
+                <input
+                    class="field"
+                    name="phone"
+                    type="tel"
+                    value="<%= values?.phone || '' %>"
+                    autocomplete="tel"
+                    placeholder="+242 ..."
+                >
+
+            </label>
+
+
+            <label>
+
+                Mot de passe *
+
+                <input
+                    class="field"
+                    name="password"
+                    type="password"
+                    minlength="8"
+                    autocomplete="new-password"
+                    required
+                >
+
+            </label>
+
+
+            <label>
+
+                Confirmer le mot de passe *
+
+                <input
+                    class="field"
+                    name="password_confirm"
+                    type="password"
+                    minlength="8"
+                    autocomplete="new-password"
+                    required
+                >
+
+            </label>
+
+
+            <label class="auth-consent">
+
+                <input
+                    type="checkbox"
+                    name="marketing_consent"
+                    value="1"
+                >
+
+                <span>
+
+                    Je souhaite recevoir
+                    les offres et nouveautés TiopTiop.
+
+                </span>
+
+            </label>
+
+
+            <button
+                class="button primary"
+                type="submit"
+            >
+
+                Créer mon compte
+
+            </button>
+
+        </form>
+
+
+        <p class="auth-switch">
+
+            Vous avez déjà un compte ?
+
+            <a href="/connexion">
+                Se connecter
+            </a>
+
+        </p>
+
+    </div>
+
 </section>
+
+
+<style>
+
+.auth-intro {
+
+    margin:
+        -5px
+        0
+        20px;
+
+    color: #746d66;
+
+    line-height: 1.6;
+
+    font-size: 14px;
+}
+
+
+.auth-error {
+
+    margin-bottom: 15px;
+
+    padding: 13px 15px;
+
+    border-radius: 13px;
+
+    background: #fdebea;
+
+    color: #962c25;
+
+    font-size: 13px;
+    font-weight: 800;
+}
+
+
+.auth-name-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        1fr
+        1fr;
+
+    gap: 12px;
+}
+
+
+.auth-consent {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 9px;
+
+    color: #746d66;
+
+    font-size: 13px;
+
+    cursor: pointer;
+}
+
+
+.auth-consent input {
+
+    margin-top: 3px;
+
+    accent-color:
+        #ff7900;
+}
+
+
+.auth-switch {
+
+    margin:
+        18px
+        0
+        0;
+
+    text-align: center;
+
+    color: #746d66;
+
+    font-size: 14px;
+}
+
+
+.auth-switch a {
+
+    color: #ff7900;
+
+    font-weight: 900;
+}
+
+
+@media(max-width:560px) {
+
+    .auth-name-grid {
+
+        grid-template-columns:
+            1fr;
+    }
+}
+
+</style>

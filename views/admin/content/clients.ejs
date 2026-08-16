@@ -1,467 +1,435 @@
 <section class="admin-heading">
-  <div>
-    <span class="admin-badge">Administration</span>
-    <h1>👥 Clients</h1>
-  </div>
-  <button
-      type="button"
-      class="btn-client-add"
-      onclick="openAddClientModal()">
-      + Ajouter un client
-    </button>
+
+    <div>
+
+        <span class="admin-badge">
+            Administration
+        </span>
+
+        <h1>
+            👥 Clients
+        </h1>
+
+    </div>
+
 </section>
+
+
 <section class="admin-clients-page">
 
 
+    <!-- =====================================================
+         TABLEAU CLIENTS
+    ====================================================== -->
 
+    <div class="clients-table-wrapper">
 
-  <!-- =========================
-       TABLEAU CLIENTS
-  ========================== -->
-  <div class="clients-table-wrapper">
+        <table class="clients-table">
 
-    <table class="clients-table">
+            <thead>
 
-      <thead>
-        <tr>
-          <th>Client</th>
-          <th>Email</th>
-          <th>Commandes</th>
-          <th>Dépenses</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
+                <tr>
 
-      <tbody>
+                    <th>
+                        Client
+                    </th>
 
-        <!-- CLIENT 1 -->
-        <tr>
+                    <th>
+                        Email
+                    </th>
 
-          <td>
-            <div class="client-identity">
+                    <th>
+                        Téléphone
+                    </th>
 
-              <div class="client-avatar-fallback">
-                👤
-              </div>
+                    <th>
+                        Commandes
+                    </th>
 
-              <span>Client Démo</span>
+                    <th>
+                        Dépenses
+                    </th>
 
-            </div>
-          </td>
+                    <th>
+                        Statut
+                    </th>
 
-          <td>client@tioptiop.cg</td>
+                    <th>
+                        Inscription
+                    </th>
 
-          <td>6</td>
+                    <th>
+                        Dernière connexion
+                    </th>
 
-          <td>129,40 €</td>
+                    <th>
+                        Actions
+                    </th>
 
-          <td>
+                </tr>
 
-            <div class="client-actions">
+            </thead>
 
-              <button
-                type="button"
-                class="btn-client-edit"
-                onclick="openEditClientModal(
-                  1,
-                  'Client Démo',
-                  'client@tioptiop.cg',
-                  '+242 06 000 00 00',
-                  ''
-                )">
-                Modifier
-              </button>
 
-              <button
-                type="button"
-                class="btn-client-delete"
-                onclick="deleteClient(1, 'Client Démo')">
-                Supprimer
-              </button>
+            <tbody>
 
-            </div>
 
-          </td>
+                <% if (
+                    clients &&
+                    clients.length > 0
+                ) { %>
 
-        </tr>
 
+                    <% clients.forEach(
+                        client => {
 
-        <!-- CLIENT 2 -->
-        <tr>
+                            const fullName =
+                                client.display_name
+                                ||
+                                [
+                                    client.first_name,
+                                    client.last_name
+                                ]
+                                    .filter(Boolean)
+                                    .join(" ")
+                                ||
+                                client.email;
 
-          <td>
-            <div class="client-identity">
+                    %>
 
-              <div class="client-avatar-fallback">
-                👤
-              </div>
 
-              <span>Mireille N.</span>
+                        <tr>
 
-            </div>
-          </td>
 
-          <td>mireille@example.com</td>
+                            <!-- CLIENT -->
 
-          <td>12</td>
+                            <td>
 
-          <td>284,70 €</td>
+                                <div class="client-identity">
 
-          <td>
 
-            <div class="client-actions">
+                                    <% if (
+                                        client.avatar_url
+                                    ) { %>
 
-              <button
-                type="button"
-                class="btn-client-edit"
-                onclick="openEditClientModal(
-                  2,
-                  'Mireille N.',
-                  'mireille@example.com',
-                  '+242 06 111 22 33',
-                  ''
-                )">
-                Modifier
-              </button>
+                                        <img
+                                            src="<%= client.avatar_url %>"
+                                            alt="<%= fullName %>"
+                                            class="client-avatar"
+                                            onerror="
+                                                this.style.display='none';
+                                                this.nextElementSibling.style.display='flex';
+                                            "
+                                        >
 
-              <button
-                type="button"
-                class="btn-client-delete"
-                onclick="deleteClient(2, 'Mireille N.')">
-                Supprimer
-              </button>
 
-            </div>
+                                        <div
+                                            class="client-avatar-fallback"
+                                            style="display:none;"
+                                        >
 
-          </td>
+                                            <%= (
+                                                fullName
+                                                || "C"
+                                            )
+                                                .charAt(0)
+                                                .toUpperCase()
+                                            %>
 
-        </tr>
+                                        </div>
 
 
-        <!-- CLIENT 3 -->
-        <tr>
+                                    <% } else { %>
 
-          <td>
-            <div class="client-identity">
 
-              <div class="client-avatar-fallback">
-                👤
-              </div>
+                                        <div
+                                            class="client-avatar-fallback"
+                                        >
 
-              <span>Junior M.</span>
+                                            <%= (
+                                                fullName
+                                                || "C"
+                                            )
+                                                .charAt(0)
+                                                .toUpperCase()
+                                            %>
 
-            </div>
-          </td>
+                                        </div>
 
-          <td>junior@example.com</td>
 
-          <td>3</td>
+                                    <% } %>
 
-          <td>69,50 €</td>
 
-          <td>
+                                    <div>
 
-            <div class="client-actions">
+                                        <strong>
+                                            <%= fullName %>
+                                        </strong>
 
-              <button
-                type="button"
-                class="btn-client-edit"
-                onclick="openEditClientModal(
-                  3,
-                  'Junior M.',
-                  'junior@example.com',
-                  '+242 06 222 33 44',
-                  ''
-                )">
-                Modifier
-              </button>
+                                        <small class="client-reference">
 
-              <button
-                type="button"
-                class="btn-client-delete"
-                onclick="deleteClient(3, 'Junior M.')">
-                Supprimer
-              </button>
+                                            #<%= client.id %>
 
-            </div>
+                                        </small>
 
-          </td>
+                                    </div>
 
-        </tr>
+                                </div>
 
+                            </td>
 
-        <!-- CLIENT AVEC PHOTO -->
-        <tr>
 
-          <td>
+                            <!-- EMAIL -->
 
-            <div class="client-identity">
+                            <td>
 
-              <img
-                src="/media/clients/test-avatar.png"
-                alt="test"
-                class="client-avatar"
-                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <%= client.email %>
 
-              <div
-                class="client-avatar-fallback"
-                style="display:none;">
-                👤
-              </div>
+                            </td>
 
-              <span>test</span>
 
-            </div>
+                            <!-- TELEPHONE -->
 
-          </td>
+                            <td>
 
-          <td>tes@g</td>
+                                <%= client.phone || "—" %>
 
-          <td>0</td>
+                            </td>
 
-          <td>0,00 €</td>
 
-          <td>
+                            <!-- COMMANDES -->
 
-            <div class="client-actions">
+                            <td>
 
-              <button
-                type="button"
-                class="btn-client-edit"
-                onclick="openEditClientModal(
-                  4,
-                  'test',
-                  'tes@g',
-                  '0644702966',
-                  '/media/clients/test-avatar.png'
-                )">
-                Modifier
-              </button>
+                                <span class="client-count">
 
-              <button
-                type="button"
-                class="btn-client-delete"
-                onclick="deleteClient(4, 'test')">
-                Supprimer
-              </button>
+                                    <%= Number(
+                                        client.orders_count || 0
+                                    ) %>
 
-            </div>
+                                </span>
 
-          </td>
+                            </td>
 
-        </tr>
 
-      </tbody>
+                            <!-- DEPENSES -->
 
-    </table>
+                            <td>
 
-  </div>
+                                <strong class="client-spent">
+
+                                    <%= Number(
+                                        client.total_spent || 0
+                                    ).toLocaleString(
+                                        "fr-FR"
+                                    ) %>
+
+                                    XAF
+
+                                </strong>
+
+                            </td>
+
+
+                            <!-- STATUT -->
+
+                            <td>
+
+
+                                <% if (
+                                    client.status === "ACTIVE"
+                                ) { %>
+
+                                    <span class="client-status active">
+
+                                        ● Actif
+
+                                    </span>
+
+
+                                <% } else { %>
+
+                                    <span class="client-status inactive">
+
+                                        ● <%= client.status %>
+
+                                    </span>
+
+                                <% } %>
+
+
+                            </td>
+
+
+                            <!-- DATE INSCRIPTION -->
+
+                            <td>
+
+                                <%= client.created_at
+                                    ? new Date(
+                                        client.created_at
+                                    ).toLocaleDateString(
+                                        "fr-FR"
+                                    )
+                                    : "—"
+                                %>
+
+                            </td>
+
+
+                            <!-- LAST LOGIN -->
+
+                            <td>
+
+                                <% if (
+                                    client.last_login_at
+                                ) { %>
+
+                                    <%= new Date(
+                                        client.last_login_at
+                                    ).toLocaleString(
+                                        "fr-FR",
+                                        {
+                                            dateStyle:
+                                                "short",
+
+                                            timeStyle:
+                                                "short"
+                                        }
+                                    ) %>
+
+                                <% } else { %>
+
+                                    Jamais
+
+                                <% } %>
+
+                            </td>
+
+                            <td>
+
+                              <div class="client-actions">
+
+                                  <!-- CONSULTER -->
+
+                                  <button
+                                      type="button"
+                                      class="btn-client-view"
+                                      onclick="viewClient(<%= client.id %>)"
+                                      title="Consulter"
+                                  >
+                                      👁
+                                  </button>
+
+
+                                  <!-- MODIFIER -->
+
+                                  <button
+                                      type="button"
+                                      class="btn-client-edit"
+                                      onclick="editClient(<%= client.id %>)"
+                                      title="Modifier"
+                                  >
+                                      ✏️
+                                  </button>
+
+
+                                  <!-- BLOQUER / DEBLOQUER -->
+
+                                  <% if (
+                                      client.status === "BLOCKED"
+                                  ) { %>
+
+                                      <button
+                                          type="button"
+                                          class="btn-client-unblock"
+                                          onclick="unblockClient(<%= client.id %>)"
+                                          title="Débloquer"
+                                      >
+                                          🔓
+                                      </button>
+
+                                  <% } else { %>
+
+                                      <button
+                                          type="button"
+                                          class="btn-client-block"
+                                          onclick="blockClient(<%= client.id %>)"
+                                          title="Bloquer"
+                                      >
+                                          🔒
+                                      </button>
+
+                                  <% } %>
+
+
+                                  <!-- SUPPRIMER -->
+
+                                  <button
+                                      type="button"
+                                      class="btn-client-delete"
+                                      onclick="deleteClient(<%= client.id %>)"
+                                      title="Supprimer"
+                                  >
+                                      🗑
+                                  </button>
+
+                              </div>
+
+                          </td>
+
+                        </tr>
+
+
+                    <% }) %>
+
+
+                <% } else { %>
+
+
+                    <tr>
+
+                        <td
+                            colspan="8"
+                        >
+
+                            <div class="clients-empty">
+
+                                <div class="clients-empty-icon">
+
+                                    👥
+
+                                </div>
+
+                                <strong>
+
+                                    Aucun client inscrit
+
+                                </strong>
+
+                                <span>
+
+                                    Les nouveaux comptes apparaîtront ici automatiquement.
+
+                                </span>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+
+                <% } %>
+
+
+            </tbody>
+
+        </table>
+
+    </div>
 
 </section>
-
-
-
-<!-- =========================================================
-     MODAL : AJOUTER UN CLIENT
-========================================================= -->
-
-<div
-  id="addClientModal"
-  class="client-modal-overlay">
-
-  <div class="client-modal">
-
-    <div class="client-modal-header">
-
-      <h2>
-        <span>➕</span>
-        Ajouter un client
-      </h2>
-
-      <button
-        type="button"
-        class="client-modal-close"
-        onclick="closeAddClientModal()">
-        ×
-      </button>
-
-    </div>
-
-
-    <form
-      action="/admin/clients"
-      method="POST"
-      enctype="multipart/form-data">
-
-      <!-- NOM -->
-      <input
-        type="text"
-        name="name"
-        class="client-field"
-        placeholder="Nom"
-        required>
-
-
-      <!-- EMAIL -->
-      <input
-        type="email"
-        name="email"
-        class="client-field"
-        placeholder="Email"
-        required>
-
-
-      <!-- TELEPHONE -->
-      <input
-        type="tel"
-        name="phone"
-        class="client-field"
-        placeholder="Téléphone">
-
-
-      <!-- PHOTO -->
-      <div class="client-upload-group">
-
-        <label>
-          📷 <strong>Photo de profil</strong>
-        </label>
-
-        <div class="client-file-box">
-
-          <input
-            type="file"
-            name="avatar"
-            accept="image/png,image/jpeg,image/jpg,image/webp"
-            onchange="previewAddClientImage(event)">
-
-        </div>
-
-
-        <img
-          id="addClientPreview"
-          class="client-image-preview"
-          alt="Aperçu photo"
-          style="display:none;">
-
-      </div>
-
-
-      <button
-        type="submit"
-        class="btn-client-save">
-        💾 Enregistrer
-      </button>
-
-    </form>
-
-  </div>
-
-</div>
-
-
-
-<!-- =========================================================
-     MODAL : MODIFIER CLIENT
-========================================================= -->
-
-<div
-  id="editClientModal"
-  class="client-modal-overlay">
-
-  <div class="client-modal">
-
-    <div class="client-modal-header">
-
-      <h2>
-        <span>📝</span>
-        Modifier le client
-      </h2>
-
-      <button
-        type="button"
-        class="client-modal-close"
-        onclick="closeEditClientModal()">
-        ×
-      </button>
-
-    </div>
-
-
-    <form
-      id="editClientForm"
-      method="POST"
-      enctype="multipart/form-data">
-
-      <!-- NOM -->
-      <input
-        type="text"
-        id="editClientName"
-        name="name"
-        class="client-field"
-        required>
-
-
-      <!-- EMAIL -->
-      <input
-        type="email"
-        id="editClientEmail"
-        name="email"
-        class="client-field"
-        required>
-
-
-      <!-- TELEPHONE -->
-      <input
-        type="tel"
-        id="editClientPhone"
-        name="phone"
-        class="client-field">
-
-
-      <!-- PHOTO -->
-      <div class="client-upload-group">
-
-        <label>
-          📷 <strong>Photo de profil</strong>
-        </label>
-
-        <div class="client-file-box">
-
-          <input
-            type="file"
-            name="avatar"
-            accept="image/png,image/jpeg,image/jpg,image/webp"
-            onchange="previewEditClientImage(event)">
-
-        </div>
-
-
-        <!-- PHOTO EXISTANTE -->
-
-        <div id="editClientPreviewContainer">
-
-          <img
-            id="editClientPreview"
-            class="client-image-preview"
-            alt="Photo du client">
-
-        </div>
-
-      </div>
-
-
-      <button
-        type="submit"
-        class="btn-client-save">
-        💾 Enregistrer
-      </button>
-
-    </form>
-
-  </div>
-
-</div>
-
 
 
 <!-- =========================================================
@@ -473,6 +441,42 @@
   method="POST"
   style="display:none;">
 </form>
+
+<!-- =========================================================
+     MODAL ADMINISTRATION CLIENT
+========================================================= -->
+
+<div
+    id="clientAdminModal"
+    class="client-modal-overlay"
+>
+
+    <div class="client-modal">
+
+        <div class="client-modal-header">
+
+            <h2 id="clientModalTitle">
+                Client
+            </h2>
+
+            <button
+                type="button"
+                class="client-modal-close"
+                onclick="closeClientModal()"
+            >
+                ✕
+            </button>
+
+        </div>
+
+
+        <div id="clientModalBody">
+
+        </div>
+
+    </div>
+
+</div>
 
 <style>
   /* ============================================================
@@ -912,6 +916,321 @@ body.modal-open {
         font-size: 21px;
     }
 }
+
+/* ============================================================
+   ACTIONS CLIENT
+============================================================ */
+
+.client-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.btn-client-view,
+.btn-client-edit,
+.btn-client-block,
+.btn-client-unblock,
+.btn-client-delete {
+    width: 38px;
+    height: 38px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    transition: .2s ease;
+}
+
+.btn-client-view {
+    background: #eef5ff;
+}
+
+.btn-client-edit {
+    background: #fff4e8;
+}
+
+.btn-client-block {
+    background: #fff0df;
+}
+
+.btn-client-unblock {
+    background: #e8f8ed;
+}
+
+.btn-client-delete {
+    background: #ffe8e5;
+}
+
+.btn-client-view:hover,
+.btn-client-edit:hover,
+.btn-client-block:hover,
+.btn-client-unblock:hover,
+.btn-client-delete:hover {
+    transform: translateY(-2px);
+}
+
+
+/* ============================================================
+   DETAIL CLIENT
+============================================================ */
+
+.client-detail-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    padding: 16px;
+
+    margin-bottom: 20px;
+
+    border-radius: 18px;
+
+    background: #faf7f3;
+}
+
+.client-detail-avatar {
+    width: 65px;
+    height: 65px;
+
+    flex: 0 0 65px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    border-radius: 50%;
+
+    background: #fff0df;
+
+    color: #ff7900;
+
+    font-size: 24px;
+    font-weight: 900;
+}
+
+.client-detail-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.client-detail-header h3 {
+    margin: 0 0 5px;
+}
+
+.client-detail-header p {
+    margin: 0;
+    color: #777;
+}
+
+.client-detail-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 10px;
+}
+
+.client-detail-item {
+    padding: 13px;
+
+    border: 1px solid #eee6df;
+    border-radius: 13px;
+
+    background: #fff;
+}
+
+.client-detail-item span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #817a74;
+
+    font-size: 11px;
+}
+
+.client-detail-item strong {
+    font-size: 13px;
+
+    word-break: break-word;
+}
+
+
+/* ============================================================
+   FORMULAIRE EDIT
+============================================================ */
+
+.client-form-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 13px;
+}
+
+.client-form-group {
+    display: flex;
+    flex-direction: column;
+
+    gap: 6px;
+}
+
+.client-form-full {
+    grid-column: 1 / -1;
+}
+
+.client-form-group label {
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.client-form-group input,
+.client-form-group select {
+    width: 100%;
+    min-height: 44px;
+
+    padding: 10px 12px;
+
+    border: 1px solid #ddd6d0;
+    border-radius: 11px;
+
+    background: #fff;
+
+    font: inherit;
+
+    outline: none;
+}
+
+.client-form-group input:focus,
+.client-form-group select:focus {
+    border-color: #ff7900;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(255, 121, 0, .08);
+}
+
+
+/* ============================================================
+   CONSENTEMENTS
+============================================================ */
+
+.client-consents {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    margin-top: 18px;
+}
+
+.client-consents label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    padding: 9px 12px;
+
+    border-radius: 999px;
+
+    background: #f7f4f1;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+/* ============================================================
+   ERREUR
+============================================================ */
+
+.client-form-error {
+    margin-top: 15px;
+
+    padding: 11px 13px;
+
+    border-radius: 10px;
+
+    background: #ffe9e7;
+
+    color: #b42318;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+/* ============================================================
+   FOOTER MODAL
+============================================================ */
+
+.client-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+
+    margin-top: 20px;
+}
+
+.client-primary-button,
+.client-secondary-button {
+    min-height: 42px;
+
+    padding: 0 18px;
+
+    border: none;
+    border-radius: 999px;
+
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.client-primary-button {
+    background: #ff7900;
+    color: #fff;
+}
+
+.client-secondary-button {
+    background: #f3efeb;
+    color: #171310;
+}
+
+
+@media (max-width: 650px) {
+
+    .client-detail-grid,
+    .client-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .client-form-full {
+        grid-column: auto;
+    }
+
+    .client-modal-footer {
+        flex-direction: column;
+    }
+
+    .client-primary-button,
+    .client-secondary-button {
+        width: 100%;
+    }
+}
+
 </style>
 
 <script src="/js/clients.js" defer></script>

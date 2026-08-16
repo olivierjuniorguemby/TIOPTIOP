@@ -20,7 +20,7 @@
             </strong>
 
             <small>
-                SAVEURS DU CONGO
+                LE GOUT QUI RASSEMBLE
             </small>
         </span>
 
@@ -37,20 +37,72 @@
     <div class="header-actions">
       <a class="icon-button" href="/panier" aria-label="Panier">🛒</a>
 
-      <% if (currentUser) { %>
-        <a class="profile-chip" href="/compte">
-          <span class="avatar">
-            <% if (currentUser.avatarUrl) { %>
-              <img src="<%= currentUser.avatarUrl %>" alt="">
-            <% } else { %>
-              <%= (currentUser.firstName || "C").charAt(0) %>
-            <% } %>
-          </span>
-          <span><%= currentUser.displayName || currentUser.firstName || "Mon compte" %></span>
-        </a>
-      <% } else { %>
-        <a class="button primary" href="/connexion">🔐 Connexion</a>
-      <% } %>
+        <% if (currentUser) { %>
+
+            <a
+                class="profile-chip"
+                href="/compte"
+            >
+
+                <span class="avatar">
+
+                    <% if (currentUser.avatarUrl) { %>
+
+                        <img
+                            src="<%= currentUser.avatarUrl %>"
+                            alt=""
+                        >
+
+                    <% } else { %>
+
+                        <%= (
+                            currentUser.firstName
+                            || "C"
+                        ).charAt(0) %>
+
+                    <% } %>
+
+                </span>
+
+
+                <span>
+
+                    <%= currentUser.displayName
+                        || currentUser.firstName
+                        || "Mon compte" %>
+
+                </span>
+
+            </a>
+
+
+            <form
+                method="POST"
+                action="/deconnexion"
+                class="header-logout-form"
+            >
+
+                <button
+                    type="submit"
+                    class="header-logout-button"
+                    aria-label="Se déconnecter"
+                    title="Se déconnecter"
+                >
+                    ↪
+                </button>
+
+            </form>
+
+        <% } else { %>
+
+            <a
+                class="button primary"
+                href="/connexion"
+            >
+                🔐 Connexion
+            </a>
+
+        <% } %>
     </div>
     
   </div>
@@ -147,6 +199,41 @@
     letter-spacing:1.8px;
 
     color:#756b62;
+}
+
+.header-logout-form {
+    margin: 0;
+}
+
+.header-logout-button {
+
+    width: 38px;
+    height: 38px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: 1px solid #eadfd3;
+    border-radius: 50%;
+
+    background: #fff;
+
+    color: #17130f;
+
+    font-size: 17px;
+
+    cursor: pointer;
+}
+
+.header-logout-button:hover {
+
+    border-color: #ff7900;
+
+    color: #ff7900;
 }
 
 </style>

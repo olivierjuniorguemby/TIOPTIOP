@@ -3,7 +3,7 @@
   <a class="brand light" href="/admin">
     <img src="/media/logo.png" alt="TiopTiop">
     <strong>TiopTiop</strong>
-    <small>Saveurs du Congo · Brazzaville</small>
+    <small>LE GOUT QUI RASSEMBLE</small>
 </a>
 
   <h3>OPÉRATIONS</h3>
@@ -36,4 +36,37 @@
   <a href="/admin/parametres">⚙️ Paramètres</a>
   <a href="/admin/journaux">📊 Journaux</a>
   <a href="/admin/profil">👤 Profil</a>
+
+  <% if (currentAdmin) { %>
+    <a
+        href="/admin/deconnexion"
+        class="admin-logout"
+    >
+        <span>🚪</span>
+        <span>Déconnexion</span>
+    </a>
+  <% } %>
 </aside>
+
+<style>
+  .admin-logout {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    width: 100%;
+    padding: 12px 16px;
+
+    border-radius: 12px;
+
+    color: #d9363e;
+    text-decoration: none;
+    font-weight: 800;
+
+    transition: .2s ease;
+}
+
+.admin-logout:hover {
+    background: #fff0f0;
+}
+</style>

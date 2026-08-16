@@ -1,4 +1,4 @@
-<section class="section">
+<!--<section class="section">
   <div class="container narrow panel">
     <span class="eyebrow">🔐 Compte</span>
     <h1>Connexion</h1>
@@ -13,4 +13,140 @@
     </form>
     <p>Compte de démonstration : celestin@tioptiop.cg / demo1234</p>
   </div>
+</section>-->
+
+<section class="section">
+
+    <div class="container narrow panel">
+
+        <span class="eyebrow">
+            🔐 Compte
+        </span>
+
+        <h1>
+            Connexion
+        </h1>
+
+
+        <% if (
+            typeof error !== "undefined"
+            &&
+            error
+        ) { %>
+
+            <div class="auth-error">
+
+                ⚠️
+                <%= error %>
+
+            </div>
+
+        <% } %>
+
+
+        <form
+            method="POST"
+            action="/connexion"
+            class="form"
+        >
+
+            <label>
+
+                Email
+
+                <input
+                    class="field"
+                    name="email"
+                    type="email"
+                    value="<%= typeof email !== 'undefined' ? email : '' %>"
+                    autocomplete="email"
+                    required
+                >
+
+            </label>
+
+
+            <label>
+
+                Mot de passe
+
+                <input
+                    class="field"
+                    name="password"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                >
+
+            </label>
+
+
+            <button
+                class="button primary"
+                type="submit"
+            >
+
+                Se connecter
+
+            </button>
+
+        </form>
+
+
+        <p class="auth-switch">
+
+            Pas encore de compte ?
+
+            <a href="/inscription">
+                Créer un compte
+            </a>
+
+        </p>
+
+    </div>
+
 </section>
+
+
+<style>
+
+.auth-error {
+
+    margin: 15px 0;
+
+    padding: 13px 15px;
+
+    border-radius: 13px;
+
+    background: #fdebea;
+
+    color: #962c25;
+
+    font-size: 13px;
+    font-weight: 800;
+}
+
+
+.auth-switch {
+
+    margin:
+        18px
+        0
+        0;
+
+    text-align: center;
+
+    color: #746d66;
+
+    font-size: 14px;
+}
+
+
+.auth-switch a {
+
+    color: #ff7900;
+
+    font-weight: 900;
+}
+
+</style>

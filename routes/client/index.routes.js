@@ -1,23 +1,56 @@
 const router = require("express").Router();
 
+
+/* ======================================================
+   CONTROLLER CLIENT
+====================================================== */
+
 const page =
     require("../../controllers/client/page.controller");
 
 
 /* ======================================================
-   ACCUEIL
+   AUTHENTIFICATION CLIENT
 ====================================================== */
 
-router.get("/", page.home);
+const {
+    requireUser
+} =
+    require("../../middleware/auth");
+
+
+/* ======================================================
+   ACCUEIL
+   PUBLIC
+====================================================== */
+
+router.get(
+    "/",
+    page.home
+);
 
 
 /* ======================================================
    CATALOGUE
+   PUBLIC
 ====================================================== */
 
-router.get("/menu", page.menu);
+router.get(
+    "/menu",
+    page.menu
+);
 
-router.get("/produit/:id", page.product);
+
+router.get(
+    "/produit/:id",
+    page.product
+);
+
+
+/* ======================================================
+   TRADITION
+   PUBLIC
+====================================================== */
 
 router.get(
     "/tradition",
@@ -27,6 +60,12 @@ router.get(
     )
 );
 
+
+/* ======================================================
+   PETIT-DEJEUNER
+   PUBLIC
+====================================================== */
+
 router.get(
     "/petit-dejeuner",
     page.staticPage(
@@ -35,15 +74,36 @@ router.get(
     )
 );
 
+
+/* ======================================================
+   FORMULES
+   PUBLIC
+====================================================== */
+
 router.get(
     "/formules",
     page.formulas
 );
 
+
+/* ======================================================
+   DETAIL FORMULE
+   PUBLIC
+
+   IMPORTANT :
+   votre controller s'appelle formulaDetail
+====================================================== */
+
 router.get(
     "/formule/:id",
     page.formulaDetail
 );
+
+
+/* ======================================================
+   OFFRES
+   PUBLIC
+====================================================== */
 
 router.get(
     "/offres",
@@ -52,6 +112,12 @@ router.get(
         "Offres"
     )
 );
+
+
+/* ======================================================
+   PROMOTIONS
+   PUBLIC
+====================================================== */
 
 router.get(
     "/promotions",
@@ -63,16 +129,24 @@ router.get(
 
 
 /* ======================================================
-   CONTENU
+   TIOP+
+   CLIENT CONNECTE OBLIGATOIRE
 ====================================================== */
 
 router.get(
     "/tiopplus",
+    requireUser,
     page.staticPage(
         "client/content/tiopplus",
         "Tiop+"
     )
 );
+
+
+/* ======================================================
+   RESTAURANTS
+   PUBLIC
+====================================================== */
 
 router.get(
     "/restaurants",
@@ -82,6 +156,12 @@ router.get(
     )
 );
 
+
+/* ======================================================
+   NOTRE HISTOIRE
+   PUBLIC
+====================================================== */
+
 router.get(
     "/histoire",
     page.staticPage(
@@ -89,6 +169,12 @@ router.get(
         "Notre histoire"
     )
 );
+
+
+/* ======================================================
+   FAQ
+   PUBLIC
+====================================================== */
 
 router.get(
     "/faq",
@@ -98,6 +184,12 @@ router.get(
     )
 );
 
+
+/* ======================================================
+   CONTACT
+   PUBLIC
+====================================================== */
+
 router.get(
     "/contact",
     page.staticPage(
@@ -105,6 +197,12 @@ router.get(
         "Contact"
     )
 );
+
+
+/* ======================================================
+   CONDITIONS
+   PUBLIC
+====================================================== */
 
 router.get(
     "/conditions",
@@ -116,7 +214,10 @@ router.get(
 
 
 /* ======================================================
-   COMMANDES
+   PANIER
+   PUBLIC
+
+   Le visiteur peut préparer son panier avant connexion.
 ====================================================== */
 
 router.get(
@@ -127,53 +228,99 @@ router.get(
     )
 );
 
+
+/* ======================================================
+   MES COMMANDES
+   CLIENT CONNECTE OBLIGATOIRE
+====================================================== */
+
 router.get(
     "/commandes",
+    requireUser,
     page.staticPage(
         "client/orders/list",
         "Mes commandes"
     )
 );
 
+
+/* ======================================================
+   DETAIL COMMANDE
+   CLIENT CONNECTE OBLIGATOIRE
+====================================================== */
+
 router.get(
     "/commande/:reference",
+    requireUser,
     page.staticPage(
         "client/orders/detail",
         "Commande"
     )
 );
 
+
+/* ======================================================
+   CHECKOUT
+   CLIENT CONNECTE OBLIGATOIRE
+====================================================== */
+
 router.get(
     "/checkout",
+    requireUser,
     page.staticPage(
         "client/orders/checkout",
         "Checkout"
     )
 );
 
+
+/* ======================================================
+   CONFIRMATION
+   CLIENT CONNECTE OBLIGATOIRE
+====================================================== */
+
 router.get(
     "/confirmation",
+    requireUser,
     page.staticPage(
         "client/orders/confirmation",
         "Confirmation"
     )
 );
 
+
+/* ======================================================
+   FACTURE
+   CLIENT CONNECTE OBLIGATOIRE
+====================================================== */
+
 router.get(
     "/facture/:reference",
+    requireUser,
     page.staticPage(
         "client/orders/invoice",
         "Facture"
     )
 );
 
+
+/* ======================================================
+   SUIVI COMMANDE
+   CLIENT CONNECTE OBLIGATOIRE
+====================================================== */
+
 router.get(
     "/suivi",
+    requireUser,
     page.staticPage(
         "client/orders/tracking",
         "Suivi de commande"
     )
 );
 
+
+/* ======================================================
+   EXPORT
+====================================================== */
 
 module.exports = router;

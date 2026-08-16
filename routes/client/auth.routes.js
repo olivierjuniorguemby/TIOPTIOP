@@ -1,16 +1,56 @@
 const router = require("express").Router();
+
 const auth = require("../../controllers/client/auth.controller");
-const { guestOnly } = require("../../middleware/auth");
 
-router.get("/connexion", guestOnly, auth.loginPage);
-router.post("/connexion", guestOnly, auth.login);
-router.post("/deconnexion", auth.logout);
+const {
+    guestOnly,
+    requireUser
+} = require("../../middleware/auth");
 
-router.get("/inscription", (req, res) => {
-  res.render("client/auth/register", {
-    title: "Inscription",
-    layout: "layouts/client"
-  });
-});
+
+/* =========================================================
+   CONNEXION
+========================================================= */
+
+router.get(
+    "/connexion",
+    guestOnly,
+    auth.loginPage
+);
+
+router.post(
+    "/connexion",
+    guestOnly,
+    auth.login
+);
+
+
+/* =========================================================
+   INSCRIPTION
+========================================================= */
+
+router.get(
+    "/inscription",
+    guestOnly,
+    auth.registerPage
+);
+
+router.post(
+    "/inscription",
+    guestOnly,
+    auth.register
+);
+
+
+/* =========================================================
+   DECONNEXION
+========================================================= */
+
+router.post(
+    "/deconnexion",
+    requireUser,
+    auth.logout
+);
+
 
 module.exports = router;
