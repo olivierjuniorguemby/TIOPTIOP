@@ -20,6 +20,7 @@ const careerRoutes = require("./routes/client/career.routes");
 const adminRoutes = require("./routes/admin/index.routes");
 const apiRoutes = require("./routes/api/index.routes");
 const clientCartRoutes = require("./routes/client/cart.routes");
+const clientCheckoutRoutes = require("./routes/client/checkout.routes");
 
 const app = express();
 const server = http.createServer(app);
@@ -44,6 +45,11 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(
     "/panier",
     clientCartRoutes
+);
+
+app.use(
+    "/checkout",
+    clientCheckoutRoutes
 );
 
 app.use("/", clientRoutes);

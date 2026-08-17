@@ -1,646 +1,1759 @@
-<section class="section">
-  <div class="container">
-    <!-- =========================================================
-     TIOPTIOP - CHECKOUT
-     views/client/cart/checkout.ejs
-========================================================= -->
+<section class="section tiop-checkout-page">
 
 <style>
-  .tiop-checkout {
+
+.tiop-checkout-page {
+
     --orange: #ff7900;
-    --orange-hover: #e96e00;
-    --text: #1d1916;
-    --muted: #77716c;
-    --border: #ebe4dd;
-    --success-bg: #eaf7ee;
-    --success-text: #397052;
+    --orange-dark: #e56d00;
 
-    font-family: Arial, Helvetica, sans-serif;
+    --dark: #17130f;
+    --text: #231f1b;
+    --muted: #746d66;
+
+    --line: #e9dfd5;
+    --soft: #fff8ef;
+    --soft-2: #f8f5f1;
+
+    --green: #267346;
+    --green-bg: #eaf7ee;
+
+    --red: #a73535;
+    --red-bg: #fff0f0;
+
     color: var(--text);
-  }
+}
 
-  /* =========================================================
-     TITRE
-  ========================================================= */
 
-  .checkout-title {
-    margin: 0 0 105px;
+.tiop-checkout-page * {
+    box-sizing: border-box;
+}
 
-    font-size: clamp(46px, 5.5vw, 76px);
+
+.checkout-container {
+
+    width: min(
+        1180px,
+        calc(100% - 32px)
+    );
+
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.checkout-header {
+
+    margin-bottom: 35px;
+}
+
+
+.checkout-eyebrow {
+
+    display: inline-flex;
+    align-items: center;
+
+    min-height: 29px;
+
+    padding: 0 12px;
+
+    margin-bottom: 12px;
+
+    border-radius: 999px;
+
+    background: #fff0df;
+
+    color: var(--orange);
+
+    font-size: 11px;
+    font-weight: 900;
+}
+
+
+.checkout-title {
+
+    margin: 0 0 10px;
+
+    font-size:
+        clamp(38px, 6vw, 64px);
+
     line-height: .95;
 
-    font-weight: 900;
-    letter-spacing: -4px;
-  }
+    letter-spacing: -3px;
 
-  /* =========================================================
-     LAYOUT
-  ========================================================= */
+    font-weight: 1000;
+}
 
-  .checkout-layout {
-    display: grid;
 
-    grid-template-columns:
-      minmax(0, 1.7fr)
-      minmax(340px, 1fr);
+.checkout-subtitle {
 
-    gap: 26px;
-
-    align-items: start;
-  }
-
-  .checkout-card {
-    background: #fff;
-
-    border: 1px solid var(--border);
-    border-radius: 32px;
-
-    box-sizing: border-box;
-  }
-
-  /* =========================================================
-     FORMULAIRE
-  ========================================================= */
-
-  .checkout-form-card {
-    padding: 56px 32px 32px;
-  }
-
-  .checkout-section-title {
-    margin: 0 0 37px;
-
-    font-size: 26px;
-    font-weight: 900;
-  }
-
-  /* =========================================================
-     CHAMPS
-  ========================================================= */
-
-  .checkout-fields {
-    display: flex;
-    flex-direction: column;
-
-    gap: 12px;
-  }
-
-  .checkout-field {
-    width: 100%;
-    min-height: 57px;
-
-    padding: 0 16px;
-
-    box-sizing: border-box;
-
-    border: 1px solid #ddd9d5;
-    border-radius: 14px;
-
-    background: #fff;
-    color: var(--text);
-
-    font-family: inherit;
-    font-size: 16px;
-
-    outline: none;
-
-    transition:
-      border-color .2s ease,
-      box-shadow .2s ease;
-  }
-
-  .checkout-field::placeholder {
-    color: #8a8581;
-  }
-
-  .checkout-field:focus {
-    border-color: var(--orange);
-
-    box-shadow:
-      0 0 0 3px rgba(255,121,0,.08);
-  }
-
-  select.checkout-field {
-    cursor: pointer;
-  }
-
-  .checkout-textarea {
-    min-height: 135px;
-
-    padding: 18px 16px;
-
-    resize: vertical;
-
-    line-height: 1.5;
-  }
-
-  /* =========================================================
-     PAIEMENT
-  ========================================================= */
-
-  .checkout-payment {
-    margin-top: 40px;
-  }
-
-  .checkout-payment .checkout-section-title {
-    margin-bottom: 30px;
-  }
-
-  .payment-options {
-    display: flex;
-    flex-direction: column;
-
-    gap: 17px;
-  }
-
-  .payment-option {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-
-    width: fit-content;
-
-    font-size: 16px;
-
-    cursor: pointer;
-  }
-
-  .payment-option input {
-    width: 15px;
-    height: 15px;
+    max-width: 720px;
 
     margin: 0;
 
-    accent-color: #007aff;
+    color: var(--muted);
 
-    cursor: pointer;
-  }
+    font-size: 14px;
+    line-height: 1.65;
+}
 
-  /* =========================================================
-     INFORMATION PROTOTYPE
-  ========================================================= */
 
-  .checkout-information {
-    margin-top: 16px;
+/* =========================================================
+   ERROR
+========================================================= */
 
-    padding: 18px;
+.checkout-error {
 
-    border-radius: 15px;
+    margin-bottom: 20px;
 
-    background: var(--success-bg);
-    color: var(--success-text);
+    padding: 15px 17px;
 
-    font-size: 15px;
-  }
+    border: 1px solid #f0caca;
+    border-radius: 14px;
 
-  /* =========================================================
-     TOTAL
-  ========================================================= */
+    background: var(--red-bg);
 
-  .checkout-summary {
-    min-height: 835px;
+    color: var(--red);
 
-    padding: 57px 31px;
+    font-size: 12px;
+    font-weight: 800;
+}
 
-    position: sticky;
-    top: 20px;
-  }
 
-  .checkout-summary-title {
-    margin: 0 0 27px;
+/* =========================================================
+   LAYOUT
+========================================================= */
 
-    font-size: 26px;
-    font-weight: 900;
-  }
+.checkout-layout {
 
-  .checkout-summary-row {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1.5fr)
+        minmax(340px, .75fr);
+
+    gap: 24px;
+
+    align-items: start;
+}
+
+
+.checkout-left {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 18px;
+}
+
+
+.checkout-card {
+
+    padding: 24px;
+
+    background: #fff;
+
+    border: 1px solid var(--line);
+    border-radius: 24px;
+}
+
+
+.checkout-card-title {
+
+    margin: 0 0 18px;
+
+    font-size: 19px;
+    font-weight: 1000;
+}
+
+
+.checkout-card-description {
+
+    margin: -8px 0 18px;
+
+    color: var(--muted);
+
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+
+/* =========================================================
+   CUSTOMER
+========================================================= */
+
+.customer-box {
+
     display: flex;
     align-items: center;
-    justify-content: space-between;
 
-    gap: 25px;
+    gap: 14px;
 
-    margin-bottom: 5px;
+    padding: 14px;
 
-    font-size: 16px;
-  }
+    border-radius: 16px;
 
-  .checkout-summary-row strong {
-    font-weight: 900;
-  }
+    background: var(--soft-2);
+}
 
-  /* =========================================================
-     SÉPARATEUR
-  ========================================================= */
 
-  .checkout-summary-separator {
-    height: 1px;
+.customer-avatar {
 
-    margin: 25px 0 43px;
+    width: 48px;
+    height: 48px;
 
-    background: #ddd9d5;
-  }
-
-  /* =========================================================
-     TOTAL À PAYER
-  ========================================================= */
-
-  .checkout-total {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 20px;
-
-    margin-bottom: 23px;
-
-    font-size: 20px;
-    font-weight: 900;
-  }
-
-  .checkout-total strong {
-    font-size: 20px;
-  }
-
-  /* =========================================================
-     BOUTON
-  ========================================================= */
-
-  .checkout-submit {
-    width: 100%;
-    min-height: 51px;
+    flex: 0 0 48px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    padding: 0 20px;
+    overflow: hidden;
 
-    box-sizing: border-box;
+    border-radius: 50%;
+
+    background: #fff0df;
+
+    font-weight: 1000;
+}
+
+
+.customer-avatar img {
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+
+.customer-name {
+
+    margin: 0 0 3px;
+
+    font-size: 14px;
+    font-weight: 1000;
+}
+
+
+.customer-contact {
+
+    color: var(--muted);
+
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   FIELD
+========================================================= */
+
+.checkout-field-group {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+
+    margin-bottom: 15px;
+}
+
+
+.checkout-label {
+
+    font-size: 11px;
+    font-weight: 900;
+}
+
+
+.checkout-field {
+
+    width: 100%;
+    min-height: 48px;
+
+    padding: 0 14px;
+
+    border: 1px solid #ded8d2;
+    border-radius: 13px;
+
+    background: #fff;
+
+    color: var(--text);
+
+    font: inherit;
+    font-size: 12px;
+
+    outline: none;
+}
+
+
+.checkout-field:focus {
+
+    border-color: var(--orange);
+
+    box-shadow:
+        0 0 0 3px
+        rgba(255,121,0,.08);
+}
+
+
+textarea.checkout-field {
+
+    min-height: 100px;
+
+    padding-top: 13px;
+
+    resize: vertical;
+}
+
+
+/* =========================================================
+   ORDER TYPE
+========================================================= */
+
+.order-types {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 10px;
+}
+
+
+.order-type-card {
+
+    position: relative;
+
+    min-height: 105px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+
+    gap: 5px;
+
+    padding: 14px;
+
+    border: 1px solid var(--line);
+    border-radius: 15px;
+
+    cursor: pointer;
+
+    transition:
+        border-color .2s,
+        background .2s,
+        transform .2s;
+}
+
+
+.order-type-card:hover {
+
+    transform:
+        translateY(-1px);
+
+    border-color:
+        #ffc88f;
+}
+
+
+.order-type-card.active {
+
+    border-color:
+        var(--orange);
+
+    background:
+        #fff8ef;
+}
+
+
+.order-type-card.disabled {
+
+    opacity: .45;
+
+    cursor: not-allowed;
+
+    transform: none;
+}
+
+
+.order-type-card input {
+
+    position: absolute;
+
+    opacity: 0;
+
+    pointer-events: none;
+}
+
+
+.order-type-icon {
+
+    font-size: 23px;
+}
+
+
+.order-type-title {
+
+    font-size: 12px;
+    font-weight: 1000;
+}
+
+
+.order-type-description {
+
+    color: var(--muted);
+
+    font-size: 9px;
+    line-height: 1.4;
+}
+
+
+/* =========================================================
+   ADDRESS
+========================================================= */
+
+.address-preview {
+
+    display: none;
+
+    margin-top: 10px;
+
+    padding: 13px;
+
+    border-radius: 13px;
+
+    background: var(--soft-2);
+
+    color: var(--muted);
+
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+
+.address-preview.visible {
+
+    display: block;
+}
+
+
+.checkout-link {
+
+    display: inline-flex;
+
+    margin-top: 7px;
+
+    color: var(--orange);
+
+    font-size: 10px;
+    font-weight: 900;
+
+    text-decoration: none;
+}
+
+
+/* =========================================================
+   DELIVERY ZONE
+========================================================= */
+
+.delivery-zone-info {
+
+    display: none;
+
+    margin-top: 10px;
+
+    padding: 13px;
+
+    border-radius: 13px;
+
+    background: #f7faf8;
+
+    color: #466251;
+
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+
+.delivery-zone-info.visible {
+
+    display: block;
+}
+
+
+/* =========================================================
+   PAYMENT
+========================================================= */
+
+.payment-options {
+
+    display: grid;
+
+    gap: 9px;
+}
+
+
+.payment-card {
+
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 13px 15px;
+
+    border: 1px solid var(--line);
+    border-radius: 14px;
+
+    cursor: pointer;
+}
+
+
+.payment-card:has(input:checked) {
+
+    border-color: var(--orange);
+
+    background: #fff8ef;
+}
+
+
+.payment-card input {
+
+    accent-color:
+        var(--orange);
+}
+
+
+.payment-icon {
+
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background: var(--soft-2);
+
+    font-size: 17px;
+}
+
+
+.payment-name {
+
+    font-size: 12px;
+    font-weight: 900;
+}
+
+
+.payment-description {
+
+    margin-top: 2px;
+
+    color: var(--muted);
+
+    font-size: 9px;
+}
+
+
+/* =========================================================
+   SUMMARY
+========================================================= */
+
+.checkout-summary {
+
+    position: sticky;
+
+    top: 90px;
+}
+
+
+.summary-products {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 13px;
+
+    margin-bottom: 20px;
+}
+
+
+.summary-product {
+
+    display: grid;
+
+    grid-template-columns:
+        58px minmax(0,1fr) auto;
+
+    gap: 10px;
+
+    align-items: start;
+}
+
+
+.summary-product-image {
+
+    width: 58px;
+    height: 58px;
+
+    overflow: hidden;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background: #f4eee7;
+
+    font-size: 23px;
+}
+
+
+.summary-product-image img {
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+
+.summary-product-name {
+
+    margin: 0 0 3px;
+
+    font-size: 11px;
+    font-weight: 1000;
+}
+
+
+.summary-product-meta {
+
+    color: var(--muted);
+
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+
+.summary-product-options {
+
+    margin-top: 4px;
+
+    color: #84694f;
+
+    font-size: 9px;
+    line-height: 1.45;
+}
+
+
+.summary-product-price {
+
+    font-size: 10px;
+    font-weight: 1000;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   TOTALS
+========================================================= */
+
+.summary-separator {
+
+    height: 1px;
+
+    margin: 17px 0;
+
+    background: var(--line);
+}
+
+
+.summary-row {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin: 11px 0;
+
+    color: var(--muted);
+
+    font-size: 11px;
+}
+
+
+.summary-row strong {
+
+    color: var(--text);
+}
+
+
+.summary-total {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding-top: 17px;
+
+    border-top: 1px solid var(--line);
+
+    font-size: 16px;
+    font-weight: 1000;
+}
+
+
+.summary-total strong {
+
+    color: var(--orange);
+
+    font-size: 20px;
+}
+
+
+.summary-minimum-warning {
+
+    display: none;
+
+    margin-top: 13px;
+
+    padding: 11px;
+
+    border-radius: 12px;
+
+    background: var(--red-bg);
+
+    color: var(--red);
+
+    font-size: 10px;
+    font-weight: 800;
+}
+
+
+.summary-minimum-warning.visible {
+
+    display: block;
+}
+
+
+/* =========================================================
+   SUBMIT
+========================================================= */
+
+.checkout-submit {
+
+    width: 100%;
+    min-height: 49px;
+
+    margin-top: 18px;
 
     border: 0;
     border-radius: 999px;
 
     background: var(--orange);
+
     color: #fff;
 
-    font-family: inherit;
-    font-size: 16px;
-    font-weight: 900;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 1000;
 
     cursor: pointer;
+}
 
-    transition:
-      background .2s ease,
-      transform .2s ease,
-      box-shadow .2s ease;
-  }
 
-  .checkout-submit:hover {
-    background: var(--orange-hover);
+.checkout-submit:hover {
 
-    transform: translateY(-1px);
+    background:
+        var(--orange-dark);
+}
 
-    box-shadow:
-      0 8px 22px rgba(255,121,0,.20);
-  }
 
-  /* =========================================================
-     RESPONSIVE TABLETTE
-  ========================================================= */
+.checkout-submit:disabled {
 
-  @media (max-width: 900px) {
+    opacity: .55;
 
-    .checkout-title {
-      margin-bottom: 55px;
-    }
+    cursor: not-allowed;
+}
+
+
+.checkout-back {
+
+    width: 100%;
+
+    min-height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-top: 9px;
+
+    border: 1px solid var(--line);
+    border-radius: 999px;
+
+    color: var(--dark);
+
+    text-decoration: none;
+
+    font-size: 10px;
+    font-weight: 900;
+}
+
+
+/* =========================================================
+   SECURITY INFO
+========================================================= */
+
+.checkout-security {
+
+    margin-top: 14px;
+
+    color: var(--muted);
+
+    text-align: center;
+
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media(max-width:900px) {
 
     .checkout-layout {
-      grid-template-columns: 1fr;
+
+        grid-template-columns: 1fr;
     }
+
 
     .checkout-summary {
-      min-height: auto;
 
-      position: static;
+        position: static;
     }
-  }
+}
 
-  /* =========================================================
-     RESPONSIVE MOBILE
-  ========================================================= */
 
-  @media (max-width: 600px) {
+@media(max-width:650px) {
 
-    .checkout-title {
-      margin-bottom: 35px;
+    .order-types {
 
-      font-size: 44px;
-
-      letter-spacing: -2px;
+        grid-template-columns: 1fr;
     }
 
-    .checkout-form-card,
-    .checkout-summary {
-      padding: 25px 18px;
 
-      border-radius: 23px;
+    .checkout-card {
+
+        padding: 18px;
+
+        border-radius: 20px;
     }
 
-    .checkout-section-title,
-    .checkout-summary-title {
-      font-size: 22px;
+
+    .summary-product {
+
+        grid-template-columns:
+            50px minmax(0,1fr);
     }
 
-    .checkout-field {
-      min-height: 52px;
 
-      font-size: 14px;
+    .summary-product-image {
+
+        width: 50px;
+        height: 50px;
     }
 
-    .checkout-textarea {
-      min-height: 120px;
-    }
 
-    .payment-option {
-      font-size: 15px;
+    .summary-product-price {
+
+        grid-column: 2;
     }
-  }
+}
 
 </style>
 
 
-<!-- =========================================================
-     CHECKOUT
-========================================================= -->
-
-<section class="tiop-checkout">
-
-
-  <!-- TITRE -->
-
-  <h1 class="checkout-title">
-    Finaliser la commande
-  </h1>
-
-
-  <div class="checkout-layout">
+<div class="checkout-container">
 
 
     <!-- =====================================================
-         FORMULAIRE
+         HEADER
     ====================================================== -->
 
-    <section class="checkout-card checkout-form-card">
+    <header class="checkout-header">
 
-      <form
+        <span class="checkout-eyebrow">
+            🔒 Commande sécurisée
+        </span>
+
+        <h1 class="checkout-title">
+            Finaliser la commande
+        </h1>
+
+        <p class="checkout-subtitle">
+            Vérifiez votre panier, choisissez votre restaurant,
+            votre mode de récupération et votre moyen de paiement.
+        </p>
+
+    </header>
+
+
+    <!-- =====================================================
+         ERREUR SERVEUR
+    ====================================================== -->
+
+    <% if (typeof error !== "undefined" && error) { %>
+
+        <div class="checkout-error">
+            ⚠️ <%= error %>
+        </div>
+
+    <% } %>
+
+
+    <form
         id="checkoutForm"
         action="/checkout"
         method="POST"
-      >
+    >
+
+        <div class="checkout-layout">
 
 
-        <!-- =================================================
-             LIVRAISON
-        ================================================== -->
+            <!-- =================================================
+                 COLONNE GAUCHE
+            ================================================== -->
 
-        <h2 class="checkout-section-title">
-          Livraison
-        </h2>
+            <div class="checkout-left">
 
 
-        <div class="checkout-fields">
+                <!-- =============================================
+                     CLIENT
+                ============================================== -->
+
+                <section class="checkout-card">
+
+                    <h2 class="checkout-card-title">
+                        👤 Votre compte
+                    </h2>
 
 
-          <!-- TYPE DE COMMANDE -->
+                    <div class="customer-box">
 
-          <select
-            name="delivery_type"
-            id="deliveryType"
-            class="checkout-field"
-            required
-          >
+                        <div class="customer-avatar">
 
-            <option value="DELIVERY">
-              Livraison à domicile
-            </option>
+                            <% if (customer && customer.avatar_url) { %>
 
-            <option value="TAKEAWAY">
-              À emporter
-            </option>
+                                <img
+                                    src="<%= customer.avatar_url %>"
+                                    alt=""
+                                >
 
-            <option value="ON_SITE">
-              Sur place
-            </option>
+                            <% } else { %>
 
-          </select>
+                                👤
+
+                            <% } %>
+
+                        </div>
 
 
-          <!-- NOM -->
+                        <div>
 
-          <input
-            type="text"
-            name="customer_name"
-            class="checkout-field"
-            placeholder="Nom complet"
-            required
-          >
+                            <div class="customer-name">
 
+                                <%= customer?.display_name
+                                    ||
+                                    [
+                                        customer?.first_name,
+                                        customer?.last_name
+                                    ]
+                                    .filter(Boolean)
+                                    .join(" ")
+                                    ||
+                                    "Client TiopTiop"
+                                %>
 
-          <!-- TÉLÉPHONE -->
-
-          <input
-            type="tel"
-            name="customer_phone"
-            class="checkout-field"
-            placeholder="Téléphone"
-            required
-          >
+                            </div>
 
 
-          <!-- ADRESSE -->
+                            <div class="customer-contact">
 
-          <input
-            type="text"
-            name="delivery_address"
-            id="deliveryAddress"
-            class="checkout-field"
-            placeholder="Adresse"
-            required
-          >
+                                <% if (customer?.email) { %>
+                                    <div>
+                                        ✉️ <%= customer.email %>
+                                    </div>
+                                <% } %>
+
+                                <% if (customer?.phone) { %>
+                                    <div>
+                                        📞 <%= customer.phone %>
+                                    </div>
+                                <% } %>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
 
 
-          <!-- INSTRUCTIONS -->
+                <!-- =============================================
+                     RESTAURANT
+                ============================================== -->
 
-          <textarea
-            name="delivery_instructions"
-            id="deliveryInstructions"
-            class="checkout-field checkout-textarea"
-            placeholder="Instructions livreur"
-          ></textarea>
+                <section class="checkout-card">
+
+                    <h2 class="checkout-card-title">
+                        🏪 Restaurant
+                    </h2>
+
+                    <p class="checkout-card-description">
+                        Sélectionnez le restaurant qui préparera
+                        votre commande.
+                    </p>
+
+
+                    <div class="checkout-field-group">
+
+                        <label
+                            for="restaurantId"
+                            class="checkout-label"
+                        >
+                            Restaurant
+                        </label>
+
+
+                        <select
+                            id="restaurantId"
+                            name="restaurant_id"
+                            class="checkout-field"
+                            required
+                        >
+
+                            <% (restaurants || []).forEach(restaurant => { %>
+
+                                <option
+                                    value="<%= restaurant.id %>"
+
+                                    data-supports-delivery="<%= Number(restaurant.supports_delivery) %>"
+                                    data-supports-pickup="<%= Number(restaurant.supports_pickup) %>"
+                                    data-supports-dine-in="<%= Number(restaurant.supports_dine_in) %>"
+
+                                    <%= Number(values?.restaurant_id)
+                                        === Number(restaurant.id)
+                                            ? "selected"
+                                            : ""
+                                    %>
+                                >
+
+                                    <%= restaurant.name %>
+
+                                    <% if (restaurant.district) { %>
+                                        — <%= restaurant.district %>
+                                    <% } %>
+
+                                </option>
+
+                            <% }) %>
+
+                        </select>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =============================================
+                     TYPE COMMANDE
+                ============================================== -->
+
+                <section class="checkout-card">
+
+                    <h2 class="checkout-card-title">
+                        🍽 Mode de commande
+                    </h2>
+
+
+                    <div class="order-types">
+
+
+                        <!-- LIVRAISON -->
+
+                        <label
+                            class="order-type-card"
+                            data-order-type-card="DELIVERY"
+                        >
+
+                            <input
+                                type="radio"
+                                name="order_type"
+                                value="DELIVERY"
+
+                                <%= (values?.order_type || "DELIVERY") === "DELIVERY"
+                                    ? "checked"
+                                    : ""
+                                %>
+                            >
+
+                            <span class="order-type-icon">
+                                🛵
+                            </span>
+
+                            <span class="order-type-title">
+                                Livraison
+                            </span>
+
+                            <span class="order-type-description">
+                                Livré à votre adresse.
+                            </span>
+
+                        </label>
+
+
+                        <!-- RETRAIT -->
+
+                        <label
+                            class="order-type-card"
+                            data-order-type-card="PICKUP"
+                        >
+
+                            <input
+                                type="radio"
+                                name="order_type"
+                                value="PICKUP"
+
+                                <%= values?.order_type === "PICKUP"
+                                    ? "checked"
+                                    : ""
+                                %>
+                            >
+
+                            <span class="order-type-icon">
+                                🥡
+                            </span>
+
+                            <span class="order-type-title">
+                                À emporter
+                            </span>
+
+                            <span class="order-type-description">
+                                Retrait au restaurant.
+                            </span>
+
+                        </label>
+
+
+                        <!-- SUR PLACE -->
+
+                        <label
+                            class="order-type-card"
+                            data-order-type-card="DINE_IN"
+                        >
+
+                            <input
+                                type="radio"
+                                name="order_type"
+                                value="DINE_IN"
+
+                                <%= values?.order_type === "DINE_IN"
+                                    ? "checked"
+                                    : ""
+                                %>
+                            >
+
+                            <span class="order-type-icon">
+                                🍽️
+                            </span>
+
+                            <span class="order-type-title">
+                                Sur place
+                            </span>
+
+                            <span class="order-type-description">
+                                Commande à consommer sur place.
+                            </span>
+
+                        </label>
+
+
+                    </div>
+
+                </section>
+
+
+                <!-- =============================================
+                     LIVRAISON
+                ============================================== -->
+
+                <section
+                    class="checkout-card"
+                    id="deliverySection"
+                >
+
+                    <h2 class="checkout-card-title">
+                        📍 Livraison
+                    </h2>
+
+
+                    <!-- ADRESSES -->
+
+                    <div class="checkout-field-group">
+
+                        <label
+                            for="deliveryAddressId"
+                            class="checkout-label"
+                        >
+                            Adresse
+                        </label>
+
+
+                        <% if (
+                            addresses &&
+                            addresses.length > 0
+                        ) { %>
+
+                            <select
+                                id="deliveryAddressId"
+                                name="delivery_address_id"
+                                class="checkout-field"
+                            >
+
+                                <option value="">
+                                    Choisir une adresse
+                                </option>
+
+
+                                <% addresses.forEach(address => { %>
+
+                                    <option
+                                        value="<%= address.id %>"
+
+                                        data-label="<%= address.label || '' %>"
+                                        data-recipient="<%= address.recipient_name || '' %>"
+                                        data-phone="<%= address.phone || '' %>"
+                                        data-address1="<%= address.address_line1 || '' %>"
+                                        data-address2="<%= address.address_line2 || '' %>"
+                                        data-district="<%= address.district || '' %>"
+                                        data-city="<%= address.city || '' %>"
+                                        data-instructions="<%= address.delivery_instructions || '' %>"
+
+                                        <%= Number(values?.delivery_address_id)
+                                            === Number(address.id)
+                                                ? "selected"
+                                                : ""
+                                        %>
+                                    >
+
+                                        <%= address.label || "Adresse" %>
+                                        —
+                                        <%= address.address_line1 %>
+
+                                        <% if (address.district) { %>
+                                            · <%= address.district %>
+                                        <% } %>
+
+                                    </option>
+
+                                <% }) %>
+
+                            </select>
+
+
+                            <div
+                                id="addressPreview"
+                                class="address-preview"
+                            ></div>
+
+
+                            <a
+                                href="/profil"
+                                class="checkout-link"
+                            >
+                                + Gérer mes adresses
+                            </a>
+
+
+                        <% } else { %>
+
+
+                            <div class="checkout-error">
+
+                                Vous n'avez encore aucune
+                                adresse de livraison.
+
+                            </div>
+
+
+                            <a
+                                href="/profil"
+                                class="checkout-link"
+                            >
+                                Ajouter une adresse →
+                            </a>
+
+
+                        <% } %>
+
+                    </div>
+
+
+                    <!-- ZONE -->
+
+                    <div class="checkout-field-group">
+
+                        <label
+                            for="deliveryZoneId"
+                            class="checkout-label"
+                        >
+                            Zone de livraison
+                        </label>
+
+
+                        <select
+                            id="deliveryZoneId"
+                            name="delivery_zone_id"
+                            class="checkout-field"
+                        >
+
+                            <option value="">
+                                Sélectionnez votre zone
+                            </option>
+
+
+                            <% (deliveryZones || []).forEach(zone => { %>
+
+                                <option
+                                    value="<%= zone.id %>"
+
+                                    data-fee="<%= Number(zone.delivery_fee || 0) %>"
+                                    data-min-order="<%= Number(zone.min_order || 0) %>"
+                                    data-free-from="<%= zone.free_delivery_from !== null
+                                        ? Number(zone.free_delivery_from)
+                                        : ''
+                                    %>"
+                                    data-estimated-min="<%= zone.estimated_min_minutes || '' %>"
+                                    data-estimated-max="<%= zone.estimated_max_minutes || '' %>"
+
+                                    <%= Number(values?.delivery_zone_id)
+                                        === Number(zone.id)
+                                            ? "selected"
+                                            : ""
+                                    %>
+                                >
+
+                                    <%= zone.name %>
+
+                                </option>
+
+                            <% }) %>
+
+                        </select>
+
+
+                        <div
+                            id="deliveryZoneInfo"
+                            class="delivery-zone-info"
+                        ></div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =============================================
+                     NOTE
+                ============================================== -->
+
+                <section class="checkout-card">
+
+                    <h2 class="checkout-card-title">
+                        📝 Note pour la commande
+                    </h2>
+
+
+                    <textarea
+                        name="customer_note"
+                        class="checkout-field"
+                        maxlength="2000"
+                        placeholder="Exemple : appeler à l'arrivée, sauce séparée..."
+                    ><%= values?.customer_note || "" %></textarea>
+
+                </section>
+
+
+                <!-- =============================================
+                     PAIEMENT
+                ============================================== -->
+
+                <section class="checkout-card">
+
+                    <h2 class="checkout-card-title">
+                        💳 Paiement
+                    </h2>
+
+
+                    <div class="payment-options">
+
+
+                        <label class="payment-card">
+
+                            <input
+                                type="radio"
+                                name="payment_method"
+                                value="MOBILE_MONEY"
+
+                                <%= values?.payment_method === "MOBILE_MONEY"
+                                    ? "checked"
+                                    : ""
+                                %>
+                            >
+
+                            <div class="payment-icon">
+                                📱
+                            </div>
+
+                            <div>
+
+                                <div class="payment-name">
+                                    Mobile Money
+                                </div>
+
+                                <div class="payment-description">
+                                    Paiement mobile.
+                                </div>
+
+                            </div>
+
+                        </label>
+
+
+                        <label class="payment-card">
+
+                            <input
+                                type="radio"
+                                name="payment_method"
+                                value="CARD"
+
+                                <%= values?.payment_method === "CARD"
+                                    ? "checked"
+                                    : ""
+                                %>
+                            >
+
+                            <div class="payment-icon">
+                                💳
+                            </div>
+
+                            <div>
+
+                                <div class="payment-name">
+                                    Carte bancaire
+                                </div>
+
+                                <div class="payment-description">
+                                    Paiement par carte.
+                                </div>
+
+                            </div>
+
+                        </label>
+
+
+                        <label class="payment-card">
+
+                            <input
+                                type="radio"
+                                name="payment_method"
+                                value="CASH"
+
+                                <%= !values?.payment_method
+                                    || values?.payment_method === "CASH"
+                                        ? "checked"
+                                        : ""
+                                %>
+                            >
+
+                            <div class="payment-icon">
+                                💵
+                            </div>
+
+                            <div>
+
+                                <div class="payment-name">
+                                    Espèces
+                                </div>
+
+                                <div class="payment-description">
+                                    Paiement lors de la récupération.
+                                </div>
+
+                            </div>
+
+                        </label>
+
+
+                    </div>
+
+                </section>
+
+            </div>
+
+
+            <!-- =================================================
+                 RECAPITULATIF
+            ================================================== -->
+
+            <aside
+                class="checkout-card checkout-summary"
+            >
+
+                <h2 class="checkout-card-title">
+                    Votre commande
+                </h2>
+
+
+                <div class="summary-products">
+
+
+                    <% (items || []).forEach(item => { %>
+
+                        <article class="summary-product">
+
+
+                            <div class="summary-product-image">
+
+                                <% if (item.image_url) { %>
+
+                                    <img
+                                        src="<%= item.image_url %>"
+                                        alt="<%= item.item_name %>"
+                                    >
+
+                                <% } else { %>
+
+                                    <%= item.item_type === "FORMULA"
+                                        ? "🍱"
+                                        : "🍽️"
+                                    %>
+
+                                <% } %>
+
+                            </div>
+
+
+                            <div>
+
+                                <h3 class="summary-product-name">
+
+                                    <%= item.quantity %>×
+                                    <%= item.item_name %>
+
+                                </h3>
+
+
+                                <div class="summary-product-meta">
+
+                                    <%= item.item_type === "FORMULA"
+                                        ? "Formule"
+                                        : "Produit"
+                                    %>
+
+                                </div>
+
+
+                                <% if (
+                                    item.options &&
+                                    item.options.length
+                                ) { %>
+
+                                    <div class="summary-product-options">
+
+                                        <% item.options.forEach(option => { %>
+
+                                            <div>
+
+                                                <% if (option.group_name) { %>
+
+                                                    <%= option.group_name %> :
+
+                                                <% } %>
+
+                                                <%= option.value_name %>
+
+                                            </div>
+
+                                        <% }) %>
+
+                                    </div>
+
+                                <% } %>
+
+
+                                <% if (item.instructions) { %>
+
+                                    <div class="summary-product-options">
+                                        📝 <%= item.instructions %>
+                                    </div>
+
+                                <% } %>
+
+                            </div>
+
+
+                            <strong class="summary-product-price">
+
+                                <%= Number(
+                                    item.line_total || 0
+                                ).toLocaleString("fr-FR") %>
+
+                                <%= item.currency || currency || "XAF" %>
+
+                            </strong>
+
+                        </article>
+
+                    <% }) %>
+
+
+                </div>
+
+
+                <div class="summary-separator"></div>
+
+
+                <!-- SOUS TOTAL -->
+
+                <div class="summary-row">
+
+                    <span>
+                        Sous-total
+                    </span>
+
+                    <strong
+                        id="checkoutSubtotal"
+                        data-subtotal="<%= Number(cart.subtotal || 0) %>"
+                    >
+
+                        <%= Number(
+                            cart.subtotal || 0
+                        ).toLocaleString("fr-FR") %>
+
+                        <%= currency || "XAF" %>
+
+                    </strong>
+
+                </div>
+
+
+                <!-- LIVRAISON -->
+
+                <div class="summary-row">
+
+                    <span>
+                        Livraison
+                    </span>
+
+                    <strong id="checkoutDeliveryFee">
+                        0 <%= currency || "XAF" %>
+                    </strong>
+
+                </div>
+
+
+                <!-- TOTAL -->
+
+                <div class="summary-total">
+
+                    <span>
+                        À payer
+                    </span>
+
+                    <strong id="checkoutTotal">
+
+                        <%= Number(
+                            cart.subtotal || 0
+                        ).toLocaleString("fr-FR") %>
+
+                        <%= currency || "XAF" %>
+
+                    </strong>
+
+                </div>
+
+
+                <!-- MINIMUM -->
+
+                <div
+                    id="minimumOrderWarning"
+                    class="summary-minimum-warning"
+                ></div>
+
+
+                <!-- SUBMIT -->
+
+                <button
+                    type="submit"
+                    id="checkoutSubmit"
+                    class="checkout-submit"
+                >
+                    Confirmer la commande
+                </button>
+
+
+                <a
+                    href="/panier"
+                    class="checkout-back"
+                >
+                    ← Retour au panier
+                </a>
+
+
+                <div class="checkout-security">
+
+                    🔒 Les montants sont recalculés
+                    côté serveur avant création de la commande.
+
+                </div>
+
+            </aside>
 
         </div>
 
+    </form>
 
-        <!-- =================================================
-             PAIEMENT
-        ================================================== -->
-
-        <div class="checkout-payment">
-
-          <h2 class="checkout-section-title">
-            Paiement
-          </h2>
+</div>
 
 
-          <div class="payment-options">
+<script>
+    window.TIOP_CHECKOUT = {
+        currency:
+            <%- JSON.stringify(currency || "XAF") %>
+    };
+</script>
 
+<script src="/js/checkout.js"></script>
 
-            <!-- CARTE -->
-
-            <label class="payment-option">
-
-              <input
-                type="radio"
-                name="payment_method"
-                value="CARD"
-                checked
-                required
-              >
-
-              <span>
-                Carte bancaire
-              </span>
-
-            </label>
-
-
-            <!-- MOBILE MONEY -->
-
-            <label class="payment-option">
-
-              <input
-                type="radio"
-                name="payment_method"
-                value="MOBILE_MONEY"
-              >
-
-              <span>
-                Mobile Money
-              </span>
-
-            </label>
-
-
-            <!-- PAIEMENT LIVRAISON -->
-
-            <label class="payment-option">
-
-              <input
-                type="radio"
-                name="payment_method"
-                value="CASH_ON_DELIVERY"
-              >
-
-              <span>
-                Paiement à la livraison
-              </span>
-
-            </label>
-
-          </div>
-
-
-          <!-- INFORMATION -->
-
-          <div class="checkout-information">
-            Prototype : aucun paiement réel n’est effectué.
-          </div>
-
-        </div>
-
-      </form>
-
-    </section>
-
-
-    <!-- =====================================================
-         RÉCAPITULATIF
-    ====================================================== -->
-
-    <aside class="checkout-card checkout-summary">
-
-      <h2 class="checkout-summary-title">
-        Total
-      </h2>
-
-
-      <!-- SOUS-TOTAL -->
-
-      <div class="checkout-summary-row">
-
-        <span>
-          Sous-total
-        </span>
-
-        <strong>
-          29,70 €
-        </strong>
-
-      </div>
-
-
-      <!-- LIVRAISON -->
-
-      <div class="checkout-summary-row">
-
-        <span>
-          Livraison
-        </span>
-
-        <strong>
-          Offerte
-        </strong>
-
-      </div>
-
-
-      <!-- SEPARATEUR -->
-
-      <div class="checkout-summary-separator"></div>
-
-
-      <!-- TOTAL -->
-
-      <div class="checkout-total">
-
-        <span>
-          À payer
-        </span>
-
-        <strong>
-          29,70 €
-        </strong>
-
-      </div>
-
-
-      <!-- IMPORTANT :
-           Le bouton appartient au formulaire situé à gauche
-           grâce à form="checkoutForm"
-      -->
-
-      <button
-        type="submit"
-        form="checkoutForm"
-        class="checkout-submit"
-      >
-        Payer et commander
-      </button>
-
-    </aside>
-
-  </div>
-
-</section>
-  </div>
 </section>

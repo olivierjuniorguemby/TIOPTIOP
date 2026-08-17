@@ -7,6 +7,9 @@ const crypto =
 const User =
     require("../../models/user.model");
 
+const CartController =
+    require("./cart.controller");
+
 
 /* =========================================================
    OUTIL RENDER
@@ -34,7 +37,46 @@ function render(
 
 
 /* =========================================================
+   URL DE RETOUR SECURISEE
+
+   Exemple :
+   /checkout        => OK
+   /panier          => OK
+   /admin           => NON
+   //google.com      => NON
+========================================================= */
+
+function getSafeReturnTo(
+    req,
+    fallback = "/compte"
+) {
+
+    const target =
+        req.session?.returnTo;
+
+
+    if (
+        typeof target !== "string" ||
+        !target.startsWith("/") ||
+        target.startsWith("//") ||
+        target === "/admin" ||
+        target.startsWith("/admin/")
+    ) {
+
+        return fallback;
+    }
+
+
+    return target;
+}
+
+
+/* =========================================================
    CONNEXION - PAGE
+
+   GET /connexion
+
+   C'EST CETTE FONCTION QUI MANQUAIT.
 ========================================================= */
 
 exports.loginPage = (
@@ -47,8 +89,16 @@ exports.loginPage = (
         "client/auth/login",
         "Connexion",
         {
-            error: null,
-            email: ""
+            error:
+                null,
+
+            email:
+                "",
+
+            returnTo:
+                req.session?.returnTo
+                ||
+                null
         }
     );
 };
@@ -56,13 +106,16 @@ exports.loginPage = (
 
 /* =========================================================
    CONNEXION CLIENT
+
+   POST /connexion
 ========================================================= */
 
-exports.login = async (
+exports.login =
+async function (
     req,
     res,
     next
-) => {
+) {
 
     try {
 
@@ -101,7 +154,12 @@ exports.login = async (
                     error:
                         "Veuillez renseigner votre email et votre mot de passe.",
 
-                    email
+                    email,
+
+                    returnTo:
+                        req.session?.returnTo
+                        ||
+                        null
                 }
             );
         }
@@ -130,14 +188,19 @@ exports.login = async (
                     error:
                         "Email ou mot de passe incorrect.",
 
-                    email
+                    email,
+
+                    returnTo:
+                        req.session?.returnTo
+                        ||
+                        null
                 }
             );
         }
 
 
         /* =================================================
-           STATUT
+           STATUT DU COMPTE
         ================================================= */
 
         if (
@@ -152,14 +215,19 @@ exports.login = async (
                     error:
                         "Ce compte n'est actuellement pas disponible.",
 
-                    email
+                    email,
+
+                    returnTo:
+                        req.session?.returnTo
+                        ||
+                        null
                 }
             );
         }
 
 
         /* =================================================
-           MOT DE PASSE
+           VERIFICATION MOT DE PASSE
         ================================================= */
 
         const passwordValid =
@@ -179,10 +247,29 @@ exports.login = async (
                     error:
                         "Email ou mot de passe incorrect.",
 
-                    email
+                    email,
+
+                    returnTo:
+                        req.session?.returnTo
+                        ||
+                        null
                 }
             );
         }
+
+
+        /* =================================================
+           DESTINATION APRES CONNEXION
+
+           IMPORTANT :
+           on récupère returnTo AVANT de le supprimer.
+        ================================================= */
+
+        const target =
+            getSafeReturnTo(
+                req,
+                "/compte"
+            );
 
 
         /* =================================================
@@ -220,21 +307,22 @@ exports.login = async (
                     .join(" "),
 
             avatarUrl:
-                user.avatar_url || null
+                user.avatar_url
+                ||
+                null
         };
 
 
-        /* =================================================
-           IMPORTANT
-           
-           On ne touche PAS à :
-           
-           req.session.admin
-           
-           Si l'utilisateur est également connecté
-           à l'administration dans ce navigateur,
-           sa session admin reste active.
-        ================================================= */
+        /*
+         * IMPORTANT :
+         *
+         * on ne touche jamais à :
+         *
+         * req.session.admin
+         *
+         * La connexion client et la connexion admin
+         * restent indépendantes.
+         */
 
 
         /* =================================================
@@ -247,7 +335,45 @@ exports.login = async (
 
 
         /* =================================================
-           SAVE
+           FUSION DU PANIER INVITE
+
+           Exemple :
+           
+           visiteur
+             ↓
+           ajoute produits
+             ↓
+           /checkout
+             ↓
+           /connexion
+             ↓
+           connexion
+             ↓
+           panier invité fusionné au compte
+        ================================================= */
+
+        if (
+            CartController &&
+            typeof CartController.mergeAfterLogin
+                === "function"
+        ) {
+
+            await CartController.mergeAfterLogin(
+                req,
+                user.id
+            );
+        }
+
+
+        /* =================================================
+           SUPPRESSION DESTINATION TEMPORAIRE
+        ================================================= */
+
+        delete req.session.returnTo;
+
+
+        /* =================================================
+           SAUVEGARDE SESSION
         ================================================= */
 
         return req.session.save(
@@ -259,8 +385,18 @@ exports.login = async (
                 }
 
 
+                /* =========================================
+                   REDIRECTION
+
+                   Si le client venait de /checkout :
+                   → /checkout
+
+                   Sinon :
+                   → /compte
+                ========================================= */
+
                 return res.redirect(
-                    "/compte"
+                    target
                 );
             }
         );
@@ -281,6 +417,8 @@ exports.login = async (
 
 /* =========================================================
    INSCRIPTION - PAGE
+
+   GET /inscription
 ========================================================= */
 
 exports.registerPage = (
@@ -293,9 +431,16 @@ exports.registerPage = (
         "client/auth/register",
         "Inscription",
         {
-            error: null,
+            error:
+                null,
 
-            values: {}
+            values:
+                {},
+
+            returnTo:
+                req.session?.returnTo
+                ||
+                null
         }
     );
 };
@@ -303,13 +448,16 @@ exports.registerPage = (
 
 /* =========================================================
    INSCRIPTION
+
+   POST /inscription
 ========================================================= */
 
-exports.register = async (
+exports.register =
+async function (
     req,
     res,
     next
-) => {
+) {
 
     try {
 
@@ -320,13 +468,15 @@ exports.register = async (
         const firstName =
             String(
                 req.body.first_name || ""
-            ).trim();
+            )
+                .trim();
 
 
         const lastName =
             String(
                 req.body.last_name || ""
-            ).trim();
+            )
+                .trim();
 
 
         const email =
@@ -340,7 +490,8 @@ exports.register = async (
         const phone =
             String(
                 req.body.phone || ""
-            ).trim();
+            )
+                .trim();
 
 
         const password =
@@ -388,14 +539,19 @@ exports.register = async (
                     error:
                         "Veuillez remplir tous les champs obligatoires.",
 
-                    values
+                    values,
+
+                    returnTo:
+                        req.session?.returnTo
+                        ||
+                        null
                 }
             );
         }
 
 
         /* =================================================
-           MOT DE PASSE
+           LONGUEUR MOT DE PASSE
         ================================================= */
 
         if (
@@ -410,14 +566,19 @@ exports.register = async (
                     error:
                         "Le mot de passe doit contenir au moins 8 caractères.",
 
-                    values
+                    values,
+
+                    returnTo:
+                        req.session?.returnTo
+                        ||
+                        null
                 }
             );
         }
 
 
         /* =================================================
-           CONFIRMATION
+           CONFIRMATION MOT DE PASSE
         ================================================= */
 
         if (
@@ -433,7 +594,12 @@ exports.register = async (
                     error:
                         "Les deux mots de passe ne correspondent pas.",
 
-                    values
+                    values,
+
+                    returnTo:
+                        req.session?.returnTo
+                        ||
+                        null
                 }
             );
         }
@@ -457,7 +623,12 @@ exports.register = async (
                     error:
                         "Un compte existe déjà avec cette adresse email.",
 
-                    values
+                    values,
+
+                    returnTo:
+                        req.session?.returnTo
+                        ||
+                        null
                 }
             );
         }
@@ -482,14 +653,19 @@ exports.register = async (
                     error:
                         "Ce numéro de téléphone est déjà associé à un compte.",
 
-                    values
+                    values,
+
+                    returnTo:
+                        req.session?.returnTo
+                        ||
+                        null
                 }
             );
         }
 
 
         /* =================================================
-           HASH
+           HASH MOT DE PASSE
         ================================================= */
 
         const passwordHash =
@@ -500,7 +676,7 @@ exports.register = async (
 
 
         /* =================================================
-           UUID
+           UUID PUBLIC
         ================================================= */
 
         const publicId =
@@ -508,7 +684,7 @@ exports.register = async (
 
 
         /* =================================================
-           CREATION USER
+           CREATION UTILISATEUR
         ================================================= */
 
         const userId =
@@ -528,7 +704,7 @@ exports.register = async (
 
 
         /* =================================================
-           PROFIL
+           CREATION PROFIL
         ================================================= */
 
         const displayName =
@@ -550,10 +726,24 @@ exports.register = async (
 
                 marketing_consent:
                     req.body.marketing_consent
-                    ? 1
-                    : 0
+                        ? 1
+                        : 0
             }
         );
+
+
+        /* =================================================
+           DESTINATION
+
+           Si inscription déclenchée depuis checkout,
+           on reviendra au checkout.
+        ================================================= */
+
+        const target =
+            getSafeReturnTo(
+                req,
+                "/compte"
+            );
 
 
         /* =================================================
@@ -584,12 +774,46 @@ exports.register = async (
 
 
         /*
-         * Encore une fois :
-         *
-         * req.session.admin
-         * n'est jamais modifié ici.
+         * session.admin n'est pas modifiée.
          */
 
+
+        /* =================================================
+           FUSION PANIER INVITE
+
+           Cela permet aussi :
+           
+           panier
+           → checkout
+           → inscription
+           → checkout
+           
+           sans perdre les articles.
+        ================================================= */
+
+        if (
+            CartController &&
+            typeof CartController.mergeAfterLogin
+                === "function"
+        ) {
+
+            await CartController.mergeAfterLogin(
+                req,
+                userId
+            );
+        }
+
+
+        /* =================================================
+           NETTOYAGE RETURN TO
+        ================================================= */
+
+        delete req.session.returnTo;
+
+
+        /* =================================================
+           SAVE
+        ================================================= */
 
         return req.session.save(
             error => {
@@ -601,7 +825,7 @@ exports.register = async (
 
 
                 return res.redirect(
-                    "/compte"
+                    target
                 );
             }
         );
@@ -629,7 +853,12 @@ exports.register = async (
                         "Un compte utilisant ces informations existe déjà.",
 
                     values:
-                        req.body
+                        req.body,
+
+                    returnTo:
+                        req.session?.returnTo
+                        ||
+                        null
                 }
             );
         }
@@ -642,6 +871,8 @@ exports.register = async (
 
 /* =========================================================
    DECONNEXION CLIENT
+
+   POST /deconnexion
 ========================================================= */
 
 exports.logout = (
@@ -652,11 +883,26 @@ exports.logout = (
 
     if (!req.session) {
 
-        return res.redirect("/");
+        return res.redirect(
+            "/"
+        );
     }
 
 
+    /*
+     * IMPORTANT :
+     *
+     * On supprime uniquement la connexion CLIENT.
+     *
+     * On ne fait PAS :
+     *
+     * req.session.destroy()
+     *
+     * sinon cela détruirait aussi la session admin.
+     */
+
     delete req.session.user;
+    delete req.session.returnTo;
 
 
     return req.session.save(
@@ -669,11 +915,14 @@ exports.logout = (
                     error
                 );
 
+
                 return next(error);
             }
 
 
-            return res.redirect("/");
+            return res.redirect(
+                "/"
+            );
         }
     );
 };

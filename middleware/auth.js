@@ -1,99 +1,204 @@
-const User = require("../models/user.model");
+const User =
+    require("../models/user.model");
+
+
+/* =========================================================
+   URL CLIENT DE RETOUR SECURISEE
+========================================================= */
+
+function safeReturnTo(value) {
+
+    if (
+        typeof value !== "string" ||
+        !value.startsWith("/") ||
+        value.startsWith("//")
+    ) {
+        return null;
+    }
+
+
+    /*
+     * Une authentification CLIENT
+     * ne doit jamais rediriger vers l'admin.
+     */
+
+    if (
+        value === "/admin" ||
+        value.startsWith("/admin/")
+    ) {
+        return null;
+    }
+
+
+    return value;
+}
 
 
 /* =========================================================
    CLIENT CONNECTE OBLIGATOIRE
 ========================================================= */
 
-async function requireUser(req, res, next) {
+async function requireUser(
+    req,
+    res,
+    next
+) {
 
     try {
 
         /*
-         * IMPORTANT :
-         * ce middleware concerne UNIQUEMENT le client.
+         * Aucun client connecté.
          */
 
-        if (!req.session || !req.session.user) {
+        if (
+            !req.session ||
+            !req.session.user
+        ) {
 
-            return res.redirect("/connexion");
-        }
+            if (req.session) {
+
+                const returnTo =
+                    safeReturnTo(
+                        req.originalUrl
+                    );
 
 
-        const userId = Number(req.session.user.id);
+                if (returnTo) {
 
-
-        if (!userId) {
-
-            delete req.session.user;
-
-            return req.session.save(error => {
-
-                if (error) {
-                    return next(error);
+                    req.session.returnTo =
+                        returnTo;
                 }
+            }
 
-                return res.redirect("/connexion");
-            });
+
+            return res.redirect(
+                "/connexion"
+            );
         }
 
 
-        /* =================================================
-           VERIFICATION DU CLIENT EN BASE
-        ================================================= */
-
-        const user = await User.findById(userId);
+        const userId =
+            Number(
+                req.session.user.id
+            );
 
 
         /*
-         * Compte :
-         *
-         * - inexistant
-         * - BLOCKED
-         * - DELETED
-         * - PENDING
-         *
-         * On déconnecte UNIQUEMENT le client.
+         * ID session incorrect.
          */
 
-        if (!user || user.status !== "ACTIVE") {
+        if (
+            !Number.isInteger(userId) ||
+            userId <= 0
+        ) {
 
             delete req.session.user;
 
 
-            return req.session.save(error => {
+            const returnTo =
+                safeReturnTo(
+                    req.originalUrl
+                );
 
-                if (error) {
 
-                    console.error(
-                        "Erreur sauvegarde session après invalidation client :",
-                        error
+            if (returnTo) {
+
+                req.session.returnTo =
+                    returnTo;
+            }
+
+
+            return req.session.save(
+                error => {
+
+                    if (error) {
+
+                        return next(error);
+                    }
+
+
+                    return res.redirect(
+                        "/connexion"
                     );
-
-                    return next(error);
                 }
-
-
-                return res.redirect("/connexion");
-            });
+            );
         }
 
 
-        /* =================================================
-           SYNCHRONISATION SESSION CLIENT
-        ================================================= */
+        /*
+         * Vérification réelle du compte
+         * dans MySQL.
+         */
+
+        const user =
+            await User.findById(
+                userId
+            );
+
+
+        /*
+         * Compte supprimé / bloqué /
+         * inexistant.
+         */
+
+        if (
+            !user ||
+            user.status !== "ACTIVE"
+        ) {
+
+            delete req.session.user;
+
+
+            const returnTo =
+                safeReturnTo(
+                    req.originalUrl
+                );
+
+
+            if (returnTo) {
+
+                req.session.returnTo =
+                    returnTo;
+            }
+
+
+            return req.session.save(
+                error => {
+
+                    if (error) {
+
+                        return next(error);
+                    }
+
+
+                    return res.redirect(
+                        "/connexion"
+                    );
+                }
+            );
+        }
+
+
+        /*
+         * Synchronisation légère
+         * de la session client.
+         */
 
         req.session.user.email =
             user.email || null;
 
+
         req.session.user.phone =
             user.phone || null;
+
 
         req.session.user.firstName =
             user.first_name || null;
 
+
         req.session.user.lastName =
             user.last_name || null;
+
 
         req.session.user.displayName =
             user.display_name
@@ -104,6 +209,7 @@ async function requireUser(req, res, next) {
             ]
                 .filter(Boolean)
                 .join(" ");
+
 
         req.session.user.avatarUrl =
             user.avatar_url || null;
@@ -119,6 +225,7 @@ async function requireUser(req, res, next) {
             error
         );
 
+
         return next(error);
     }
 }
@@ -128,88 +235,143 @@ async function requireUser(req, res, next) {
    VISITEUR CLIENT UNIQUEMENT
 ========================================================= */
 
-async function guestOnly(req, res, next) {
+async function guestOnly(
+    req,
+    res,
+    next
+) {
 
     try {
 
         /*
-         * Aucun client connecté.
-         *
-         * ATTENTION :
-         * session.admin n'est volontairement
-         * jamais vérifiée ici.
+         * Pas de client connecté.
          */
 
-        if (!req.session || !req.session.user) {
+        if (
+            !req.session ||
+            !req.session.user
+        ) {
 
             return next();
         }
 
 
         const userId =
-            Number(req.session.user.id);
+            Number(
+                req.session.user.id
+            );
 
 
         /*
-         * Mauvaise session client.
+         * Mauvaise session :
+         * on nettoie seulement user.
          */
 
-        if (!userId) {
+        if (
+            !Number.isInteger(userId) ||
+            userId <= 0
+        ) {
 
             delete req.session.user;
 
 
-            return req.session.save(error => {
+            return req.session.save(
+                error => {
 
-                if (error) {
-                    return next(error);
+                    if (error) {
+
+                        return next(error);
+                    }
+
+
+                    return next();
                 }
-
-                return next();
-            });
+            );
         }
 
 
         const user =
-            await User.findById(userId);
+            await User.findById(
+                userId
+            );
 
 
         /*
-         * Client actif déjà connecté.
+         * Client valide déjà connecté.
          */
 
-        if (user && user.status === "ACTIVE") {
+        if (
+            user &&
+            user.status === "ACTIVE"
+        ) {
 
-            return res.redirect("/compte");
+            const returnTo =
+                safeReturnTo(
+                    req.session.returnTo
+                );
+
+
+            /*
+             * Exemple :
+             *
+             * /checkout
+             * → /connexion
+             *
+             * mais client déjà connecté
+             * → retour /checkout
+             */
+
+            if (returnTo) {
+
+                delete req.session.returnTo;
+
+
+                return req.session.save(
+                    error => {
+
+                        if (error) {
+
+                            return next(error);
+                        }
+
+
+                        return res.redirect(
+                            returnTo
+                        );
+                    }
+                );
+            }
+
+
+            return res.redirect(
+                "/compte"
+            );
         }
 
 
         /*
-         * Client bloqué / supprimé / invalide.
+         * Le compte n'est plus valide.
          *
-         * SUPPRESSION UNIQUEMENT DE user.
-         *
-         * admin reste connecté.
+         * ATTENTION :
+         * on ne supprime jamais
+         * req.session.admin ici.
          */
 
         delete req.session.user;
 
 
-        return req.session.save(error => {
+        return req.session.save(
+            error => {
 
-            if (error) {
+                if (error) {
 
-                console.error(
-                    "Erreur nettoyage session client :",
-                    error
-                );
+                    return next(error);
+                }
 
-                return next(error);
+
+                return next();
             }
-
-
-            return next();
-        });
+        );
 
     }
     catch (error) {
@@ -218,6 +380,7 @@ async function guestOnly(req, res, next) {
             "Erreur guestOnly :",
             error
         );
+
 
         return next(error);
     }
@@ -228,19 +391,16 @@ async function guestOnly(req, res, next) {
    ADMIN CONNECTE OBLIGATOIRE
 ========================================================= */
 
-function requireAdmin(req, res, next) {
+function requireAdmin(
+    req,
+    res,
+    next
+) {
 
-    /*
-     * IMPORTANT :
-     *
-     * on regarde UNIQUEMENT :
-     *
-     * req.session.admin
-     *
-     * La connexion client n'intervient absolument pas.
-     */
-
-    if (!req.session || !req.session.admin) {
+    if (
+        !req.session ||
+        !req.session.admin
+    ) {
 
         return res.redirect(
             "/admin/connexion"
@@ -256,13 +416,11 @@ function requireAdmin(req, res, next) {
    VISITEUR ADMIN UNIQUEMENT
 ========================================================= */
 
-function adminGuestOnly(req, res, next) {
-
-    /*
-     * Un CLIENT connecté peut venir ici.
-     *
-     * On regarde uniquement la session ADMIN.
-     */
+function adminGuestOnly(
+    req,
+    res,
+    next
+) {
 
     if (
         req.session &&
@@ -283,33 +441,47 @@ function adminGuestOnly(req, res, next) {
    DECONNEXION CLIENT
 ========================================================= */
 
-function logoutUser(req, res, next) {
+function logoutUser(
+    req,
+    res,
+    next
+) {
 
     if (!req.session) {
 
-        return res.redirect("/");
+        return res.redirect(
+            "/"
+        );
     }
 
 
     /*
-     * NE PAS FAIRE :
+     * On ne fait surtout PAS :
      *
      * req.session.destroy()
      *
-     * car cela supprimerait également admin.
+     * car la session admin doit rester
+     * indépendante.
      */
 
     delete req.session.user;
+    delete req.session.returnTo;
 
 
-    return req.session.save(error => {
+    return req.session.save(
+        error => {
 
-        if (error) {
-            return next(error);
+            if (error) {
+
+                return next(error);
+            }
+
+
+            return res.redirect(
+                "/"
+            );
         }
-
-        return res.redirect("/");
-    });
+    );
 }
 
 
@@ -317,7 +489,11 @@ function logoutUser(req, res, next) {
    DECONNEXION ADMIN
 ========================================================= */
 
-function logoutAdmin(req, res, next) {
+function logoutAdmin(
+    req,
+    res,
+    next
+) {
 
     if (!req.session) {
 
@@ -328,27 +504,43 @@ function logoutAdmin(req, res, next) {
 
 
     /*
-     * Suppression uniquement ADMIN.
+     * On supprime uniquement
+     * la session ADMIN.
      */
 
     delete req.session.admin;
 
 
-    return req.session.save(error => {
+    return req.session.save(
+        error => {
 
-        if (error) {
-            return next(error);
+            if (error) {
+
+                return next(error);
+            }
+
+
+            return res.redirect(
+                "/admin/connexion"
+            );
         }
-
-        return res.redirect(
-            "/admin/connexion"
-        );
-    });
+    );
 }
 
 
 /* =========================================================
    EXPORTS
+
+   IMPORTANT :
+   auth.routes.js fait :
+
+   const {
+       guestOnly,
+       requireUser
+   } = require("../../middleware/auth");
+
+   Ces fonctions doivent donc absolument
+   être exportées ici.
 ========================================================= */
 
 module.exports = {
@@ -360,5 +552,7 @@ module.exports = {
     adminGuestOnly,
 
     logoutUser,
-    logoutAdmin
+    logoutAdmin,
+
+    safeReturnTo
 };
