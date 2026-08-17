@@ -111,9 +111,37 @@
           <h3><%= product.name %></h3>
           <p><%= product.short_description || product.description || "" %></p>
           <div class="card-row">
-            <strong><%= formatMoney(product.price) %></strong>
-            <a class="button small" href="/produit/<%= product.id %>">Voir</a>
-          </div>
+            <strong>
+                <%= formatMoney(product.price) %>
+            </strong>
+
+            <div
+                style="
+                    display:flex;
+                    align-items:center;
+                    gap:7px;
+                    flex-wrap:wrap;
+                "
+            >
+
+                <a
+                    class="button small"
+                    href="/produit/<%= product.id %>"
+                >
+                    Voir
+                </a>
+
+                <button
+                    type="button"
+                    class="button small primary add-product-to-cart"
+                    data-product-id="<%= product.id %>"
+                >
+                    🛒 Ajouter
+                </button>
+
+            </div>
+
+        </div>
         </div>
       </article>
     <% }) %>
@@ -121,3 +149,4 @@
     <% } %>
   </div>
 </section>
+

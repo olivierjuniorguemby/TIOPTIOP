@@ -213,20 +213,6 @@ router.get(
 );
 
 
-/* ======================================================
-   PANIER
-   PUBLIC
-
-   Le visiteur peut préparer son panier avant connexion.
-====================================================== */
-
-router.get(
-    "/panier",
-    page.staticPage(
-        "client/orders/cart",
-        "Panier"
-    )
-);
 
 
 /* ======================================================

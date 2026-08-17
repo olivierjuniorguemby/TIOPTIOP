@@ -35,7 +35,16 @@
     </nav>
 
     <div class="header-actions">
-      <a class="icon-button" href="/panier" aria-label="Panier">🛒</a>
+      <a href="/panier" class="cart-header-link">
+            🛒 Panier
+
+            <span
+                id="cartCount"
+                class="cart-count-badge"
+            >
+                0
+            </span>
+        </a>
 
         <% if (currentUser) { %>
 

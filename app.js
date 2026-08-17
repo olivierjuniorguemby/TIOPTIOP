@@ -19,6 +19,7 @@ const accountRoutes = require("./routes/client/account.routes");
 const careerRoutes = require("./routes/client/career.routes");
 const adminRoutes = require("./routes/admin/index.routes");
 const apiRoutes = require("./routes/api/index.routes");
+const clientCartRoutes = require("./routes/client/cart.routes");
 
 const app = express();
 const server = http.createServer(app);
@@ -40,6 +41,11 @@ app.use(locals);
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+app.use(
+    "/panier",
+    clientCartRoutes
+);
+
 app.use("/", clientRoutes);
 app.use("/", authRoutes);
 app.use("/", accountRoutes);
@@ -53,6 +59,8 @@ io.on("connection", (socket) => {
     io.to(`order:${data.orderId}`).emit("driver:location", data);
   });
 });
+
+
 
 app.use(notFound);
 app.use(errorHandler);

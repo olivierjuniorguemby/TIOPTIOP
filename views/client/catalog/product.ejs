@@ -752,6 +752,113 @@
       grid-template-columns: 1fr;
     }
   }
+
+  /* =========================================================
+   QUANTITE PRODUIT
+========================================================= */
+
+.product-quantity-box {
+
+    margin-top: 12px;
+
+    padding: 14px 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    border: 1px solid #dedbd7;
+    border-radius: 15px;
+}
+
+
+.product-quantity-title {
+
+    font-size: 13px;
+    font-weight: 900;
+}
+
+
+.product-quantity-control {
+
+    display: inline-flex;
+    align-items: center;
+
+    overflow: hidden;
+
+    border: 1px solid #dedbd7;
+    border-radius: 999px;
+}
+
+
+.product-quantity-button {
+
+    width: 38px;
+    height: 38px;
+
+    border: 0;
+
+    background: #fff;
+
+    font-size: 18px;
+    font-weight: 900;
+
+    cursor: pointer;
+}
+
+
+.product-quantity-button:hover {
+
+    background: #fff0df;
+
+    color: var(--orange);
+}
+
+
+.product-quantity-value {
+
+    width: 42px;
+    height: 38px;
+
+    border: 0;
+
+    text-align: center;
+
+    font-size: 13px;
+    font-weight: 900;
+
+    outline: none;
+
+    appearance: textfield;
+}
+
+
+.product-cart-error {
+
+    display: none;
+
+    margin-top: 12px;
+
+    padding: 11px 13px;
+
+    border-radius: 12px;
+
+    background: #fff0ef;
+
+    color: #a52d2d;
+
+    font-size: 11px;
+    font-weight: 800;
+}
+
+
+.product-cart-error.show {
+
+    display: block;
+}
+
 </style>
 
 
@@ -1130,6 +1237,7 @@
               <div
                   class="product-option-box"
                   data-group-id="<%= group.id %>"
+                  data-group-name="<%= group.name %>"
                   data-selection-type="<%= group.selection_type %>"
                   data-min-choices="<%= group.min_choices %>"
                   data-max-choices="<%= group.max_choices || '' %>"
@@ -1137,7 +1245,7 @@
 
                   <h2 class="product-option-title">
 
-                      <% if (group.selection_type === "single") { %>
+                      <% if (String(group.selection_type).toLowerCase() === "single") { %>
                           🍚
                       <% } else { %>
                           ✨
@@ -1161,12 +1269,12 @@
                           <label class="product-option-label">
 
                               <input
-                                  type="<%= group.selection_type === 'single'
+                                  type="<%= String(group.selection_type).toLowerCase() === 'single'
                                       ? 'radio'
                                       : 'checkbox'
                                   %>"
 
-                                  name="<%= group.selection_type === 'single'
+                                  name="<%= String(group.selection_type).toLowerCase() === 'single'
                                       ? 'option_group_' + group.id
                                       : 'option_group_' + group.id + '[]'
                                   %>"
@@ -1177,11 +1285,9 @@
 
                                   <%= Number(option.is_default) === 1
                                       ? "checked"
-                                        : ""
-                                    %>
-
-                                    onchange="updateProductPrice()"
-                                >
+                                      : ""
+                                  %>
+                              >
 
                                 <%= option.name %>
 
@@ -1216,6 +1322,54 @@
         <% } %>
 
         <!-- INSTRUCTIONS -->
+
+        <!-- =====================================================
+            QUANTITE
+        ====================================================== -->
+
+        <div class="product-quantity-box">
+
+            <strong class="product-quantity-title">
+                Quantité
+            </strong>
+
+
+            <div class="product-quantity-control">
+
+                <button
+                    type="button"
+                    class="product-quantity-button"
+                    id="productQuantityMinus"
+                >
+                    −
+                </button>
+
+
+                <input
+                    type="number"
+                    id="productQuantity"
+                    class="product-quantity-value"
+
+                    value="1"
+
+                    min="1"
+                    max="99"
+
+                    readonly
+                >
+
+
+                <button
+                    type="button"
+                    class="product-quantity-button"
+                    id="productQuantityPlus"
+                >
+                    +
+                </button>
+
+            </div>
+
+        </div>
 
         <textarea
           name="instructions"
@@ -1253,6 +1407,10 @@
 
         </div>
 
+        <div
+            id="productCartError"
+            class="product-cart-error"
+        ></div>
       </form>
 
     </article>
@@ -1418,159 +1576,685 @@
 
 <script>
 
-  /* =========================================================
-     GALERIE PRODUIT
-  ========================================================= */
+/* =========================================================
+   GALERIE
+========================================================= */
 
-  function changeProductImage(button, imageUrl) {
+function changeProductImage(
+    button,
+    imageUrl
+) {
 
     const mainImage =
-      document.getElementById("mainProductImage");
+        document.getElementById(
+            "mainProductImage"
+        );
 
 
     if (!mainImage) {
-      return;
-    }
-
-
-    mainImage.src = imageUrl;
-
-
-    document
-      .querySelectorAll(".product-thumbnail")
-      .forEach(item => {
-
-        item.classList.remove("active");
-
-      });
-
-
-    button.classList.add("active");
-  }
-
-
-  /* =========================================================
-     FAVORI PRODUIT
-     Temporaire : étape Auth / favoris plus tard
-  ========================================================= */
-
-  function toggleProductFavorite(button) {
-
-    button.classList.toggle("active");
-
-
-    if (button.classList.contains("active")) {
-
-      button.innerHTML =
-        "♥ Favori";
-
-    }
-    else {
-
-      button.innerHTML =
-        "♡ Favori";
-
-    }
-  }
-
-
-  /* =========================================================
-     FAVORI SUGGESTION
-  ========================================================= */
-
-  function toggleSuggestionFavorite(button) {
-
-    button.classList.toggle("active");
-
-
-    if (button.classList.contains("active")) {
-
-      button.innerHTML = "♥";
-
-    }
-    else {
-
-      button.innerHTML = "♡";
-
-    }
-  }
-
-  function updateProductPrice() {
-
-    const priceElement =
-        document.getElementById("productPrice");
-
-    const button =
-        document.getElementById("addToCartButton");
-
-
-    if (!priceElement || !button) {
         return;
     }
 
 
-    const basePrice =
-        Number(
-            priceElement.dataset.basePrice || 0
+    mainImage.src =
+        imageUrl;
+
+
+    document
+        .querySelectorAll(
+            ".product-thumbnail"
+        )
+        .forEach(
+            item => {
+
+                item.classList.remove(
+                    "active"
+                );
+            }
         );
 
 
-    const currency =
-        priceElement.dataset.currency || "XAF";
-
-
-    let total = basePrice;
-
-
-    /*
-     * On récupère toutes les options sélectionnées :
-     *
-     * - radio
-     * - checkbox
-     */
-    document
-        .querySelectorAll(
-            '.product-option-box input:checked'
-        )
-        .forEach(input => {
-
-            const additionalPrice =
-                Number(
-                    input.dataset.price || 0
-                );
-
-
-            total += additionalPrice;
-
-        });
-
-
-    const formatted =
-        total.toLocaleString("fr-FR");
-
-
-    priceElement.textContent =
-        formatted + " " + currency;
-
-
-    button.innerHTML =
-        "🛒 Ajouter · "
-        + formatted
-        + " "
-        + currency;
+    button.classList.add(
+        "active"
+    );
 }
 
 
-/*
- * Calcule immédiatement le prix
- * lorsque la page est chargée.
- *
- * Important si une option par défaut
- * possède un supplément.
- */
+/* =========================================================
+   FAVORI PRODUIT
+========================================================= */
+
+function toggleProductFavorite(
+    button
+) {
+
+    button.classList.toggle(
+        "active"
+    );
+
+
+    button.innerHTML =
+        button.classList.contains(
+            "active"
+        )
+            ? "♥ Favori"
+            : "♡ Favori";
+}
+
+
+/* =========================================================
+   FAVORI SUGGESTION
+========================================================= */
+
+function toggleSuggestionFavorite(
+    button
+) {
+
+    button.classList.toggle(
+        "active"
+    );
+
+
+    button.innerHTML =
+        button.classList.contains(
+            "active"
+        )
+            ? "♥"
+            : "♡";
+}
+
+
+/* =========================================================
+   PRIX
+========================================================= */
+
+function calculateCurrentUnitPrice() {
+
+    const priceElement =
+        document.getElementById(
+            "productPrice"
+        );
+
+
+    if (!priceElement) {
+        return 0;
+    }
+
+
+    let total =
+        Number(
+            priceElement.dataset
+                .basePrice || 0
+        );
+
+
+    document
+        .querySelectorAll(
+            ".product-option-box[data-group-id] input:checked"
+        )
+        .forEach(
+            input => {
+
+                total +=
+                    Number(
+                        input.dataset
+                            .price || 0
+                    );
+            }
+        );
+
+
+    return total;
+}
+
+function updateProductPrice() {
+
+    const priceElement =
+        document.getElementById(
+            "productPrice"
+        );
+
+
+    const button =
+        document.getElementById(
+            "addToCartButton"
+        );
+
+
+    const quantityInput =
+        document.getElementById(
+            "productQuantity"
+        );
+
+
+    if (
+        !priceElement ||
+        !button
+    ) {
+        return;
+    }
+
+
+    const unitPrice =
+        calculateCurrentUnitPrice();
+
+
+    const quantity =
+        Number(
+            quantityInput?.value || 1
+        );
+
+
+    const total =
+        unitPrice * quantity;
+
+
+    const currency =
+        priceElement.dataset.currency
+        || "XAF";
+
+
+    /*
+     * Le prix principal affiche
+     * toujours le prix unitaire personnalisé.
+     */
+
+    priceElement.textContent =
+        unitPrice.toLocaleString(
+            "fr-FR"
+        )
+        +
+        " "
+        +
+        currency;
+
+
+    /*
+     * Le bouton affiche le total
+     * selon la quantité.
+     */
+
+    button.innerHTML =
+        "🛒 Ajouter · "
+        +
+        total.toLocaleString(
+            "fr-FR"
+        )
+        +
+        " "
+        +
+        currency;
+}
+
+
+/* =========================================================
+   ERREUR
+========================================================= */
+
+function showProductCartError(
+    message
+) {
+
+    const errorBox =
+        document.getElementById(
+            "productCartError"
+        );
+
+
+    if (!errorBox) {
+        return;
+    }
+
+
+    errorBox.textContent =
+        message;
+
+
+    errorBox.classList.add(
+        "show"
+    );
+}
+
+
+function clearProductCartError() {
+
+    const errorBox =
+        document.getElementById(
+            "productCartError"
+        );
+
+
+    if (!errorBox) {
+        return;
+    }
+
+
+    errorBox.textContent = "";
+
+
+    errorBox.classList.remove(
+        "show"
+    );
+}
+
+
+/* =========================================================
+   VALIDER GROUPES
+========================================================= */
+
+function validateProductOptions() {
+
+    const groups =
+        document.querySelectorAll(
+            ".product-option-box[data-group-id]"
+        );
+
+
+    for (
+        const group
+        of groups
+    ) {
+
+        const groupName =
+            group.dataset.groupName ||
+            "Cette option";
+
+
+        const selectionType =
+            String(
+                group.dataset
+                    .selectionType || ""
+            )
+                .toLowerCase();
+
+
+        const declaredMin =
+            Number(
+                group.dataset.minChoices || 0
+            );
+
+        const isRequired =
+            group.querySelector(
+                ".product-option-title small"
+            ) !== null;
+
+        const minChoices =
+            isRequired
+                ? Math.max(1, declaredMin)
+                : declaredMin;
+
+
+        const maxRaw =
+            group.dataset
+                .maxChoices;
+
+
+        const maxChoices =
+            maxRaw
+                ? Number(maxRaw)
+                : null;
+
+
+        const checked =
+            group.querySelectorAll(
+                "input:checked"
+            ).length;
+
+
+        /*
+         * MINIMUM.
+         */
+
+        if (
+            checked <
+            minChoices
+        ) {
+
+            return {
+                valid: false,
+
+                message:
+                    `Veuillez sélectionner au moins ${minChoices} choix dans « ${groupName} ».`
+            };
+        }
+
+
+        /*
+         * SINGLE.
+         */
+
+        if (
+            selectionType ===
+            "single"
+            &&
+            checked > 1
+        ) {
+
+            return {
+                valid: false,
+
+                message:
+                    `Un seul choix est autorisé dans « ${groupName} ».`
+            };
+        }
+
+
+        /*
+         * MAXIMUM.
+         */
+
+        if (
+            maxChoices !== null
+            &&
+            checked >
+            maxChoices
+        ) {
+
+            return {
+                valid: false,
+
+                message:
+                    `Maximum ${maxChoices} choix dans « ${groupName} ».`
+            };
+        }
+    }
+
+
+    return {
+        valid: true
+    };
+}
+
+
+/* =========================================================
+   INITIALISATION
+========================================================= */
+
 document.addEventListener(
     "DOMContentLoaded",
-    updateProductPrice
+    function () {
+
+        const form =
+            document.getElementById(
+                "productForm"
+            );
+
+
+        const addButton =
+            document.getElementById(
+                "addToCartButton"
+            );
+
+
+        const quantity =
+            document.getElementById(
+                "productQuantity"
+            );
+
+
+        const minus =
+            document.getElementById(
+                "productQuantityMinus"
+            );
+
+
+        const plus =
+            document.getElementById(
+                "productQuantityPlus"
+            );
+
+
+        /* =================================================
+           QUANTITE -
+        ================================================= */
+
+        minus?.addEventListener(
+            "click",
+            function () {
+
+                const current =
+                    Number(
+                        quantity.value || 1
+                    );
+
+
+                if (
+                    current > 1
+                ) {
+
+                    quantity.value =
+                        current - 1;
+
+
+                    updateProductPrice();
+                }
+            }
+        );
+
+
+        /* =================================================
+           QUANTITE +
+        ================================================= */
+
+        plus?.addEventListener(
+            "click",
+            function () {
+
+                const current =
+                    Number(
+                        quantity.value || 1
+                    );
+
+
+                if (
+                    current < 99
+                ) {
+
+                    quantity.value =
+                        current + 1;
+
+
+                    updateProductPrice();
+                }
+            }
+        );
+
+
+        /* =================================================
+           OPTIONS
+        ================================================= */
+
+        form
+            ?.querySelectorAll(
+                ".product-option-box input"
+            )
+            .forEach(
+                input => {
+
+                    input.addEventListener(
+                        "change",
+                        function () {
+
+                            clearProductCartError();
+
+                            updateProductPrice();
+                        }
+                    );
+                }
+            );
+
+
+        /* =================================================
+           AJOUT PANIER
+        ================================================= */
+
+        addButton?.addEventListener(
+            "click",
+            async function () {
+
+                clearProductCartError();
+
+
+                /* -----------------------------------------
+                   VALIDATION CLIENT
+                ----------------------------------------- */
+
+                const validation =
+                    validateProductOptions();
+
+
+                if (!validation.valid) {
+
+                    showProductCartError(
+                        validation.message
+                    );
+
+                    return;
+                }
+
+
+                /* -----------------------------------------
+                   ID PRODUIT
+                ----------------------------------------- */
+
+                const productId =
+                    Number(
+                        form.querySelector(
+                            '[name="product_id"]'
+                        )
+                        ?.value
+                    );
+
+
+                /* -----------------------------------------
+                   OPTIONS SELECTIONNEES
+                ----------------------------------------- */
+
+                const optionValueIds =
+                  Array.from(
+                      form.querySelectorAll(
+                          '.product-option-box[data-group-id] input:checked'
+                      )
+                  )
+                  .map(input => Number(input.value))
+                  .filter(id =>
+                      Number.isInteger(id) &&
+                      id > 0
+                  );
+
+
+                /* -----------------------------------------
+                   INSTRUCTIONS
+                ----------------------------------------- */
+
+                const instructions =
+                    form.querySelector(
+                        '[name="instructions"]'
+                    )
+                    ?.value
+                    ?.trim()
+                    || "";
+
+
+                const qty =
+                    Number(
+                        quantity?.value || 1
+                    );
+
+
+                const original =
+                    addButton.innerHTML;
+
+
+                try {
+
+                    addButton.disabled =
+                        true;
+
+
+                    addButton.innerHTML =
+                        "Ajout en cours...";
+
+
+                    if (
+                        !window.TiopCart
+                    ) {
+
+                        throw new Error(
+                            "Le module panier n'est pas disponible."
+                        );
+                    }
+
+
+                    await window.TiopCart
+                        .addProduct({
+
+                            productId,
+
+                            quantity:
+                                qty,
+
+                            optionValueIds,
+
+                            instructions
+                        });
+
+
+                    window.TiopCart.notify(
+                        "✓ Produit ajouté au panier"
+                    );
+
+
+                    addButton.innerHTML =
+                        "✓ Ajouté au panier";
+
+
+                    /*
+                     * On garde les choix du client.
+                     * Il peut éventuellement en ajouter
+                     * un autre identique.
+                     */
+
+                    setTimeout(
+                        function () {
+
+                            updateProductPrice();
+
+                        },
+                        1200
+                    );
+
+                }
+                catch (error) {
+
+                    console.error(
+                        "Erreur fiche produit panier :",
+                        error
+                    );
+
+
+                    showProductCartError(
+                        error.message
+                        ||
+                        "Impossible d'ajouter ce produit."
+                    );
+
+
+                    addButton.innerHTML =
+                        original;
+                }
+                finally {
+
+                    addButton.disabled =
+                        false;
+                }
+            }
+        );
+
+
+        updateProductPrice();
+
+    }
 );
 
 </script>
