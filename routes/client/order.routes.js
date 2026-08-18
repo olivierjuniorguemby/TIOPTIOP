@@ -2,9 +2,9 @@ const router =
     require("express").Router();
 
 
-const checkout =
+const order =
     require(
-        "../../controllers/client/checkout.controller"
+        "../../controllers/client/order.controller"
     );
 
 
@@ -17,35 +17,41 @@ const {
 
 
 /* =========================================================
-   GET /checkout
+   CONFIRMATION
+
+   GET /commande/confirmation/:reference
 ========================================================= */
 
 router.get(
-    "/",
+    "/confirmation/:reference",
     requireUser,
-    checkout.index
+    order.confirmation
 );
 
 
 /* =========================================================
-   GET /checkout/zones/:restaurantId
+   FACTURE
+
+   GET /commande/:reference/facture
 ========================================================= */
 
 router.get(
-    "/zones/:restaurantId",
+    "/:reference/facture",
     requireUser,
-    checkout.deliveryZones
+    order.invoice
 );
 
 
 /* =========================================================
-   POST /checkout
+   SUIVI
+
+   GET /commande/:reference/suivi
 ========================================================= */
 
-router.post(
-    "/",
+router.get(
+    "/:reference/suivi",
     requireUser,
-    checkout.create
+    order.tracking
 );
 
 

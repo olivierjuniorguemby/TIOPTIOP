@@ -16,10 +16,8 @@ function getUserId(req) {
             req.session?.user?.id
         );
 
-
     return Number.isInteger(id) &&
         id > 0
-
         ? id
         : null;
 }
@@ -38,20 +36,11 @@ async function (
 
     try {
 
-        /* =================================================
-           CLIENT
-        ================================================= */
-
         const userId =
             getUserId(req);
 
 
         if (!userId) {
-
-            /*
-             * Normalement impossible puisque
-             * requireUser protège déjà cette route.
-             */
 
             return res.redirect(
                 "/connexion"
@@ -59,20 +48,11 @@ async function (
         }
 
 
-        /* =================================================
-           PANIER ACTIF
-        ================================================= */
-
         const activeCart =
             await Cart.findActiveByUserId(
                 userId
             );
 
-
-        /*
-         * Ne surtout pas créer un panier vide
-         * simplement parce que le client visite /checkout.
-         */
 
         if (!activeCart) {
 
@@ -100,14 +80,23 @@ async function (
         }
 
 
-        /* =================================================
-           CLIENT MYSQL
-        ================================================= */
+        const [
+            customer,
+            addresses,
+            restaurants
+        ] =
+            await Promise.all([
 
-        const customer =
-            await Order.getCustomer(
-                userId
-            );
+                Order.getCustomer(
+                    userId
+                ),
+
+                Order.getAddresses(
+                    userId
+                ),
+
+                Order.getRestaurants()
+            ]);
 
 
         if (!customer) {
@@ -118,42 +107,11 @@ async function (
         }
 
 
-        /* =================================================
-           ADRESSES
-        ================================================= */
-
-        const addresses =
-            await Order.getAddresses(
-                userId
-            );
-
-
-        /* =================================================
-           RESTAURANTS
-        ================================================= */
-
-        const restaurants =
-            await Order.getRestaurants();
-
-
-        /*
-         * Pour cette première version du checkout,
-         * le premier restaurant ouvert devient
-         * le restaurant présélectionné.
-         *
-         * Plus tard la sélection pourra dépendre
-         * de la localisation.
-         */
-
         const selectedRestaurant =
-            restaurants.length > 0
-                ? restaurants[0]
-                : null;
+            restaurants[0]
+            ||
+            null;
 
-
-        /* =================================================
-           ZONES DE LIVRAISON
-        ================================================= */
 
         let deliveryZones =
             [];
@@ -168,10 +126,6 @@ async function (
         }
 
 
-        /* =================================================
-           ADRESSE PAR DEFAUT
-        ================================================= */
-
         const defaultAddress =
             addresses.find(
                 address =>
@@ -185,24 +139,15 @@ async function (
             null;
 
 
-        /* =================================================
-           MONNAIE
-        ================================================= */
-
         const currency =
             cart.items[0]?.currency
             ||
             "XAF";
 
 
-        /* =================================================
-           RENDER
-        ================================================= */
-
         return res.render(
             "client/orders/checkout",
             {
-
                 title:
                     "Finaliser la commande",
 
@@ -210,18 +155,15 @@ async function (
                     "layouts/client",
 
                 customer,
-
                 cart,
 
                 items:
                     cart.items,
 
                 addresses,
-
                 defaultAddress,
 
                 restaurants,
-
                 selectedRestaurant,
 
                 deliveryZones,
@@ -265,7 +207,6 @@ async function (
             error
         );
 
-
         return next(error);
     }
 };
@@ -273,8 +214,6 @@ async function (
 
 /* =========================================================
    GET /checkout/zones/:restaurantId
-
-   Utilisé par JavaScript lorsque le restaurant change.
 ========================================================= */
 
 exports.deliveryZones =
@@ -300,7 +239,6 @@ async function (
         ) {
 
             return res.status(400).json({
-
                 success:
                     false,
 
@@ -319,7 +257,6 @@ async function (
         if (!restaurant) {
 
             return res.status(404).json({
-
                 success:
                     false,
 
@@ -336,12 +273,10 @@ async function (
 
 
         return res.json({
-
             success:
                 true,
 
             restaurant: {
-
                 id:
                     restaurant.id,
 
@@ -367,7 +302,6 @@ async function (
             zones:
                 zones.map(
                     zone => ({
-
                         id:
                             zone.id,
 
@@ -410,7 +344,6 @@ async function (
 
 
         return res.status(500).json({
-
             success:
                 false,
 
@@ -423,8 +356,6 @@ async function (
 
 /* =========================================================
    POST /checkout
-
-   CREATION COMMANDE
 ========================================================= */
 
 exports.create =
@@ -435,10 +366,6 @@ async function (
 ) {
 
     try {
-
-        /* =================================================
-           CLIENT
-        ================================================= */
 
         const userId =
             getUserId(req);
@@ -451,10 +378,6 @@ async function (
             );
         }
 
-
-        /* =================================================
-           VALEURS FORMULAIRE
-        ================================================= */
 
         const orderType =
             String(
@@ -472,21 +395,17 @@ async function (
 
         const deliveryAddressId =
             req.body.delivery_address_id
-
                 ? Number(
                     req.body.delivery_address_id
                 )
-
                 : null;
 
 
         const deliveryZoneId =
             req.body.delivery_zone_id
-
                 ? Number(
                     req.body.delivery_zone_id
                 )
-
                 : null;
 
 
@@ -496,6 +415,16 @@ async function (
             )
                 .trim()
                 .toUpperCase();
+
+
+        if (
+            paymentMethod ===
+            "CASH_ON_DELIVERY"
+        ) {
+
+            paymentMethod =
+                "CASH";
+        }
 
 
         const customerNote =
@@ -509,28 +438,7 @@ async function (
                 );
 
 
-        /* =================================================
-           COMPATIBILITE ANCIEN FORMULAIRE
-
-           Votre ancien checkout envoyait :
-           CASH_ON_DELIVERY
-
-           La table payments attend :
-           CASH
-        ================================================= */
-
-        if (
-            paymentMethod ===
-            "CASH_ON_DELIVERY"
-        ) {
-
-            paymentMethod =
-                "CASH";
-        }
-
-
         const values = {
-
             order_type:
                 orderType,
 
@@ -550,10 +458,6 @@ async function (
                 customerNote
         };
 
-
-        /* =================================================
-           PANIER
-        ================================================= */
 
         const activeCart =
             await Cart.findActiveByUserId(
@@ -577,7 +481,7 @@ async function (
 
         if (
             !cart ||
-            !cart.items ||
+            !Array.isArray(cart.items) ||
             cart.items.length === 0
         ) {
 
@@ -587,16 +491,11 @@ async function (
         }
 
 
-        /* =================================================
-           VALIDATION
-        ================================================= */
-
-        const allowedOrderTypes =
-            [
-                "DELIVERY",
-                "PICKUP",
-                "DINE_IN"
-            ];
+        const allowedOrderTypes = [
+            "DELIVERY",
+            "PICKUP",
+            "DINE_IN"
+        ];
 
 
         if (
@@ -634,8 +533,7 @@ async function (
 
 
         if (
-            orderType === "DELIVERY"
-            &&
+            orderType === "DELIVERY" &&
             (
                 !Number.isInteger(
                     deliveryAddressId
@@ -656,8 +554,7 @@ async function (
 
 
         if (
-            orderType === "DELIVERY"
-            &&
+            orderType === "DELIVERY" &&
             (
                 !Number.isInteger(
                     deliveryZoneId
@@ -677,12 +574,11 @@ async function (
         }
 
 
-        const allowedPaymentMethods =
-            [
-                "CARD",
-                "MOBILE_MONEY",
-                "CASH"
-            ];
+        const allowedPaymentMethods = [
+            "CARD",
+            "MOBILE_MONEY",
+            "CASH"
+        ];
 
 
         if (
@@ -701,15 +597,9 @@ async function (
         }
 
 
-        /* =================================================
-           CREATION TRANSACTIONNELLE
-        ================================================= */
-
         const result =
             await Order.createFromCart({
-
                 userId,
-
                 restaurantId,
 
                 deliveryAddressId:
@@ -723,32 +613,26 @@ async function (
                         : null,
 
                 orderType,
-
                 paymentMethod,
-
                 customerNote,
-
                 cart
             });
 
 
-        /* =================================================
-           SESSION
-
-           Important :
-           le panier vient d'être CONVERTED.
-           On peut retirer l'ancien token guest.
-        ================================================= */
-
         if (req.session) {
 
             delete req.session.cartGuestToken;
+
+
+            req.session.lastOrder = {
+                reference:
+                    result.reference,
+
+                publicId:
+                    result.publicId
+            };
         }
 
-
-        /* =================================================
-           REDIRECTION CONFIRMATION
-        ================================================= */
 
         return res.redirect(
             "/commande/confirmation/"
@@ -766,11 +650,6 @@ async function (
             error
         );
 
-
-        /*
-         * Les erreurs métier venant du model
-         * peuvent être affichées au client.
-         */
 
         try {
 
@@ -796,37 +675,33 @@ async function (
 
             if (
                 cart &&
-                cart.items &&
-                cart.items.length
+                Array.isArray(cart.items) &&
+                cart.items.length > 0
             ) {
-
-                const values = {
-
-                    order_type:
-                        req.body.order_type,
-
-                    restaurant_id:
-                        req.body.restaurant_id,
-
-                    delivery_address_id:
-                        req.body.delivery_address_id,
-
-                    delivery_zone_id:
-                        req.body.delivery_zone_id,
-
-                    payment_method:
-                        req.body.payment_method,
-
-                    customer_note:
-                        req.body.customer_note
-                };
-
 
                 return await renderCheckoutError(
                     req,
                     res,
                     cart,
-                    values,
+                    {
+                        order_type:
+                            req.body.order_type,
+
+                        restaurant_id:
+                            req.body.restaurant_id,
+
+                        delivery_address_id:
+                            req.body.delivery_address_id,
+
+                        delivery_zone_id:
+                            req.body.delivery_zone_id,
+
+                        payment_method:
+                            req.body.payment_method,
+
+                        customer_note:
+                            req.body.customer_note
+                    },
                     error.message
                     ||
                     "Impossible de créer la commande."
@@ -834,9 +709,7 @@ async function (
             }
 
         }
-        catch (
-            renderError
-        ) {
+        catch (renderError) {
 
             console.error(
                 "Erreur affichage erreur checkout :",
@@ -851,7 +724,7 @@ async function (
 
 
 /* =========================================================
-   HELPER RENDU ERREUR
+   HELPER ERREUR CHECKOUT
 ========================================================= */
 
 async function renderCheckoutError(
@@ -947,7 +820,6 @@ async function renderCheckoutError(
     return res.status(400).render(
         "client/orders/checkout",
         {
-
             title:
                 "Finaliser la commande",
 
@@ -955,18 +827,15 @@ async function renderCheckoutError(
                 "layouts/client",
 
             customer,
-
             cart,
 
             items:
                 cart.items,
 
             addresses,
-
             defaultAddress,
 
             restaurants,
-
             selectedRestaurant,
 
             deliveryZones,
@@ -981,10 +850,6 @@ async function renderCheckoutError(
     );
 }
 
-
-/* =========================================================
-   EXPORT HELPER POUR TESTS EVENTUELS
-========================================================= */
 
 exports.renderCheckoutError =
     renderCheckoutError;

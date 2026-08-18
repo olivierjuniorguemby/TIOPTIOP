@@ -18,6 +18,14 @@ const {
 } =
     require("../../middleware/auth");
 
+/* ======================================================
+   ORDER COMMANDES
+====================================================== */
+
+const orderController =
+require(
+    "../../controllers/client/order.controller"
+);
 
 /* ======================================================
    ACCUEIL
@@ -223,10 +231,7 @@ router.get(
 router.get(
     "/commandes",
     requireUser,
-    page.staticPage(
-        "client/orders/list",
-        "Mes commandes"
-    )
+    orderController.list
 );
 
 

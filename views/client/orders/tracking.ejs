@@ -164,7 +164,7 @@
 
         const socket = io();
 
-        const orderId = "TIOP-38651";
+        const orderId = <%- JSON.stringify(order.reference) %>;
 
         socket.emit(
             "order:join",
@@ -290,7 +290,9 @@
   <div class="tracking-heading">
     <span class="eyebrow">🛵 Suivi en temps réel</span>
 
-    <h1>🛵Suivi TIOP-38651</h1>
+    <h1>
+        🛵 Suivi <%= order.reference %>
+    </h1>
 
     <p>
       Suivez votre commande et la position de votre livreur en temps réel.

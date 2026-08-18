@@ -1,22 +1,36 @@
-const crypto =
-    require("crypto");
-
-const db =
-    require("../config/database");
+const crypto = require("crypto");
+const db = require("../config/database");
 
 
 /* =========================================================
    HELPERS
 ========================================================= */
 
-function number(value) {
+function toNumber(value) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+}
 
-    const n =
-        Number(value);
 
-    return Number.isFinite(n)
-        ? n
-        : 0;
+function createReference() {
+    /*
+     * Référence lisible + suffixe aléatoire.
+     * La contrainte UNIQUE de orders.reference reste
+     * la dernière protection contre une collision.
+     */
+    const date = new Date();
+
+    const yyyy = String(date.getFullYear());
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+
+    const random =
+        crypto
+            .randomBytes(4)
+            .toString("hex")
+            .toUpperCase();
+
+    return `TIOP-${yyyy}${mm}${dd}-${random}`;
 }
 
 
@@ -24,77 +38,66 @@ function number(value) {
    CLIENT
 ========================================================= */
 
-async function getCustomer(
-    userId
-) {
+async function getCustomer(userId) {
 
-    const rows =
-        await db.query(`
-            SELECT
-                u.id,
-                u.email,
-                u.phone,
+    const rows = await db.query(`
+        SELECT
+            u.id,
+            u.email,
+            u.phone,
 
-                up.first_name,
-                up.last_name,
-                up.display_name,
-                up.avatar_url
+            up.first_name,
+            up.last_name,
+            up.display_name,
+            up.avatar_url
 
-            FROM users u
+        FROM users u
 
-            LEFT JOIN user_profiles up
-                ON up.user_id = u.id
+        LEFT JOIN user_profiles up
+            ON up.user_id = u.id
 
-            WHERE u.id = ?
-              AND u.status = 'ACTIVE'
+        WHERE u.id = ?
+          AND u.status = 'ACTIVE'
 
-            LIMIT 1
-        `, [
-            userId
-        ]);
-
+        LIMIT 1
+    `, [userId]);
 
     return rows[0] || null;
 }
 
 
 /* =========================================================
-   ADRESSES CLIENT
+   ADRESSES
 ========================================================= */
 
-async function getAddresses(
-    userId
-) {
+async function getAddresses(userId) {
 
-    const rows =
-        await db.query(`
-            SELECT
-                id,
-                user_id,
-                label,
-                recipient_name,
-                phone,
-                address_line1,
-                address_line2,
-                district,
-                city,
-                country_code,
-                latitude,
-                longitude,
-                delivery_instructions,
-                is_default
+    const rows = await db.query(`
+        SELECT
+            id,
+            user_id,
+            label,
+            recipient_name,
+            phone,
+            address_line1,
+            address_line2,
+            district,
+            city,
+            country_code,
+            latitude,
+            longitude,
+            delivery_instructions,
+            is_default,
+            created_at
 
-            FROM user_addresses
+        FROM user_addresses
 
-            WHERE user_id = ?
+        WHERE user_id = ?
 
-            ORDER BY
-                is_default DESC,
-                id DESC
-        `, [
-            userId
-        ]);
-
+        ORDER BY
+            is_default DESC,
+            id DESC
+    `, [userId]);
 
     return Array.isArray(rows)
         ? rows
@@ -102,63 +105,48 @@ async function getAddresses(
 }
 
 
-/* =========================================================
-   ADRESSE CLIENT PAR ID
-========================================================= */
+async function getAddressById(userId, addressId) {
 
-async function getAddressById(
-    userId,
-    addressId
-) {
-
-    const rows =
-        await db.query(`
-            SELECT *
-            FROM user_addresses
-
-            WHERE id = ?
-              AND user_id = ?
-
-            LIMIT 1
-        `, [
-            addressId,
-            userId
-        ]);
-
+    const rows = await db.query(`
+        SELECT *
+        FROM user_addresses
+        WHERE id = ?
+          AND user_id = ?
+        LIMIT 1
+    `, [
+        addressId,
+        userId
+    ]);
 
     return rows[0] || null;
 }
 
 
 /* =========================================================
-   RESTAURANTS OUVERTS
+   RESTAURANTS
 ========================================================= */
 
 async function getRestaurants() {
 
-    const rows =
-        await db.query(`
-            SELECT
-                id,
-                code,
-                name,
-                address,
-                district,
-                city,
+    const rows = await db.query(`
+        SELECT
+            id,
+            code,
+            name,
+            address,
+            district,
+            city,
+            supports_delivery,
+            supports_pickup,
+            supports_dine_in,
+            status
 
-                supports_delivery,
-                supports_pickup,
-                supports_dine_in,
+        FROM restaurants
 
-                status
+        WHERE status = 'OPEN'
 
-            FROM restaurants
-
-            WHERE status = 'OPEN'
-
-            ORDER BY id ASC
-        `);
-
+        ORDER BY id ASC
+    `);
 
     return Array.isArray(rows)
         ? rows
@@ -166,28 +154,15 @@ async function getRestaurants() {
 }
 
 
-/* =========================================================
-   RESTAURANT
-========================================================= */
+async function getRestaurantById(restaurantId) {
 
-async function getRestaurantById(
-    restaurantId
-) {
-
-    const rows =
-        await db.query(`
-            SELECT *
-
-            FROM restaurants
-
-            WHERE id = ?
-              AND status = 'OPEN'
-
-            LIMIT 1
-        `, [
-            restaurantId
-        ]);
-
+    const rows = await db.query(`
+        SELECT *
+        FROM restaurants
+        WHERE id = ?
+          AND status = 'OPEN'
+        LIMIT 1
+    `, [restaurantId]);
 
     return rows[0] || null;
 }
@@ -197,34 +172,28 @@ async function getRestaurantById(
    ZONES DE LIVRAISON
 ========================================================= */
 
-async function getDeliveryZones(
-    restaurantId
-) {
+async function getDeliveryZones(restaurantId) {
 
-    const rows =
-        await db.query(`
-            SELECT
-                id,
-                restaurant_id,
-                name,
-                min_order,
-                delivery_fee,
-                free_delivery_from,
-                estimated_min_minutes,
-                estimated_max_minutes
+    const rows = await db.query(`
+        SELECT
+            id,
+            restaurant_id,
+            name,
+            min_order,
+            delivery_fee,
+            free_delivery_from,
+            estimated_min_minutes,
+            estimated_max_minutes
 
-            FROM delivery_zones
+        FROM delivery_zones
 
-            WHERE restaurant_id = ?
-              AND is_active = 1
+        WHERE restaurant_id = ?
+          AND is_active = 1
 
-            ORDER BY
-                delivery_fee ASC,
-                id ASC
-        `, [
-            restaurantId
-        ]);
-
+        ORDER BY
+            delivery_fee ASC,
+            id ASC
+    `, [restaurantId]);
 
     return Array.isArray(rows)
         ? rows
@@ -232,38 +201,29 @@ async function getDeliveryZones(
 }
 
 
-/* =========================================================
-   ZONE
-========================================================= */
-
 async function getDeliveryZoneById(
     restaurantId,
     zoneId
 ) {
 
-    const rows =
-        await db.query(`
-            SELECT *
-
-            FROM delivery_zones
-
-            WHERE id = ?
-              AND restaurant_id = ?
-              AND is_active = 1
-
-            LIMIT 1
-        `, [
-            zoneId,
-            restaurantId
-        ]);
-
+    const rows = await db.query(`
+        SELECT *
+        FROM delivery_zones
+        WHERE id = ?
+          AND restaurant_id = ?
+          AND is_active = 1
+        LIMIT 1
+    `, [
+        zoneId,
+        restaurantId
+    ]);
 
     return rows[0] || null;
 }
 
 
 /* =========================================================
-   CALCUL FRAIS LIVRAISON
+   CALCUL LIVRAISON
 ========================================================= */
 
 function calculateDeliveryFee(
@@ -272,87 +232,30 @@ function calculateDeliveryFee(
     zone
 ) {
 
-    if (
-        orderType !== "DELIVERY"
-    ) {
+    if (orderType !== "DELIVERY") {
         return 0;
     }
-
 
     if (!zone) {
         return 0;
     }
 
-
     const freeFrom =
-        zone.free_delivery_from !== null
-        &&
+        zone.free_delivery_from !== null &&
         zone.free_delivery_from !== undefined
-
-            ? number(
-                zone.free_delivery_from
-            )
-
+            ? toNumber(zone.free_delivery_from)
             : null;
 
-
     if (
-        freeFrom !== null
-        &&
+        freeFrom !== null &&
         subtotal >= freeFrom
     ) {
-
         return 0;
     }
 
-
-    return number(
+    return toNumber(
         zone.delivery_fee
     );
-}
-
-
-/* =========================================================
-   REFERENCE COMMANDE
-========================================================= */
-
-async function generateUniqueReference() {
-
-    while (true) {
-
-        const now =
-            Date.now()
-                .toString()
-                .slice(-8);
-
-
-        const random =
-            Math.floor(
-                100 +
-                Math.random() * 900
-            );
-
-
-        const reference =
-            `TIOP-${now}${random}`;
-
-
-        const rows =
-            await db.query(`
-                SELECT id
-                FROM orders
-                WHERE reference = ?
-                LIMIT 1
-            `, [
-                reference
-            ]);
-
-
-        if (!rows.length) {
-
-            return reference;
-        }
-    }
 }
 
 
@@ -371,14 +274,19 @@ async function findByReference(
 
             r.name AS restaurant_name,
             r.address AS restaurant_address,
+            r.district AS restaurant_district,
+            r.city AS restaurant_city,
+            r.phone AS restaurant_phone,
 
             ua.label AS delivery_address_label,
             ua.recipient_name,
             ua.phone AS delivery_phone,
             ua.address_line1,
             ua.address_line2,
-            ua.district,
-            ua.city
+            ua.district AS delivery_district,
+            ua.city AS delivery_city,
+            ua.country_code AS delivery_country_code,
+            ua.delivery_instructions
 
         FROM orders o
 
@@ -391,34 +299,26 @@ async function findByReference(
         WHERE o.reference = ?
     `;
 
+    const params = [reference];
 
-    const params =
-        [reference];
-
-
-    if (userId) {
+    if (userId !== null) {
 
         sql += `
             AND o.user_id = ?
         `;
 
-        params.push(
-            userId
-        );
+        params.push(userId);
     }
-
 
     sql += `
         LIMIT 1
     `;
-
 
     const rows =
         await db.query(
             sql,
             params
         );
-
 
     return rows[0] || null;
 }
@@ -428,51 +328,142 @@ async function findByReference(
    ARTICLES COMMANDE
 ========================================================= */
 
-async function getOrderItems(
-    orderId
-) {
+async function getOrderItems(orderId) {
 
-    const items =
-        await db.query(`
-            SELECT *
-            FROM order_items
-            WHERE order_id = ?
+    const items = await db.query(`
+        SELECT
+            oi.id,
+            oi.order_id,
+            oi.product_id,
+            oi.formula_id,
+            oi.product_name,
+            oi.unit_price,
+            oi.quantity,
+            oi.line_total,
+            oi.notes,
+
+            CASE
+                WHEN oi.product_id IS NOT NULL
+                THEN (
+                    SELECT pi.image_url
+                    FROM product_images pi
+                    WHERE pi.product_id = oi.product_id
+                    ORDER BY
+                        pi.is_primary DESC,
+                        pi.position ASC,
+                        pi.id ASC
+                    LIMIT 1
+                )
+
+                WHEN oi.formula_id IS NOT NULL
+                THEN (
+                    SELECT fi.image_url
+                    FROM formula_images fi
+                    WHERE fi.formula_id = oi.formula_id
+                    ORDER BY
+                        fi.is_primary DESC,
+                        fi.position ASC,
+                        fi.id ASC
+                    LIMIT 1
+                )
+            END AS image_url
+
+        FROM order_items oi
+
+        WHERE oi.order_id = ?
+
+        ORDER BY oi.id ASC
+    `, [orderId]);
+
+
+    for (const item of items) {
+
+        item.options = await db.query(`
+            SELECT
+                id,
+                order_item_id,
+                option_name,
+                option_value,
+                price_delta
+
+            FROM order_item_options
+
+            WHERE order_item_id = ?
+
             ORDER BY id ASC
-        `, [
-            orderId
-        ]);
-
-
-    for (
-        const item
-        of items
-    ) {
-
-        const options =
-            await db.query(`
-                SELECT *
-                FROM order_item_options
-                WHERE order_item_id = ?
-                ORDER BY id ASC
-            `, [
-                item.id
-            ]);
-
-
-        item.options =
-            options;
+        `, [item.id]);
     }
-
 
     return items;
 }
 
 
 /* =========================================================
-   CREATION COMMANDE TRANSACTIONNELLE
+   PAIEMENT
+========================================================= */
 
-   cart doit être le panier détaillé
-   provenant de Cart.getDetailedCart().
+async function getPaymentByOrderId(orderId) {
+
+    const rows = await db.query(`
+        SELECT
+            id,
+            public_id,
+            order_id,
+            method,
+            provider,
+            status,
+            amount,
+            currency,
+            provider_reference,
+            paid_at,
+            created_at,
+            updated_at
+
+        FROM payments
+
+        WHERE order_id = ?
+
+        ORDER BY id DESC
+        LIMIT 1
+    `, [orderId]);
+
+    return rows[0] || null;
+}
+
+
+/* =========================================================
+   HISTORIQUE
+========================================================= */
+
+async function getStatusHistory(orderId) {
+
+    const rows = await db.query(`
+        SELECT
+            id,
+            order_id,
+            status,
+            comment,
+            changed_by_user_id,
+            changed_by_admin_user_id,
+            created_at
+
+        FROM order_status_history
+
+        WHERE order_id = ?
+
+        ORDER BY
+            created_at ASC,
+            id ASC
+    `, [orderId]);
+
+    return Array.isArray(rows)
+        ? rows
+        : [];
+}
+
+
+/* =========================================================
+   CREATION TRANSACTIONNELLE
 ========================================================= */
 
 async function createFromCart({
@@ -489,18 +480,18 @@ async function createFromCart({
     const connection =
         await db.pool.getConnection();
 
-
     try {
 
         await connection.beginTransaction();
 
 
         /* =================================================
-           VALIDATION PANIER
+           PANIER : VERROU + ANTI DOUBLE-COMMANDE
         ================================================= */
 
         if (
             !cart ||
+            !cart.id ||
             !Array.isArray(cart.items) ||
             cart.items.length === 0
         ) {
@@ -511,24 +502,59 @@ async function createFromCart({
         }
 
 
+        const [
+            lockedCartRows
+        ] = await connection.execute(`
+            SELECT
+                id,
+                user_id,
+                status
+            FROM carts
+            WHERE id = ?
+              AND user_id = ?
+            LIMIT 1
+            FOR UPDATE
+        `, [
+            cart.id,
+            userId
+        ]);
+
+
+        const lockedCart =
+            lockedCartRows[0];
+
+
+        if (!lockedCart) {
+
+            throw new Error(
+                "Panier introuvable."
+            );
+        }
+
+
+        if (
+            lockedCart.status !== "ACTIVE"
+        ) {
+
+            throw new Error(
+                "Ce panier a déjà été utilisé pour une commande."
+            );
+        }
+
+
         /* =================================================
            RESTAURANT
         ================================================= */
 
         const [
             restaurantRows
-        ] =
-            await connection.execute(`
-                SELECT *
-                FROM restaurants
-
-                WHERE id = ?
-                  AND status = 'OPEN'
-
-                LIMIT 1
-            `, [
-                restaurantId
-            ]);
+        ] = await connection.execute(`
+            SELECT *
+            FROM restaurants
+            WHERE id = ?
+              AND status = 'OPEN'
+            LIMIT 1
+        `, [restaurantId]);
 
 
         const restaurant =
@@ -544,15 +570,14 @@ async function createFromCart({
 
 
         /* =================================================
-           TYPE DE COMMANDE
+           TYPE COMMANDE
         ================================================= */
 
-        const allowedTypes =
-            [
-                "DELIVERY",
-                "PICKUP",
-                "DINE_IN"
-            ];
+        const allowedTypes = [
+            "DELIVERY",
+            "PICKUP",
+            "DINE_IN"
+        ];
 
 
         if (
@@ -568,8 +593,7 @@ async function createFromCart({
 
 
         if (
-            orderType === "DELIVERY"
-            &&
+            orderType === "DELIVERY" &&
             Number(
                 restaurant.supports_delivery
             ) !== 1
@@ -582,8 +606,7 @@ async function createFromCart({
 
 
         if (
-            orderType === "PICKUP"
-            &&
+            orderType === "PICKUP" &&
             Number(
                 restaurant.supports_pickup
             ) !== 1
@@ -596,8 +619,7 @@ async function createFromCart({
 
 
         if (
-            orderType === "DINE_IN"
-            &&
+            orderType === "DINE_IN" &&
             Number(
                 restaurant.supports_dine_in
             ) !== 1
@@ -631,20 +653,16 @@ async function createFromCart({
 
             const [
                 addressRows
-            ] =
-                await connection.execute(`
-                    SELECT id
-
-                    FROM user_addresses
-
-                    WHERE id = ?
-                      AND user_id = ?
-
-                    LIMIT 1
-                `, [
-                    deliveryAddressId,
-                    userId
-                ]);
+            ] = await connection.execute(`
+                SELECT id
+                FROM user_addresses
+                WHERE id = ?
+                  AND user_id = ?
+                LIMIT 1
+            `, [
+                deliveryAddressId,
+                userId
+            ]);
 
 
             if (
@@ -666,19 +684,26 @@ async function createFromCart({
 
         /* =================================================
            SOUS-TOTAL
-
-           SOURCE :
-           panier recalculé côté serveur.
         ================================================= */
 
         const subtotal =
-            number(
+            toNumber(
                 cart.subtotal
             );
 
 
+        if (
+            subtotal <= 0
+        ) {
+
+            throw new Error(
+                "Le montant du panier est invalide."
+            );
+        }
+
+
         /* =================================================
-           ZONE
+           ZONE + FRAIS
         ================================================= */
 
         let deliveryFee =
@@ -699,21 +724,17 @@ async function createFromCart({
 
             const [
                 zoneRows
-            ] =
-                await connection.execute(`
-                    SELECT *
-
-                    FROM delivery_zones
-
-                    WHERE id = ?
-                      AND restaurant_id = ?
-                      AND is_active = 1
-
-                    LIMIT 1
-                `, [
-                    deliveryZoneId,
-                    restaurantId
-                ]);
+            ] = await connection.execute(`
+                SELECT *
+                FROM delivery_zones
+                WHERE id = ?
+                  AND restaurant_id = ?
+                  AND is_active = 1
+                LIMIT 1
+            `, [
+                deliveryZoneId,
+                restaurantId
+            ]);
 
 
             const zone =
@@ -729,18 +750,17 @@ async function createFromCart({
 
 
             const minOrder =
-                number(
+                toNumber(
                     zone.min_order
                 );
 
 
             if (
-                subtotal <
-                minOrder
+                subtotal < minOrder
             ) {
 
                 throw new Error(
-                    `Le minimum de commande pour cette zone est de ${minOrder} XAF.`
+                    `Le minimum de commande pour cette zone est de ${minOrder.toLocaleString("fr-FR")} XAF.`
                 );
             }
 
@@ -755,16 +775,11 @@ async function createFromCart({
 
 
         /* =================================================
-           TOTAL
+           TOTALS
         ================================================= */
 
-        const discountAmount =
-            0;
-
-
-        const taxAmount =
-            0;
-
+        const discountAmount = 0;
+        const taxAmount = 0;
 
         const totalAmount =
             subtotal
@@ -777,68 +792,83 @@ async function createFromCart({
 
 
         /* =================================================
-           REFERENCE
+           PAIEMENT
         ================================================= */
 
-        const reference =
-            await generateUniqueReference();
+        const allowedPayments = [
+            "CARD",
+            "MOBILE_MONEY",
+            "CASH"
+        ];
 
 
-        const publicId =
-            crypto.randomUUID();
+        if (
+            !allowedPayments.includes(
+                paymentMethod
+            )
+        ) {
+
+            throw new Error(
+                "Moyen de paiement invalide."
+            );
+        }
 
 
         /* =================================================
            ORDER
         ================================================= */
 
+        const publicId =
+            crypto.randomUUID();
+
+        const reference =
+            createReference();
+
+
         const [
             orderResult
-        ] =
-            await connection.execute(`
-                INSERT INTO orders
-                (
-                    public_id,
-                    reference,
-                    user_id,
-                    restaurant_id,
-                    delivery_address_id,
-                    order_type,
-                    channel,
-                    status,
-                    subtotal,
-                    discount_amount,
-                    delivery_fee,
-                    tax_amount,
-                    total_amount,
-                    currency,
-                    customer_note
-                )
-                VALUES
-                (
-                    ?, ?, ?, ?, ?, ?,
-                    'WEB',
-                    'RECEIVED',
-                    ?, ?, ?, ?, ?,
-                    'XAF',
-                    ?
-                )
-            `, [
-                publicId,
+        ] = await connection.execute(`
+            INSERT INTO orders
+            (
+                public_id,
                 reference,
-                userId,
-                restaurantId,
-                finalAddressId,
-                orderType,
-
+                user_id,
+                restaurant_id,
+                delivery_address_id,
+                order_type,
+                channel,
+                status,
                 subtotal,
-                discountAmount,
-                deliveryFee,
-                taxAmount,
-                totalAmount,
-
-                customerNote || null
-            ]);
+                discount_amount,
+                delivery_fee,
+                tax_amount,
+                total_amount,
+                currency,
+                customer_note
+            )
+            VALUES
+            (
+                ?, ?, ?, ?, ?, ?,
+                'WEB',
+                'RECEIVED',
+                ?, ?, ?, ?, ?,
+                'XAF',
+                ?
+            )
+        `, [
+            publicId,
+            reference,
+            userId,
+            restaurantId,
+            finalAddressId,
+            orderType,
+            subtotal,
+            discountAmount,
+            deliveryFee,
+            taxAmount,
+            totalAmount,
+            customerNote || null
+        ]);
 
 
         const orderId =
@@ -846,7 +876,7 @@ async function createFromCart({
 
 
         /* =================================================
-           ARTICLES
+           ORDER ITEMS + OPTIONS SNAPSHOT
         ================================================= */
 
         for (
@@ -866,15 +896,26 @@ async function createFromCart({
                     : null;
 
 
-            const unitPrice =
-                number(
-                    item.final_unit_price
-                );
-
-
             const quantity =
                 Number(
                     item.quantity
+                );
+
+
+            if (
+                !Number.isInteger(quantity) ||
+                quantity <= 0
+            ) {
+
+                throw new Error(
+                    "Quantité d'article invalide."
+                );
+            }
+
+
+            const unitPrice =
+                toNumber(
+                    item.final_unit_price
                 );
 
 
@@ -885,40 +926,35 @@ async function createFromCart({
 
             const [
                 itemResult
-            ] =
-                await connection.execute(`
-                    INSERT INTO order_items
-                    (
-                        order_id,
-                        product_id,
-                        formula_id,
-                        product_name,
-                        unit_price,
-                        quantity,
-                        line_total,
-                        notes
-                    )
-                    VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?)
-                `, [
-                    orderId,
-                    productId,
-                    formulaId,
-                    item.item_name,
-                    unitPrice,
+            ] = await connection.execute(`
+                INSERT INTO order_items
+                (
+                    order_id,
+                    product_id,
+                    formula_id,
+                    product_name,
+                    unit_price,
                     quantity,
-                    lineTotal,
-                    item.instructions || null
-                ]);
+                    line_total,
+                    notes
+                )
+                VALUES
+                (?, ?, ?, ?, ?, ?, ?, ?)
+            `, [
+                orderId,
+                productId,
+                formulaId,
+                item.item_name,
+                unitPrice,
+                quantity,
+                lineTotal,
+                item.instructions || null
+            ]);
 
 
             const orderItemId =
                 itemResult.insertId;
 
-
-            /* =============================================
-               OPTIONS
-            ============================================= */
 
             for (
                 const option
@@ -947,7 +983,7 @@ async function createFromCart({
                     ||
                     "Choix",
 
-                    number(
+                    toNumber(
                         option.price_delta
                     )
                 ]);
@@ -956,7 +992,7 @@ async function createFromCart({
 
 
         /* =================================================
-           HISTORIQUE
+           HISTORIQUE INITIAL
         ================================================= */
 
         await connection.execute(`
@@ -965,14 +1001,16 @@ async function createFromCart({
                 order_id,
                 status,
                 comment,
-                changed_by_user_id
+                changed_by_user_id,
+                changed_by_admin_user_id
             )
             VALUES
             (
                 ?,
                 'RECEIVED',
                 'Commande reçue depuis le site web',
-                ?
+                ?,
+                NULL
             )
         `, [
             orderId,
@@ -981,33 +1019,16 @@ async function createFromCart({
 
 
         /* =================================================
-           PAIEMENT
-
-           Aucun paiement réel à cette étape :
-           tout commence en PENDING.
+           PAIEMENT INITIAL
         ================================================= */
 
-        const allowedPayments =
-            [
-                "CARD",
-                "MOBILE_MONEY",
-                "CASH"
-            ];
+        const paymentPublicId =
+            crypto.randomUUID();
 
 
-        if (
-            !allowedPayments.includes(
-                paymentMethod
-            )
-        ) {
-
-            throw new Error(
-                "Moyen de paiement invalide."
-            );
-        }
-
-
-        await connection.execute(`
+        const [
+            paymentResult
+        ] = await connection.execute(`
             INSERT INTO payments
             (
                 public_id,
@@ -1016,7 +1037,9 @@ async function createFromCart({
                 provider,
                 status,
                 amount,
-                currency
+                currency,
+                provider_reference,
+                paid_at
             )
             VALUES
             (
@@ -1026,10 +1049,12 @@ async function createFromCart({
                 NULL,
                 'PENDING',
                 ?,
-                'XAF'
+                'XAF',
+                NULL,
+                NULL
             )
         `, [
-            crypto.randomUUID(),
+            paymentPublicId,
             orderId,
             paymentMethod,
             totalAmount
@@ -1038,21 +1063,30 @@ async function createFromCart({
 
         /* =================================================
            PANIER CONVERTI
-
-           On ne supprime PAS cart_items ici.
-           Le panier passe simplement à CONVERTED.
-           Le prochain ajout créera un nouveau panier actif.
         ================================================= */
 
-        await connection.execute(`
+        const [
+            convertResult
+        ] = await connection.execute(`
             UPDATE carts
-
             SET status = 'CONVERTED'
-
             WHERE id = ?
+              AND user_id = ?
+              AND status = 'ACTIVE'
         `, [
-            cart.id
+            cart.id,
+            userId
         ]);
+
+
+        if (
+            convertResult.affectedRows !== 1
+        ) {
+
+            throw new Error(
+                "Impossible de convertir le panier."
+            );
+        }
 
 
         await connection.commit();
@@ -1063,15 +1097,36 @@ async function createFromCart({
             publicId,
             reference,
 
+            paymentId:
+                paymentResult.insertId,
+
+            paymentPublicId,
+
+            paymentStatus:
+                "PENDING",
+
             subtotal,
             deliveryFee,
-            totalAmount
+            discountAmount,
+            taxAmount,
+            totalAmount,
+            currency:
+                "XAF"
         };
 
     }
     catch (error) {
 
-        await connection.rollback();
+        try {
+            await connection.rollback();
+        }
+        catch (rollbackError) {
+
+            console.error(
+                "Erreur rollback commande :",
+                rollbackError
+            );
+        }
 
         throw error;
     }
@@ -1081,6 +1136,218 @@ async function createFromCart({
     }
 }
 
+/* =========================================================
+   LISTE DES COMMANDES D'UN CLIENT
+========================================================= */
+
+async function findAllByUserId(
+    userId,
+    filters = {}
+) {
+
+    const search =
+        String(
+            filters.search || ""
+        ).trim();
+
+
+    const status =
+        String(
+            filters.status || ""
+        )
+            .trim()
+            .toUpperCase();
+
+
+    const maxPrice =
+        Number(
+            filters.maxPrice || 0
+        );
+
+
+    let sql = `
+        SELECT
+            o.id,
+            o.public_id,
+            o.reference,
+            o.user_id,
+            o.restaurant_id,
+            o.delivery_address_id,
+            o.order_type,
+            o.channel,
+            o.status,
+
+            o.subtotal,
+            o.discount_amount,
+            o.delivery_fee,
+            o.tax_amount,
+            o.total_amount,
+            o.currency,
+
+            o.customer_note,
+
+            o.created_at,
+            o.updated_at,
+
+            r.name AS restaurant_name,
+            r.address AS restaurant_address,
+            r.district AS restaurant_district,
+            r.city AS restaurant_city,
+
+            (
+                SELECT COUNT(*)
+                FROM order_items oi
+                WHERE oi.order_id = o.id
+            ) AS item_lines,
+
+            (
+                SELECT
+                    COALESCE(
+                        SUM(oi.quantity),
+                        0
+                    )
+                FROM order_items oi
+                WHERE oi.order_id = o.id
+            ) AS total_quantity,
+
+            (
+                SELECT
+                    GROUP_CONCAT(
+                        CONCAT(
+                            oi.quantity,
+                            '× ',
+                            oi.product_name
+                        )
+                        ORDER BY oi.id ASC
+                        SEPARATOR ', '
+                    )
+                FROM order_items oi
+                WHERE oi.order_id = o.id
+            ) AS items_summary,
+
+            (
+                SELECT p.method
+                FROM payments p
+                WHERE p.order_id = o.id
+                ORDER BY p.id DESC
+                LIMIT 1
+            ) AS payment_method,
+
+            (
+                SELECT p.status
+                FROM payments p
+                WHERE p.order_id = o.id
+                ORDER BY p.id DESC
+                LIMIT 1
+            ) AS payment_status
+
+        FROM orders o
+
+        INNER JOIN restaurants r
+            ON r.id = o.restaurant_id
+
+        WHERE o.user_id = ?
+    `;
+
+
+    const params = [
+        userId
+    ];
+
+
+    /* =====================================================
+       RECHERCHE
+    ===================================================== */
+
+    if (search) {
+
+        sql += `
+            AND
+            (
+                o.reference LIKE ?
+
+                OR EXISTS
+                (
+                    SELECT 1
+                    FROM order_items search_item
+                    WHERE search_item.order_id = o.id
+                      AND search_item.product_name LIKE ?
+                )
+
+                OR r.name LIKE ?
+            )
+        `;
+
+
+        const searchValue =
+            `%${search}%`;
+
+
+        params.push(
+            searchValue,
+            searchValue,
+            searchValue
+        );
+    }
+
+
+    /* =====================================================
+       STATUT
+    ===================================================== */
+
+    if (status) {
+
+        sql += `
+            AND o.status = ?
+        `;
+
+        params.push(
+            status
+        );
+    }
+
+
+    /* =====================================================
+       PRIX MAXIMUM
+    ===================================================== */
+
+    if (
+        Number.isFinite(maxPrice) &&
+        maxPrice > 0
+    ) {
+
+        sql += `
+            AND o.total_amount <= ?
+        `;
+
+        params.push(
+            maxPrice
+        );
+    }
+
+
+    /* =====================================================
+       TRI
+    ===================================================== */
+
+    sql += `
+        ORDER BY
+            o.created_at DESC,
+            o.id DESC
+    `;
+
+
+    const rows =
+        await db.query(
+            sql,
+            params
+        );
+
+
+    return Array.isArray(rows)
+        ? rows
+        : [];
+}
 
 /* =========================================================
    EXPORTS
@@ -1102,7 +1369,12 @@ module.exports = {
     calculateDeliveryFee,
 
     findByReference,
+
+    findAllByUserId,
+
     getOrderItems,
+    getPaymentByOrderId,
+    getStatusHistory,
 
     createFromCart
 };

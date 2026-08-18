@@ -1,354 +1,1090 @@
-<section class="section">
-    <div class="container">
-        <!-- =========================================================
-     TIOPTIOP - PAGE CONFIRMATION COMMANDE
-     views/client/orders/confirmation.ejs
-========================================================= -->
+<section class="section tiop-confirmation-page">
 
 <style>
-  .tiop-confirmation {
+
+.tiop-confirmation-page {
+
     --orange: #ff7900;
-    --orange-hover: #e96e00;
-    --text: #181512;
-    --muted: #7a746e;
-    --border: #f1e7dc;
-    --success-bg: #e6f7ed;
-    --success: #2f8c59;
+    --dark: #17130f;
+    --text: #231f1b;
+    --muted: #746d66;
+    --line: #eadfd3;
+    --soft: #fff8ef;
+    --green: #237247;
+    --green-bg: #eaf7ee;
+}
 
-    font-family: Arial, Helvetica, sans-serif;
-    color: var(--text);
-  }
 
-  .confirmation-card {
-    width: 100%;
-    min-height: 770px;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
-    padding: 70px 40px;
-
+.tiop-confirmation-page * {
     box-sizing: border-box;
+}
 
-    background: #ffffff;
 
-    border: 1px solid var(--border);
-    border-radius: 42px;
+.confirmation-container {
+
+    width: min(
+        1100px,
+        calc(100% - 32px)
+    );
+
+    margin: 0 auto;
+}
+
+
+.confirmation-hero {
+
+    padding: 42px 26px;
+
+    margin-bottom: 22px;
 
     text-align: center;
-  }
 
-  /* =====================================================
-     ICÔNE SUCCÈS
-  ===================================================== */
+    border: 1px solid #d8ecdf;
+    border-radius: 28px;
 
-  .confirmation-icon {
-    width: 146px;
-    height: 146px;
+    background:
+        var(--green-bg);
+}
+
+
+.confirmation-icon {
+
+    width: 72px;
+    height: 72px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    margin-bottom: 18px;
+    margin: 0 auto 15px;
 
-    border-radius: 18px;
+    border-radius: 50%;
 
-    background:
-      linear-gradient(
-        145deg,
-        #6ee6a0 0%,
-        #4fcf84 70%,
-        #3caa6d 100%
-      );
+    background: #fff;
 
-    box-shadow:
-      inset 0 0 15px rgba(255,255,255,.3),
-      0 8px 18px rgba(42,143,88,.15);
-  }
+    color: var(--green);
 
-  .confirmation-icon::before {
-    content: "";
+    font-size: 36px;
+    font-weight: 1000;
+}
 
-    width: 66px;
-    height: 36px;
 
-    border-left: 11px solid #ffffff;
-    border-bottom: 11px solid #ffffff;
+.confirmation-eyebrow {
 
-    transform: rotate(-45deg) translateY(-4px);
-
-    border-radius: 4px;
-  }
-
-  /* =====================================================
-     BADGE
-  ===================================================== */
-
-  .confirmation-badge {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
 
-    min-height: 64px;
+    padding: 6px 10px;
 
-    padding: 0 26px;
-
-    margin-bottom: 90px;
+    margin-bottom: 10px;
 
     border-radius: 999px;
 
-    background: #fff0df;
-    color: var(--orange);
+    background: #fff;
 
-    font-size: 24px;
+    color: var(--green);
+
+    font-size: 10px;
     font-weight: 900;
-  }
+}
 
-  /* =====================================================
-     TITRE
-  ===================================================== */
 
-  .confirmation-title {
-    margin: 0 0 90px;
+.confirmation-title {
 
-    font-size: clamp(64px, 7vw, 110px);
-    line-height: .9;
+    margin: 0 0 8px;
 
-    font-weight: 900;
-    letter-spacing: -4px;
-  }
+    font-size:
+        clamp(32px, 5vw, 52px);
 
-  /* =====================================================
-     TEXTE
-  ===================================================== */
+    line-height: 1;
 
-  .confirmation-text {
-    max-width: 1100px;
+    letter-spacing: -2px;
 
-    margin: 0 0 50px;
+    font-weight: 1000;
+}
+
+
+.confirmation-reference {
+
+    margin: 0;
 
     color: var(--muted);
 
-    font-size: clamp(22px, 2.1vw, 32px);
-    line-height: 1.4;
-  }
+    font-size: 13px;
+}
 
-  /* =====================================================
-     ACTIONS
-  ===================================================== */
 
-  .confirmation-actions {
+.confirmation-reference strong {
+
+    color: var(--text);
+}
+
+
+.confirmation-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1.4fr)
+        minmax(310px, .7fr);
+
+    gap: 20px;
+
+    align-items: start;
+}
+
+
+.confirmation-card {
+
+    padding: 22px;
+
+    background: #fff;
+
+    border: 1px solid var(--line);
+    border-radius: 22px;
+}
+
+
+.confirmation-card + .confirmation-card {
+
+    margin-top: 16px;
+}
+
+
+.confirmation-card-title {
+
+    margin: 0 0 17px;
+
+    font-size: 17px;
+    font-weight: 1000;
+}
+
+
+.confirmation-items {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 13px;
+}
+
+
+.confirmation-item {
+
+    display: grid;
+
+    grid-template-columns:
+        62px minmax(0,1fr) auto;
+
+    gap: 12px;
+
+    align-items: start;
+
+    padding-bottom: 13px;
+
+    border-bottom: 1px dashed var(--line);
+}
+
+
+.confirmation-item:last-child {
+
+    padding-bottom: 0;
+
+    border-bottom: 0;
+}
+
+
+.confirmation-item-image {
+
+    width: 62px;
+    height: 62px;
+
     display: flex;
     align-items: center;
     justify-content: center;
 
+    overflow: hidden;
+
+    border-radius: 12px;
+
+    background: #f4eee7;
+
+    font-size: 24px;
+}
+
+
+.confirmation-item-image img {
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+
+.confirmation-item-name {
+
+    margin: 0 0 4px;
+
+    font-size: 12px;
+    font-weight: 1000;
+}
+
+
+.confirmation-item-meta,
+.confirmation-options,
+.confirmation-note {
+
+    color: var(--muted);
+
+    font-size: 9px;
+    line-height: 1.55;
+}
+
+
+.confirmation-options {
+
+    margin-top: 5px;
+}
+
+
+.confirmation-note {
+
+    margin-top: 5px;
+
+    color: #856448;
+}
+
+
+.confirmation-item-price {
+
+    font-size: 11px;
+    font-weight: 1000;
+
+    white-space: nowrap;
+}
+
+
+.info-list {
+
+    display: grid;
+
+    gap: 10px;
+}
+
+
+.info-row {
+
+    display: flex;
+    justify-content: space-between;
+
     gap: 20px;
 
-    flex-wrap: wrap;
-  }
+    padding-bottom: 10px;
 
-  .confirmation-primary,
-  .confirmation-secondary {
-    min-height: 90px;
+    border-bottom: 1px dashed var(--line);
+
+    color: var(--muted);
+
+    font-size: 11px;
+}
+
+
+.info-row:last-child {
+
+    padding-bottom: 0;
+
+    border-bottom: 0;
+}
+
+
+.info-row strong {
+
+    color: var(--text);
+
+    text-align: right;
+}
+
+
+.total-row {
+
+    margin-top: 15px;
+    padding-top: 15px;
+
+    border-top: 1px solid var(--line);
+
+    font-size: 16px;
+    font-weight: 1000;
+}
+
+
+.total-row strong {
+
+    color: var(--orange);
+
+    font-size: 19px;
+}
+
+
+.payment-badge,
+.status-badge {
 
     display: inline-flex;
     align-items: center;
-    justify-content: center;
 
-    padding: 0 34px;
+    min-height: 27px;
 
-    border: 0;
+    padding: 0 10px;
+
     border-radius: 999px;
 
-    font-size: 28px;
+    background: var(--soft);
+
+    font-size: 9px;
     font-weight: 900;
+}
+
+
+.status-timeline {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 14px;
+}
+
+
+.status-event {
+
+    position: relative;
+
+    padding-left: 25px;
+}
+
+
+.status-event::before {
+
+    content: "";
+
+    position: absolute;
+
+    top: 4px;
+    left: 3px;
+
+    width: 10px;
+    height: 10px;
+
+    border-radius: 50%;
+
+    background: var(--orange);
+}
+
+
+.status-event::after {
+
+    content: "";
+
+    position: absolute;
+
+    top: 17px;
+    left: 7px;
+
+    width: 2px;
+    height: calc(100% + 4px);
+
+    background: #eee1d5;
+}
+
+
+.status-event:last-child::after {
+    display: none;
+}
+
+
+.status-event strong {
+
+    display: block;
+
+    margin-bottom: 3px;
+
+    font-size: 11px;
+}
+
+
+.status-event span {
+
+    color: var(--muted);
+
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+
+.confirmation-actions {
+
+    display: grid;
+
+    gap: 9px;
+
+    margin-top: 18px;
+}
+
+
+.confirmation-button {
+
+    min-height: 43px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 16px;
+
+    border-radius: 999px;
 
     text-decoration: none;
 
-    transition:
-      transform .2s ease,
-      background .2s ease,
-      box-shadow .2s ease;
-  }
+    font-size: 10px;
+    font-weight: 900;
+}
 
-  .confirmation-primary {
+
+.confirmation-button.primary {
+
     background: var(--orange);
-    color: #ffffff;
-  }
 
-  .confirmation-primary:hover {
-    background: var(--orange-hover);
+    color: #fff;
+}
 
-    transform: translateY(-2px);
 
-    box-shadow:
-      0 10px 24px rgba(255,121,0,.2);
-  }
+.confirmation-button.secondary {
 
-  .confirmation-secondary {
-    background: #ffffff;
-    color: var(--text);
+    border: 1px solid var(--line);
 
-    box-shadow:
-      0 10px 30px rgba(0,0,0,.04);
-  }
+    color: var(--dark);
+}
 
-  .confirmation-secondary:hover {
-    transform: translateY(-2px);
 
-    box-shadow:
-      0 12px 34px rgba(0,0,0,.07);
-  }
+@media(max-width:850px) {
 
-  /* =====================================================
-     RESPONSIVE
-  ===================================================== */
+    .confirmation-grid {
+        grid-template-columns: 1fr;
+    }
+}
 
-  @media (max-width: 900px) {
 
-    .confirmation-card {
-      min-height: 650px;
+@media(max-width:560px) {
 
-      padding: 55px 24px;
+    .confirmation-item {
 
-      border-radius: 34px;
+        grid-template-columns:
+            50px minmax(0,1fr);
     }
 
-    .confirmation-badge {
-      margin-bottom: 60px;
+
+    .confirmation-item-image {
+
+        width: 50px;
+        height: 50px;
     }
 
-    .confirmation-title {
-      margin-bottom: 60px;
+
+    .confirmation-item-price {
+
+        grid-column: 2;
     }
 
-    .confirmation-primary,
-    .confirmation-secondary {
-      min-height: 66px;
 
-      padding: 0 25px;
+    .info-row {
 
-      font-size: 20px;
-    }
-  }
+        flex-direction: column;
 
-  @media (max-width: 560px) {
-
-    .confirmation-card {
-      min-height: auto;
-
-      padding: 45px 18px;
-
-      border-radius: 26px;
+        gap: 4px;
     }
 
-    .confirmation-icon {
-      width: 110px;
-      height: 110px;
+
+    .info-row strong {
+        text-align: left;
     }
+}
 
-    .confirmation-icon::before {
-      width: 50px;
-      height: 28px;
-
-      border-left-width: 9px;
-      border-bottom-width: 9px;
-    }
-
-    .confirmation-badge {
-      min-height: 48px;
-
-      margin-bottom: 45px;
-
-      padding: 0 18px;
-
-      font-size: 17px;
-    }
-
-    .confirmation-title {
-      margin-bottom: 45px;
-
-      font-size: 58px;
-    }
-
-    .confirmation-text {
-      margin-bottom: 35px;
-
-      font-size: 18px;
-    }
-
-    .confirmation-actions {
-      width: 100%;
-
-      flex-direction: column;
-    }
-
-    .confirmation-primary,
-    .confirmation-secondary {
-      width: 100%;
-
-      min-height: 58px;
-
-      box-sizing: border-box;
-
-      font-size: 17px;
-    }
-  }
 </style>
 
 
-<section class="tiop-confirmation">
+<%
+    const money = value =>
+        Number(value || 0)
+            .toLocaleString(
+                "fr-FR",
+                {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2
+                }
+            );
 
-  <div class="confirmation-card">
+    const orderTypeLabels = {
+        DELIVERY: "Livraison",
+        PICKUP: "À emporter",
+        DINE_IN: "Sur place"
+    };
+
+    const paymentLabels = {
+        CARD: "Carte bancaire",
+        MOBILE_MONEY: "Mobile Money",
+        CASH: "Espèces"
+    };
+
+    const paymentStatusLabels = {
+        PENDING: "En attente",
+        AUTHORIZED: "Autorisé",
+        PAID: "Payé",
+        FAILED: "Échoué",
+        CANCELLED: "Annulé",
+        PARTIAL: "Partiel",
+        REFUNDED: "Remboursé"
+    };
+
+    const orderStatusLabels = {
+        RECEIVED: "Commande reçue",
+        CONFIRMED: "Confirmée",
+        PREPARING: "En préparation",
+        READY: "Prête",
+        PICKED_UP: "Retirée",
+        ON_THE_WAY: "En livraison",
+        DELIVERED: "Livrée",
+        CANCELLED: "Annulée",
+        REFUNDED: "Remboursée"
+    };
+%>
 
 
-    <!-- ICÔNE -->
-    <div class="confirmation-icon"></div>
+<div class="confirmation-container">
 
 
-    <!-- BADGE -->
-    <div class="confirmation-badge">
-      Commande confirmée
+    <!-- =====================================================
+         HERO
+    ====================================================== -->
+
+    <section class="confirmation-hero">
+
+        <div class="confirmation-icon">
+            ✓
+        </div>
+
+        <span class="confirmation-eyebrow">
+            Commande enregistrée
+        </span>
+
+        <h1 class="confirmation-title">
+            Merci pour votre commande !
+        </h1>
+
+        <p class="confirmation-reference">
+
+            Référence :
+
+            <strong>
+                <%= order.reference %>
+            </strong>
+
+        </p>
+
+    </section>
+
+
+    <div class="confirmation-grid">
+
+
+        <!-- =================================================
+             GAUCHE
+        ================================================== -->
+
+        <div>
+
+
+            <!-- ARTICLES -->
+
+            <section class="confirmation-card">
+
+                <h2 class="confirmation-card-title">
+                    🍽 Votre commande
+                </h2>
+
+
+                <div class="confirmation-items">
+
+                    <% (items || []).forEach(item => { %>
+
+                        <article class="confirmation-item">
+
+                            <div class="confirmation-item-image">
+
+                                <% if (item.image_url) { %>
+
+                                    <img
+                                        src="<%= item.image_url %>"
+                                        alt="<%= item.product_name %>"
+                                    >
+
+                                <% } else { %>
+
+                                    <%= item.formula_id
+                                        ? "🍱"
+                                        : "🍽️"
+                                    %>
+
+                                <% } %>
+
+                            </div>
+
+
+                            <div>
+
+                                <h3 class="confirmation-item-name">
+
+                                    <%= item.quantity %>×
+                                    <%= item.product_name %>
+
+                                </h3>
+
+
+                                <div class="confirmation-item-meta">
+
+                                    Prix unitaire :
+                                    <%= money(item.unit_price) %>
+                                    <%= order.currency %>
+
+                                </div>
+
+
+                                <% if (
+                                    item.options &&
+                                    item.options.length
+                                ) { %>
+
+                                    <div class="confirmation-options">
+
+                                        <% item.options.forEach(option => { %>
+
+                                            <div>
+                                                <%= option.option_name %> :
+                                                <%= option.option_value %>
+
+                                                <% if (
+                                                    Number(
+                                                        option.price_delta || 0
+                                                    ) > 0
+                                                ) { %>
+
+                                                    (+<%= money(option.price_delta) %>
+                                                    <%= order.currency %>)
+
+                                                <% } %>
+                                            </div>
+
+                                        <% }) %>
+
+                                    </div>
+
+                                <% } %>
+
+
+                                <% if (item.notes) { %>
+
+                                    <div class="confirmation-note">
+                                        📝 <%= item.notes %>
+                                    </div>
+
+                                <% } %>
+
+                            </div>
+
+
+                            <strong class="confirmation-item-price">
+
+                                <%= money(item.line_total) %>
+                                <%= order.currency %>
+
+                            </strong>
+
+                        </article>
+
+                    <% }) %>
+
+                </div>
+
+            </section>
+
+
+            <!-- SUIVI -->
+
+            <section class="confirmation-card">
+
+                <h2 class="confirmation-card-title">
+                    📍 Statut
+                </h2>
+
+
+                <div class="status-timeline">
+
+                    <% (history || []).forEach(event => { %>
+
+                        <div class="status-event">
+
+                            <strong>
+
+                                <%= orderStatusLabels[event.status]
+                                    || event.status
+                                %>
+
+                            </strong>
+
+                            <span>
+
+                                <%= event.comment || "" %>
+
+                                <% if (event.created_at) { %>
+
+                                    ·
+
+                                    <%= new Date(
+                                        event.created_at
+                                    ).toLocaleString(
+                                        "fr-FR"
+                                    ) %>
+
+                                <% } %>
+
+                            </span>
+
+                        </div>
+
+                    <% }) %>
+
+                </div>
+
+            </section>
+
+        </div>
+
+
+        <!-- =================================================
+             DROITE
+        ================================================== -->
+
+        <aside>
+
+
+            <!-- DETAILS -->
+
+            <section class="confirmation-card">
+
+                <h2 class="confirmation-card-title">
+                    📋 Détails
+                </h2>
+
+
+                <div class="info-list">
+
+                    <div class="info-row">
+
+                        <span>
+                            Statut
+                        </span>
+
+                        <strong>
+
+                            <span class="status-badge">
+
+                                <%= orderStatusLabels[order.status]
+                                    || order.status
+                                %>
+
+                            </span>
+
+                        </strong>
+
+                    </div>
+
+
+                    <div class="info-row">
+
+                        <span>
+                            Mode
+                        </span>
+
+                        <strong>
+                            <%= orderTypeLabels[order.order_type]
+                                || order.order_type
+                            %>
+                        </strong>
+
+                    </div>
+
+
+                    <div class="info-row">
+
+                        <span>
+                            Restaurant
+                        </span>
+
+                        <strong>
+                            <%= order.restaurant_name %>
+                        </strong>
+
+                    </div>
+
+
+                    <% if (
+                        order.order_type === "DELIVERY"
+                    ) { %>
+
+                        <div class="info-row">
+
+                            <span>
+                                Adresse
+                            </span>
+
+                            <strong>
+
+                                <%= order.address_line1 || "" %>
+
+                                <% if (
+                                    order.delivery_district
+                                ) { %>
+
+                                    <br>
+                                    <%= order.delivery_district %>
+
+                                <% } %>
+
+                                <% if (
+                                    order.delivery_city
+                                ) { %>
+
+                                    · <%= order.delivery_city %>
+
+                                <% } %>
+
+                            </strong>
+
+                        </div>
+
+                    <% } %>
+
+
+                    <div class="info-row">
+
+                        <span>
+                            Créée le
+                        </span>
+
+                        <strong>
+
+                            <%= new Date(
+                                order.created_at
+                            ).toLocaleString(
+                                "fr-FR"
+                            ) %>
+
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- PAIEMENT -->
+
+            <section class="confirmation-card">
+
+                <h2 class="confirmation-card-title">
+                    💳 Paiement
+                </h2>
+
+
+                <% if (payment) { %>
+
+                    <div class="info-list">
+
+                        <div class="info-row">
+
+                            <span>
+                                Moyen
+                            </span>
+
+                            <strong>
+                                <%= paymentLabels[payment.method]
+                                    || payment.method
+                                %>
+                            </strong>
+
+                        </div>
+
+
+                        <div class="info-row">
+
+                            <span>
+                                Statut
+                            </span>
+
+                            <strong>
+
+                                <span class="payment-badge">
+
+                                    <%= paymentStatusLabels[payment.status]
+                                        || payment.status
+                                    %>
+
+                                </span>
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="info-row">
+
+                            <span>
+                                Montant
+                            </span>
+
+                            <strong>
+
+                                <%= money(payment.amount) %>
+                                <%= payment.currency %>
+
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                <% } else { %>
+
+                    <p class="confirmation-item-meta">
+                        Aucun paiement associé.
+                    </p>
+
+                <% } %>
+
+            </section>
+
+
+            <!-- TOTAL -->
+
+            <section class="confirmation-card">
+
+                <h2 class="confirmation-card-title">
+                    💰 Total
+                </h2>
+
+
+                <div class="info-list">
+
+                    <div class="info-row">
+
+                        <span>
+                            Sous-total
+                        </span>
+
+                        <strong>
+
+                            <%= money(order.subtotal) %>
+                            <%= order.currency %>
+
+                        </strong>
+
+                    </div>
+
+
+                    <div class="info-row">
+
+                        <span>
+                            Livraison
+                        </span>
+
+                        <strong>
+
+                            <%= money(order.delivery_fee) %>
+                            <%= order.currency %>
+
+                        </strong>
+
+                    </div>
+
+
+                    <% if (
+                        Number(
+                            order.discount_amount || 0
+                        ) > 0
+                    ) { %>
+
+                        <div class="info-row">
+
+                            <span>
+                                Réduction
+                            </span>
+
+                            <strong>
+
+                                -<%= money(
+                                    order.discount_amount
+                                ) %>
+
+                                <%= order.currency %>
+
+                            </strong>
+
+                        </div>
+
+                    <% } %>
+
+
+                    <div class="info-row total-row">
+
+                        <span>
+                            À payer
+                        </span>
+
+                        <strong>
+
+                            <%= money(order.total_amount) %>
+                            <%= order.currency %>
+
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="confirmation-actions">
+
+                    <a
+                        href="/commandes"
+                        class="confirmation-button primary"
+                    >
+                        Voir mes commandes
+                    </a>
+
+
+                    <a
+                        href="/menu"
+                        class="confirmation-button secondary"
+                    >
+                        Continuer mes achats
+                    </a>
+
+                </div>
+
+            </section>
+
+        </aside>
+
     </div>
 
+</div>
 
-    <!-- MERCI -->
-    <h1 class="confirmation-title">
-      Merci !
-    </h1>
-
-
-    <!-- MESSAGE -->
-    <p class="confirmation-text">
-      Votre commande est créée.
-      Vous pouvez suivre sa préparation et sa livraison.
-    </p>
-
-
-    <!-- ACTIONS -->
-    <div class="confirmation-actions">
-
-      <a
-        href="/suivi"
-        class="confirmation-primary"
-      >
-        Suivre ma commande
-      </a>
-
-      <a
-        href="/commandes"
-        class="confirmation-secondary"
-      >
-        Mes commandes
-      </a>
-
-    </div>
-
-  </div>
-
-</section>
-    </div>
 </section>

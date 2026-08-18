@@ -1,39 +1,60 @@
 <section class="page-hero">
-  <div class="container">
-    <span class="eyebrow">🧾 Mes commandes</span>
-    <h2>🧾 Mes commandes</h2>
-  </div>
+
+    <div class="container">
+
+        <span class="eyebrow">
+            🧾 Mon espace
+        </span>
+
+        <h2>
+            🧾 Mes commandes
+        </h2>
+
+        <p>
+            Retrouvez vos commandes,
+            factures et leur suivi.
+        </p>
+
+    </div>
+
 </section>
-  <div class="container">
-    <!-- =========================================================
-     TIOPTIOP - BLOC MES COMMANDES
-========================================================= -->
+
+
+<div class="container">
+
 
 <style>
-  .tiop-orders-block {
+
+.tiop-orders-block {
+
     --orange: #ff7900;
     --orange-hover: #e96f00;
     --text: #1c1916;
     --muted: #77716c;
-    --border: #dfdfdf;
+    --border: #e5dfd9;
     --card: #ffffff;
 
-    font-family: Arial, Helvetica, sans-serif;
+    padding-bottom: 70px;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
     color: var(--text);
-  }
+}
 
-  /* ==========================
-     FILTRES
-  ========================== */
 
-  .orders-filters {
+.orders-filters {
+
     display: grid;
+
     grid-template-columns:
-      minmax(230px, 1.8fr)
-      minmax(170px, 1fr)
-      minmax(170px, 1fr)
-      minmax(150px, 1fr)
-      auto;
+        minmax(230px, 1.8fr)
+        minmax(180px, 1fr)
+        minmax(160px, 1fr)
+        auto
+        auto;
 
     gap: 10px;
 
@@ -44,9 +65,11 @@
     background: #fff;
 
     border-radius: 23px;
-  }
+}
 
-  .orders-field {
+
+.orders-field {
+
     width: 100%;
     height: 52px;
 
@@ -54,7 +77,9 @@
 
     box-sizing: border-box;
 
-    border: 1px solid var(--border);
+    border:
+        1px solid var(--border);
+
     border-radius: 15px;
 
     background: #fff;
@@ -64,433 +89,888 @@
     font-size: 14px;
 
     outline: none;
+}
 
-    transition:
-      border-color .2s ease,
-      box-shadow .2s ease;
-  }
 
-  .orders-field:focus {
-    border-color: var(--orange);
+.orders-field:focus {
+
+    border-color:
+        var(--orange);
 
     box-shadow:
-      0 0 0 3px rgba(255,121,0,.08);
-  }
+        0 0 0 3px
+        rgba(255,121,0,.08);
+}
 
-  .orders-filter-button {
-    min-width: 84px;
-    height: 52px;
 
-    padding: 0 18px;
+.orders-filter-button,
+.orders-reset-button {
 
-    border: 0;
-    border-radius: 999px;
+    min-height: 52px;
 
-    background: var(--orange);
-    color: #fff;
+    display: inline-flex;
 
-    font-weight: 800;
-    font-size: 14px;
-
-    cursor: pointer;
-
-    transition: .2s ease;
-  }
-
-  .orders-filter-button:hover {
-    background: var(--orange-hover);
-    transform: translateY(-1px);
-  }
-
-  /* ==========================
-     LISTE
-  ========================== */
-
-  .orders-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .order-card {
-    min-height: 82px;
-
-    display: flex;
-    align-items: center;
-
-    padding: 0 16px;
-
-    background: var(--card);
-
-    border: 1px solid var(--border);
-    border-radius: 20px;
-
-    box-sizing: border-box;
-  }
-
-  /* ICONE */
-
-  .order-icon {
-    width: 48px;
-    height: 48px;
-
-    min-width: 48px;
-
-    display: flex;
     align-items: center;
     justify-content: center;
 
-    margin-right: 13px;
+    padding: 0 18px;
 
-    border-radius: 13px;
+    border-radius: 999px;
 
-    background: #fff0df;
-
-    font-size: 20px;
-  }
-
-  /* INFORMATIONS */
-
-  .order-information {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .order-number {
-    display: block;
-
-    margin-bottom: 3px;
-
-    font-size: 14px;
     font-weight: 900;
-  }
+    font-size: 13px;
 
-  .order-description {
-    margin: 0;
+    text-decoration: none;
+
+    cursor: pointer;
+}
+
+
+.orders-filter-button {
+
+    border: 0;
+
+    background:
+        var(--orange);
+
+    color: #fff;
+}
+
+
+.orders-reset-button {
+
+    border:
+        1px solid var(--border);
+
+    background: #fff;
+
+    color: var(--text);
+}
+
+
+.orders-count {
+
+    margin-bottom: 16px;
 
     color: var(--muted);
 
-    font-size: 14px;
+    font-size: 13px;
+}
+
+
+.orders-count strong {
+
+    color: var(--text);
+}
+
+
+.orders-list {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 14px;
+}
+
+
+.order-card {
+
+    display: grid;
+
+    grid-template-columns:
+        55px
+        minmax(0,1fr)
+        auto;
+
+    gap: 15px;
+
+    align-items: center;
+
+    padding: 17px;
+
+    background: var(--card);
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 22px;
+}
+
+
+.order-icon {
+
+    width: 52px;
+    height: 52px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 15px;
+
+    background: #fff0df;
+
+    font-size: 22px;
+}
+
+
+.order-information {
+
+    min-width: 0;
+}
+
+
+.order-number {
+
+    display: block;
+
+    margin-bottom: 5px;
+
+    font-size: 15px;
+    font-weight: 900;
+}
+
+
+.order-meta {
+
+    margin-bottom: 5px;
+
+    color: var(--muted);
+
+    font-size: 12px;
+}
+
+
+.order-description {
+
+    margin: 0;
+
+    max-width: 700px;
+
+    color: var(--muted);
+
+    font-size: 13px;
 
     white-space: nowrap;
+
     overflow: hidden;
+
     text-overflow: ellipsis;
-  }
+}
 
-  /* ACTIONS */
 
-  .order-actions {
+.order-right {
+
     display: flex;
+
+    flex-direction: column;
+
+    align-items: flex-end;
+
+    gap: 10px;
+}
+
+
+.order-summary {
+
+    display: flex;
+
     align-items: center;
-    gap: 14px;
 
-    margin-left: 18px;
-  }
+    gap: 10px;
+}
 
-  .order-status {
+
+.order-status {
+
     display: inline-flex;
+
     align-items: center;
 
     min-height: 28px;
 
-    padding: 0 12px;
+    padding: 0 11px;
 
     border-radius: 999px;
 
-    background: #fff0dc;
+    background: #fff0df;
+
     color: #a85a00;
 
-    font-size: 11px;
-    font-weight: 800;
-  }
-
-  .order-price {
-    min-width: 65px;
-
-    font-size: 14px;
+    font-size: 10px;
     font-weight: 900;
+}
+
+
+.order-status.delivered {
+
+    background: #eaf8ef;
+
+    color: #267347;
+}
+
+
+.order-status.cancelled {
+
+    background: #fff0f0;
+
+    color: #b93838;
+}
+
+
+.order-price {
+
+    font-size: 15px;
+    font-weight: 1000;
 
     white-space: nowrap;
-  }
+}
 
-  /* ==========================
-     FACTURE
-  ========================== */
 
-  .invoice-button {
-    min-height: 42px;
+.order-buttons {
+
+    display: flex;
+
+    gap: 7px;
+
+    flex-wrap: wrap;
+
+    justify-content: flex-end;
+}
+
+
+.order-button {
+
+    min-height: 36px;
 
     display: inline-flex;
+
     align-items: center;
     justify-content: center;
 
-    gap: 8px;
-
-    padding: 0 17px;
+    padding: 0 13px;
 
     border-radius: 999px;
 
+    text-decoration: none;
+
+    font-size: 11px;
+    font-weight: 900;
+
+    transition: .2s ease;
+}
+
+
+.order-button.view {
+
+    background:
+        var(--orange);
+
+    color: #fff;
+}
+
+
+.order-button.invoice {
+
     background: #fff;
+
     color: var(--text);
+
+    border:
+        1px solid var(--border);
+}
+
+
+.order-button.track {
+
+    background: #1c1916;
+
+    color: #fff;
+}
+
+
+.order-button:hover {
+
+    transform:
+        translateY(-1px);
+}
+
+
+.orders-empty {
+
+    padding: 60px 25px;
+
+    text-align: center;
+
+    background: #fff;
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 24px;
+}
+
+
+.orders-empty-icon {
+
+    margin-bottom: 15px;
+
+    font-size: 55px;
+}
+
+
+.orders-empty h3 {
+
+    margin:
+        0 0 8px;
+
+    font-size: 22px;
+}
+
+
+.orders-empty p {
+
+    color: var(--muted);
+}
+
+
+.orders-empty a {
+
+    min-height: 42px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    margin-top: 10px;
+
+    padding: 0 18px;
+
+    border-radius: 999px;
+
+    background:
+        var(--orange);
+
+    color: #fff;
 
     text-decoration: none;
 
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 900;
+}
 
-    box-shadow:
-      0 5px 20px rgba(0,0,0,.055);
 
-    transition:
-      transform .2s ease,
-      color .2s ease,
-      box-shadow .2s ease;
-  }
-
-  .invoice-button:hover {
-    color: var(--orange);
-
-    transform: translateY(-1px);
-
-    box-shadow:
-      0 7px 22px rgba(0,0,0,.08);
-  }
-
-  /* ==========================
-     RESPONSIVE
-  ========================== */
-
-  @media (max-width: 950px) {
+@media(max-width:950px) {
 
     .orders-filters {
-      grid-template-columns: 1fr 1fr;
+
+        grid-template-columns:
+            1fr 1fr;
     }
 
-    .orders-filter-button {
-      width: 100%;
-    }
-  }
-
-  @media (max-width: 700px) {
 
     .order-card {
-      align-items: flex-start;
-      flex-wrap: wrap;
 
-      padding: 15px;
+        grid-template-columns:
+            52px minmax(0,1fr);
     }
 
-    .order-information {
-      width: calc(100% - 65px);
+
+    .order-right {
+
+        grid-column:
+            2;
+
+        align-items:
+            flex-start;
     }
 
-    .order-actions {
-      width: 100%;
 
-      margin:
-        15px 0
-        0 61px;
+    .order-buttons {
 
-      flex-wrap: wrap;
+        justify-content:
+            flex-start;
     }
-  }
+}
 
-  @media (max-width: 520px) {
+
+@media(max-width:600px) {
 
     .orders-filters {
-      grid-template-columns: 1fr;
 
-      padding: 11px;
-
-      border-radius: 19px;
+        grid-template-columns:
+            1fr;
     }
+
+
+    .order-card {
+
+        grid-template-columns:
+            45px minmax(0,1fr);
+
+        padding: 14px;
+    }
+
+
+    .order-icon {
+
+        width: 45px;
+        height: 45px;
+    }
+
 
     .order-description {
-      white-space: normal;
+
+        white-space:
+            normal;
     }
 
-    .order-actions {
-      margin-left: 0;
 
-      justify-content: space-between;
+    .order-summary {
+
+        flex-wrap: wrap;
     }
 
-    .invoice-button {
-      flex: 1;
+
+    .order-buttons {
+
+        width: 100%;
     }
-  }
+
+
+    .order-button {
+
+        flex: 1;
+    }
+}
+
 </style>
+
+
+<%
+
+const money = value =>
+    Number(value || 0)
+        .toLocaleString(
+            "fr-FR",
+            {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            }
+        );
+
+
+const dateTime = value => {
+
+    if (!value) {
+        return "";
+    }
+
+
+    const date =
+        new Date(value);
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+        return "";
+    }
+
+
+    return date.toLocaleString(
+        "fr-FR",
+        {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        }
+    );
+};
+
+
+const statusLabels = {
+
+    RECEIVED:
+        "Commande reçue",
+
+    CONFIRMED:
+        "Confirmée",
+
+    PREPARING:
+        "En préparation",
+
+    READY:
+        "Prête",
+
+    PICKED_UP:
+        "Retirée",
+
+    ON_THE_WAY:
+        "En livraison",
+
+    DELIVERED:
+        "Livrée",
+
+    CANCELLED:
+        "Annulée",
+
+    REFUNDED:
+        "Remboursée"
+};
+
+
+const typeLabels = {
+
+    DELIVERY:
+        "Livraison",
+
+    PICKUP:
+        "À emporter",
+
+    DINE_IN:
+        "Sur place"
+};
+
+%>
 
 
 <section class="tiop-orders-block">
 
-  <!-- ============================================
-       FILTRES
-  ============================================= -->
 
-  <form
-    class="orders-filters"
-    action="/commandes"
-    method="GET"
-  >
-
-    <!-- Recherche -->
-    <input
-      type="search"
-      name="search"
-      class="orders-field"
-      placeholder="Commande ou produit"
+    <form
+        class="orders-filters"
+        action="/commandes"
+        method="GET"
     >
 
 
-    <!-- Statut -->
-    <select
-      name="status"
-      class="orders-field"
-    >
-
-      <option value="">
-        Tous statuts
-      </option>
-
-      <option value="pending">
-        En attente
-      </option>
-
-      <option value="preparation">
-        Préparation
-      </option>
-
-      <option value="delivery">
-        En livraison
-      </option>
-
-      <option value="delivered">
-        Livrée
-      </option>
-
-      <option value="cancelled">
-        Annulée
-      </option>
-
-    </select>
+        <input
+            type="search"
+            name="search"
+            class="orders-field"
+            placeholder="Référence, produit ou restaurant"
+            value="<%= filters?.search || '' %>"
+        >
 
 
-    <!-- Catégorie -->
-    <select
-      name="category"
-      class="orders-field"
-    >
+        <select
+            name="status"
+            class="orders-field"
+        >
 
-      <option value="">
-        Toutes catégories
-      </option>
-
-      <option value="traditions">
-        Traditions
-      </option>
-
-      <option value="grillades">
-        Grillades
-      </option>
-
-      <option value="petit-dejeuner">
-        Petit-déjeuner
-      </option>
-
-      <option value="boissons">
-        Boissons
-      </option>
-
-      <option value="desserts">
-        Desserts
-      </option>
-
-    </select>
+            <option value="">
+                Tous les statuts
+            </option>
 
 
-    <!-- Prix maximum -->
-    <input
-      type="number"
-      name="maxPrice"
-      class="orders-field"
-      placeholder="Prix maximum"
-      min="0"
-    >
+            <option
+                value="RECEIVED"
+                <%= filters?.status === "RECEIVED"
+                    ? "selected"
+                    : ""
+                %>
+            >
+                Commande reçue
+            </option>
 
 
-    <button
-      type="submit"
-      class="orders-filter-button"
-    >
-      Filtrer
-    </button>
-
-  </form>
-
-
-  <!-- ============================================
-       COMMANDES
-  ============================================= -->
-
-  <div class="orders-list">
+            <option
+                value="CONFIRMED"
+                <%= filters?.status === "CONFIRMED"
+                    ? "selected"
+                    : ""
+                %>
+            >
+                Confirmée
+            </option>
 
 
-    <!-- COMMANDE -->
-
-    <article class="order-card">
-
-      <!-- Icône -->
-      <div class="order-icon">
-        🧾
-      </div>
-
-
-      <!-- Informations -->
-      <div class="order-information">
-
-        <strong class="order-number">
-          TIOP-00124
-        </strong>
-
-        <p class="order-description">
-          Aujourd’hui 19:42 · Poulet Braisé Tiop, Jus de Bissap
-        </p>
-
-      </div>
+            <option
+                value="PREPARING"
+                <%= filters?.status === "PREPARING"
+                    ? "selected"
+                    : ""
+                %>
+            >
+                En préparation
+            </option>
 
 
-      <!-- Statut / prix / facture -->
-      <div class="order-actions">
+            <option
+                value="READY"
+                <%= filters?.status === "READY"
+                    ? "selected"
+                    : ""
+                %>
+            >
+                Prête
+            </option>
 
-        <span class="order-status">
-          Préparation
-        </span>
 
-        <strong class="order-price">
-          27,30 €
-        </strong>
+            <option
+                value="ON_THE_WAY"
+                <%= filters?.status === "ON_THE_WAY"
+                    ? "selected"
+                    : ""
+                %>
+            >
+                En livraison
+            </option>
 
 
-        <!--
-          IMPORTANT :
-          Ce lien ouvre la page invoice de cette commande.
-        -->
+            <option
+                value="DELIVERED"
+                <%= filters?.status === "DELIVERED"
+                    ? "selected"
+                    : ""
+                %>
+            >
+                Livrée
+            </option>
+
+
+            <option
+                value="CANCELLED"
+                <%= filters?.status === "CANCELLED"
+                    ? "selected"
+                    : ""
+                %>
+            >
+                Annulée
+            </option>
+
+        </select>
+
+
+        <input
+            type="number"
+            name="maxPrice"
+            class="orders-field"
+            placeholder="Prix maximum"
+            min="0"
+            value="<%= filters?.maxPrice || '' %>"
+        >
+
+
+        <button
+            type="submit"
+            class="orders-filter-button"
+        >
+            Filtrer
+        </button>
+
 
         <a
-          href="/commande/TIOP-00124"
-          class="invoice-button"
-          title="Consulter la facture"
+            href="/commandes"
+            class="orders-reset-button"
         >
-          🧾
-          Facture
+            Réinitialiser
         </a>
 
-      </div>
+    </form>
 
-    </article>
 
-  </div>
+    <div class="orders-count">
+
+        <strong>
+            <%= (orders || []).length %>
+        </strong>
+
+        commande(s)
+
+    </div>
+
+
+    <div class="orders-list">
+
+
+        <% if (
+            !orders ||
+            orders.length === 0
+        ) { %>
+
+
+            <div class="orders-empty">
+
+                <div class="orders-empty-icon">
+                    🧾
+                </div>
+
+
+                <h3>
+                    Aucune commande
+                </h3>
+
+
+                <p>
+
+                    Vous n'avez aucune commande
+                    correspondant à votre recherche.
+
+                </p>
+
+
+                <a href="/menu">
+                    Découvrir le menu
+                </a>
+
+            </div>
+
+
+        <% } %>
+
+
+        <% (orders || [])
+            .forEach(order => { %>
+
+
+            <article class="order-card">
+
+
+                <div class="order-icon">
+
+                    <%= order.order_type === "DELIVERY"
+                        ? "🛵"
+                        : order.order_type === "PICKUP"
+                            ? "🥡"
+                            : "🍽️"
+                    %>
+
+                </div>
+
+
+                <div class="order-information">
+
+
+                    <strong class="order-number">
+
+                        <%= order.reference %>
+
+                    </strong>
+
+
+                    <div class="order-meta">
+
+                        <%= dateTime(
+                            order.created_at
+                        ) %>
+
+                        ·
+
+                        <%= typeLabels[
+                            order.order_type
+                        ] || order.order_type %>
+
+                        ·
+
+                        <%= order.restaurant_name %>
+
+                    </div>
+
+
+                    <p class="order-description">
+
+                        <%= order.items_summary
+                            || "Commande TiopTiop"
+                        %>
+
+                    </p>
+
+                </div>
+
+
+                <div class="order-right">
+
+
+                    <div class="order-summary">
+
+
+                        <span
+                            class="
+                                order-status
+
+                                <%= order.status === "DELIVERED"
+                                    ? "delivered"
+                                    : ""
+                                %>
+
+                                <%= order.status === "CANCELLED"
+                                    ? "cancelled"
+                                    : ""
+                                %>
+                            "
+                        >
+
+                            <%= statusLabels[
+                                order.status
+                            ] || order.status %>
+
+                        </span>
+
+
+                        <strong class="order-price">
+
+                            <%= money(
+                                order.total_amount
+                            ) %>
+
+                            <%= order.currency
+                                || "XAF"
+                            %>
+
+                        </strong>
+
+                    </div>
+
+
+                    <div class="order-buttons">
+
+
+                        <a
+                            href="/commande/confirmation/<%= encodeURIComponent(order.reference) %>"
+                            class="order-button view"
+                        >
+                            👁 Voir
+                        </a>
+
+
+                        <a
+                            href="/commande/<%= encodeURIComponent(order.reference) %>/facture"
+                            class="order-button invoice"
+                        >
+                            🧾 Facture
+                        </a>
+
+
+                        <a
+                            href="/commande/<%= encodeURIComponent(order.reference) %>/suivi"
+                            class="order-button track"
+                        >
+                            🛵 Suivre
+                        </a>
+
+
+                    </div>
+
+                </div>
+
+            </article>
+
+
+        <% }) %>
+
+
+    </div>
 
 </section>
-  </div>
+
+
+</div>

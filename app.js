@@ -22,6 +22,8 @@ const apiRoutes = require("./routes/api/index.routes");
 const clientCartRoutes = require("./routes/client/cart.routes");
 const clientCheckoutRoutes = require("./routes/client/checkout.routes");
 
+const clientOrderRoutes = require("./routes/client/order.routes");
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
@@ -50,6 +52,11 @@ app.use(
 app.use(
     "/checkout",
     clientCheckoutRoutes
+);
+
+app.use(
+    "/commande",
+    clientOrderRoutes
 );
 
 app.use("/", clientRoutes);
