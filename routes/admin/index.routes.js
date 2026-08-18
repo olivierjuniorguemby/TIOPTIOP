@@ -46,6 +46,17 @@ const page =
     );
 
 
+const orderController =
+    require(
+        "../../controllers/admin/order.controller"
+    );
+
+const deliveryController =
+    require(
+        "../../controllers/admin/delivery.controller"
+    );
+
+
 /* =========================================================
    CATEGORIES
 ========================================================= */
@@ -448,10 +459,25 @@ router.get(
 
 router.get(
     "/commandes",
-    page.render(
-        "admin/operations/orders",
-        "Commandes"
-    )
+    orderController.index
+);
+
+
+router.post(
+    "/commandes/:reference/statut",
+    orderController.updateStatus
+);
+
+
+router.post(
+    "/commandes/:reference/livraison/affecter",
+    deliveryController.assign
+);
+
+
+router.get(
+    "/commandes/:reference",
+    orderController.detail
 );
 
 
@@ -466,10 +492,7 @@ router.get(
 
 router.get(
     "/livraisons",
-    page.render(
-        "admin/operations/deliveries",
-        "Livraisons"
-    )
+    deliveryController.index
 );
 
 

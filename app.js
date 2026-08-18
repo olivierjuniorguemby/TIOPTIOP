@@ -28,6 +28,8 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+app.set("io", io);
+
 app.disable("x-powered-by");
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -66,12 +68,77 @@ app.use("/", careerRoutes);
 app.use("/admin", adminRoutes);
 app.use("/api/v1", apiRoutes);
 
-io.on("connection", (socket) => {
-  socket.on("order:join", (orderId) => socket.join(`order:${orderId}`));
-  socket.on("driver:location", (data) => {
-    io.to(`order:${data.orderId}`).emit("driver:location", data);
-  });
-});
+io.on(
+    "connection",
+    socket => {
+
+        socket.on(
+            "order:join",
+            orderReference => {
+
+                const reference =
+                    String(
+                        orderReference || ""
+                    )
+                        .trim()
+                        .slice(0, 60);
+
+
+                if (!reference) {
+                    return;
+                }
+
+
+                socket.join(
+                    `order:${reference}`
+                );
+            }
+        );
+
+
+        /*
+         * Conservé pour la future étape GPS.
+         * Le tracking réel de position sera sécurisé
+         * et persisté en 13.5 / 13.6.
+         */
+
+        socket.on(
+            "driver:location",
+            data => {
+
+                if (
+                    !data ||
+                    !data.orderId
+                ) {
+                    return;
+                }
+
+
+                const reference =
+                    String(
+                        data.orderId
+                    )
+                        .trim()
+                        .slice(0, 60);
+
+
+                if (!reference) {
+                    return;
+                }
+
+
+                io
+                    .to(
+                        `order:${reference}`
+                    )
+                    .emit(
+                        "driver:location",
+                        data
+                    );
+            }
+        );
+    }
+);
 
 
 

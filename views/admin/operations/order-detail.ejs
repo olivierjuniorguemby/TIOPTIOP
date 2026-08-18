@@ -1,0 +1,2214 @@
+<%
+    const money = value =>
+        Number(value || 0)
+            .toLocaleString(
+                "fr-FR",
+                {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2
+                }
+            );
+
+
+    const formatDate = value => {
+
+        if (!value) {
+            return "—";
+        }
+
+        const date =
+            new Date(value);
+
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        ) {
+            return "—";
+        }
+
+        return date.toLocaleString(
+            "fr-FR",
+            {
+                dateStyle: "medium",
+                timeStyle: "short"
+            }
+        );
+    };
+
+
+    const customerName =
+        order.customer_display_name
+        ||
+        [
+            order.customer_first_name,
+            order.customer_last_name
+        ]
+            .filter(Boolean)
+            .join(" ")
+        ||
+        order.customer_email
+        ||
+        "Client invité";
+
+
+    const statusLabels = {
+        RECEIVED: "Commande reçue",
+        CONFIRMED: "Confirmée",
+        PREPARING: "En préparation",
+        READY: "Prête",
+        PICKED_UP: "Retirée",
+        ON_THE_WAY: "En livraison",
+        DELIVERED: "Livrée",
+        CANCELLED: "Annulée",
+        REFUNDED: "Remboursée"
+    };
+
+
+    const orderTypeLabels = {
+        DELIVERY: "Livraison",
+        PICKUP: "À emporter",
+        DINE_IN: "Sur place"
+    };
+
+
+    const paymentLabels = {
+        CARD: "Carte bancaire",
+        MOBILE_MONEY: "Mobile Money",
+        CASH: "Espèces"
+    };
+
+
+    const paymentStatusLabels = {
+        PENDING: "En attente",
+        AUTHORIZED: "Autorisé",
+        PAID: "Payé",
+        FAILED: "Échoué",
+        CANCELLED: "Annulé",
+        PARTIAL: "Partiel",
+        REFUNDED: "Remboursé"
+    };
+%>
+
+
+<section class="admin-heading">
+
+    <div>
+
+        <span class="eyebrow">
+            Administration · Commandes
+        </span>
+
+        <h1>
+            <%= order.reference %>
+        </h1>
+
+        <p class="order-detail-subtitle">
+
+            Créée le
+            <%= formatDate(order.created_at) %>
+
+            ·
+
+            <%= orderTypeLabels[order.order_type]
+                || order.order_type
+            %>
+
+        </p>
+
+    </div>
+
+
+    <div class="order-detail-top-actions">
+
+        <a
+            href="/admin/commandes"
+            class="detail-button secondary"
+        >
+            ← Commandes
+        </a>
+
+
+        <a
+            href="/commande/confirmation/<%= encodeURIComponent(order.reference) %>"
+            target="_blank"
+            class="detail-button secondary"
+        >
+            Vue client ↗
+        </a>
+
+    </div>
+
+</section>
+
+
+<section class="admin-order-detail-page">
+
+
+    <!-- =====================================================
+         ENTETE / STATUT
+    ====================================================== -->
+
+    <div class="order-detail-highlight">
+
+
+        <div>
+
+            <span class="detail-label">
+                Statut actuel
+            </span>
+
+            <strong class="detail-main-status">
+                <%= statusLabels[order.status]
+                    || order.status
+                %>
+            </strong>
+
+        </div>
+
+
+        <div>
+
+            <span class="detail-label">
+                Montant total
+            </span>
+
+            <strong class="detail-main-total">
+                <%= money(order.total_amount) %>
+                <%= order.currency || "XAF" %>
+            </strong>
+
+        </div>
+
+
+        <div>
+
+            <span class="detail-label">
+                Canal
+            </span>
+
+            <strong>
+                <%= order.channel %>
+            </strong>
+
+        </div>
+
+
+        <div>
+
+            <span class="detail-label">
+                Paiement
+            </span>
+
+            <strong>
+                <%= payment
+                    ? (
+                        paymentLabels[payment.method]
+                        ||
+                        payment.method
+                    )
+                    : "—"
+                %>
+            </strong>
+
+        </div>
+
+
+    </div>
+
+
+    <div class="order-detail-grid">
+
+
+        <!-- =================================================
+             COLONNE PRINCIPALE
+        ================================================== -->
+
+        <div class="order-detail-main">
+
+
+            <!-- ARTICLES -->
+
+            <section class="detail-card">
+
+                <div class="detail-card-header">
+
+                    <div>
+
+                        <span class="detail-kicker">
+                            Contenu
+                        </span>
+
+                        <h2>
+                            🍽 Articles commandés
+                        </h2>
+
+                    </div>
+
+                    <span class="detail-count">
+                        <%= (items || []).length %> ligne(s)
+                    </span>
+
+                </div>
+
+
+                <div class="admin-order-items">
+
+
+                    <% (items || []).forEach(item => { %>
+
+
+                        <article class="admin-order-item">
+
+
+                            <div class="admin-order-item-image">
+
+                                <% if (item.image_url) { %>
+
+                                    <img
+                                        src="<%= item.image_url %>"
+                                        alt="<%= item.product_name %>"
+                                    >
+
+                                <% } else { %>
+
+                                    <%= item.formula_id
+                                        ? "🍱"
+                                        : "🍽️"
+                                    %>
+
+                                <% } %>
+
+                            </div>
+
+
+                            <div class="admin-order-item-info">
+
+                                <strong>
+
+                                    <%= item.quantity %>×
+                                    <%= item.product_name %>
+
+                                </strong>
+
+
+                                <span>
+
+                                    Unité :
+                                    <%= money(item.unit_price) %>
+                                    <%= order.currency %>
+
+                                </span>
+
+
+                                <% if (
+                                    item.options &&
+                                    item.options.length
+                                ) { %>
+
+                                    <div class="admin-order-item-options">
+
+                                        <% item.options.forEach(option => { %>
+
+                                            <div>
+
+                                                <strong>
+                                                    <%= option.option_name %>
+                                                </strong>
+
+                                                :
+                                                <%= option.option_value %>
+
+                                                <% if (
+                                                    Number(
+                                                        option.price_delta || 0
+                                                    ) !== 0
+                                                ) { %>
+
+                                                    ·
+                                                    +<%= money(option.price_delta) %>
+                                                    <%= order.currency %>
+
+                                                <% } %>
+
+                                            </div>
+
+                                        <% }) %>
+
+                                    </div>
+
+                                <% } %>
+
+
+                                <% if (item.notes) { %>
+
+                                    <div class="admin-order-item-note">
+                                        📝 <%= item.notes %>
+                                    </div>
+
+                                <% } %>
+
+                            </div>
+
+
+                            <strong class="admin-order-item-total">
+
+                                <%= money(item.line_total) %>
+                                <%= order.currency %>
+
+                            </strong>
+
+
+                        </article>
+
+
+                    <% }) %>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- HISTORIQUE -->
+
+            <section class="detail-card">
+
+                <div class="detail-card-header">
+
+                    <div>
+
+                        <span class="detail-kicker">
+                            Traçabilité
+                        </span>
+
+                        <h2>
+                            🕘 Historique des statuts
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div class="admin-history">
+
+
+                    <% if (
+                        !history ||
+                        history.length === 0
+                    ) { %>
+
+                        <div class="detail-empty">
+                            Aucun historique.
+                        </div>
+
+                    <% } %>
+
+
+                    <% (history || []).forEach(event => { %>
+
+
+                        <div class="admin-history-event">
+
+
+                            <div class="admin-history-dot"></div>
+
+
+                            <div>
+
+                                <strong>
+                                    <%= statusLabels[event.status]
+                                        || event.status
+                                    %>
+                                </strong>
+
+                                <p>
+                                    <%= event.comment || "Mise à jour du statut." %>
+                                </p>
+
+                                <small>
+
+                                    <%= formatDate(event.created_at) %>
+
+                                    <% if (event.changed_by_admin_user_id) { %>
+
+                                        · Admin #<%= event.changed_by_admin_user_id %>
+
+                                    <% } else if (event.changed_by_user_id) { %>
+
+                                        · Client #<%= event.changed_by_user_id %>
+
+                                    <% } %>
+
+                                </small>
+
+                            </div>
+
+
+                        </div>
+
+
+                    <% }) %>
+
+
+                </div>
+
+            </section>
+
+
+        </div>
+
+
+        <!-- =================================================
+             COLONNE LATERALE
+        ================================================== -->
+
+        <aside class="order-detail-side">
+
+
+            <!-- CLIENT -->
+
+            <section class="detail-card">
+
+                <span class="detail-kicker">
+                    Client
+                </span>
+
+                <h2>
+                    👤 Informations client
+                </h2>
+
+
+                <div class="detail-info-list">
+
+
+                    <div class="detail-info-row">
+
+                        <span>
+                            Nom
+                        </span>
+
+                        <strong>
+                            <%= customerName %>
+                        </strong>
+
+                    </div>
+
+
+                    <div class="detail-info-row">
+
+                        <span>
+                            Email
+                        </span>
+
+                        <strong>
+                            <%= order.customer_email || "—" %>
+                        </strong>
+
+                    </div>
+
+
+                    <div class="detail-info-row">
+
+                        <span>
+                            Téléphone
+                        </span>
+
+                        <strong>
+                            <%= order.customer_phone || "—" %>
+                        </strong>
+
+                    </div>
+
+
+                    <div class="detail-info-row">
+
+                        <span>
+                            Compte
+                        </span>
+
+                        <strong>
+                            <%= order.customer_status || "—" %>
+                        </strong>
+
+                    </div>
+
+
+                </div>
+
+
+                <% if (order.customer_id) { %>
+
+                    <a
+                        href="/admin/clients/<%= order.customer_id %>"
+                        class="detail-inline-link"
+                    >
+                        Consulter le client →
+                    </a>
+
+                <% } %>
+
+            </section>
+
+
+            <!-- RESTAURANT / SERVICE -->
+
+            <section class="detail-card">
+
+                <span class="detail-kicker">
+                    Service
+                </span>
+
+                <h2>
+                    🏪 Restaurant & retrait
+                </h2>
+
+
+                <div class="detail-info-list">
+
+
+                    <div class="detail-info-row">
+
+                        <span>
+                            Restaurant
+                        </span>
+
+                        <strong>
+                            <%= order.restaurant_name %>
+                        </strong>
+
+                    </div>
+
+
+                    <div class="detail-info-row">
+
+                        <span>
+                            Mode
+                        </span>
+
+                        <strong>
+                            <%= orderTypeLabels[order.order_type]
+                                || order.order_type
+                            %>
+                        </strong>
+
+                    </div>
+
+
+                    <div class="detail-info-row">
+
+                        <span>
+                            Canal
+                        </span>
+
+                        <strong>
+                            <%= order.channel %>
+                        </strong>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- LIVRAISON -->
+
+            <% if (order.order_type === "DELIVERY") { %>
+
+                <section class="detail-card">
+
+                    <span class="detail-kicker">
+                        Destination
+                    </span>
+
+                    <h2>
+                        📍 Livraison
+                    </h2>
+
+
+                    <div class="delivery-address-box">
+
+                        <% if (order.recipient_name) { %>
+
+                            <strong>
+                                <%= order.recipient_name %>
+                            </strong>
+
+                        <% } %>
+
+
+                        <div>
+                            <%= order.address_line1 || "Adresse non disponible" %>
+                        </div>
+
+
+                        <% if (order.address_line2) { %>
+
+                            <div>
+                                <%= order.address_line2 %>
+                            </div>
+
+                        <% } %>
+
+
+                        <div>
+
+                            <%= [
+                                order.delivery_district,
+                                order.delivery_city
+                            ]
+                                .filter(Boolean)
+                                .join(" · ")
+                            %>
+
+                        </div>
+
+
+                        <% if (order.delivery_phone) { %>
+
+                            <div>
+                                📞 <%= order.delivery_phone %>
+                            </div>
+
+                        <% } %>
+
+
+                        <% if (order.delivery_instructions) { %>
+
+                            <div class="delivery-instruction">
+                                📝 <%= order.delivery_instructions %>
+                            </div>
+
+                        <% } %>
+
+                    </div>
+
+                </section>
+
+            <% } %>
+
+
+
+            <!-- LIVREUR / AFFECTATION -->
+
+            <% if (order.order_type === "DELIVERY") { %>
+
+                <section class="detail-card delivery-operation-card">
+
+                    <span class="detail-kicker">
+                        Opération livraison
+                    </span>
+
+                    <h2>
+                        🛵 Livreur
+                    </h2>
+
+
+                    <% if (deliveryUpdated) { %>
+
+                        <div class="workflow-alert success">
+                            ✅ Le livreur a été affecté et le client a été notifié en temps réel.
+                        </div>
+
+                    <% } %>
+
+
+                    <% if (deliveryError) { %>
+
+                        <div class="workflow-alert error">
+                            ⚠️ <%= deliveryError %>
+                        </div>
+
+                    <% } %>
+
+
+                    <% if (delivery) { %>
+
+                        <div class="delivery-current">
+
+                            <div>
+
+                                <span>
+                                    Statut livraison
+                                </span>
+
+                                <strong>
+                                    <%= delivery.status %>
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+                                    Livreur
+                                </span>
+
+                                <strong>
+                                    <%= delivery.driver_name || "Non affecté" %>
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+                                    Téléphone
+                                </span>
+
+                                <strong>
+                                    <%= delivery.driver_phone || "—" %>
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+                                    Arrivée estimée
+                                </span>
+
+                                <strong>
+                                    <%= formatDate(delivery.estimated_arrival) %>
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    <% } else { %>
+
+                        <div class="detail-empty">
+                            Aucune livraison opérationnelle n'est encore créée pour cette commande.
+                        </div>
+
+                    <% } %>
+
+
+                    <% if (
+                        ![
+                            "DELIVERED",
+                            "CANCELLED",
+                            "REFUNDED"
+                        ].includes(order.status)
+                    ) { %>
+
+                        <form
+                            action="/admin/commandes/<%= encodeURIComponent(order.reference) %>/livraison/affecter"
+                            method="POST"
+                            class="delivery-assign-form"
+                            id="deliveryAssignForm"
+                        >
+
+                            <label>
+                                Nom du livreur
+                            </label>
+
+                            <input
+                                type="text"
+                                name="driver_name"
+                                maxlength="160"
+                                value="<%= delivery?.driver_name || '' %>"
+                                placeholder="Ex. Jean Pierre"
+                                required
+                            >
+
+
+                            <label>
+                                Téléphone
+                            </label>
+
+                            <input
+                                type="text"
+                                name="driver_phone"
+                                maxlength="40"
+                                value="<%= delivery?.driver_phone || '' %>"
+                                placeholder="+242..."
+                                required
+                            >
+
+
+                            <label>
+                                Arrivée estimée
+                            </label>
+
+                            <input
+                                type="datetime-local"
+                                name="estimated_arrival"
+                                value="<%= delivery?.estimated_arrival
+                                    ? new Date(delivery.estimated_arrival)
+                                        .toISOString()
+                                        .slice(0,16)
+                                    : ''
+                                %>"
+                            >
+
+
+                            <button
+                                type="submit"
+                                class="workflow-submit"
+                                id="deliveryAssignSubmit"
+                            >
+                                <%= delivery?.driver_name
+                                    ? "Modifier l'affectation"
+                                    : "Affecter le livreur"
+                                %>
+                            </button>
+
+                        </form>
+
+                    <% } %>
+
+
+                    <a
+                        href="/admin/livraisons"
+                        class="detail-inline-link"
+                    >
+                        Voir toutes les livraisons →
+                    </a>
+
+                </section>
+
+            <% } %>
+
+            <!-- PAIEMENT -->
+
+            <section class="detail-card">
+
+                <span class="detail-kicker">
+                    Encaissement
+                </span>
+
+                <h2>
+                    💳 Paiement
+                </h2>
+
+
+                <% if (payment) { %>
+
+
+                    <div class="detail-info-list">
+
+
+                        <div class="detail-info-row">
+
+                            <span>
+                                Moyen
+                            </span>
+
+                            <strong>
+                                <%= paymentLabels[payment.method]
+                                    || payment.method
+                                %>
+                            </strong>
+
+                        </div>
+
+
+                        <div class="detail-info-row">
+
+                            <span>
+                                Statut
+                            </span>
+
+                            <strong>
+                                <%= paymentStatusLabels[payment.status]
+                                    || payment.status
+                                %>
+                            </strong>
+
+                        </div>
+
+
+                        <div class="detail-info-row">
+
+                            <span>
+                                Montant
+                            </span>
+
+                            <strong>
+                                <%= money(payment.amount) %>
+                                <%= payment.currency %>
+                            </strong>
+
+                        </div>
+
+
+                        <div class="detail-info-row">
+
+                            <span>
+                                Prestataire
+                            </span>
+
+                            <strong>
+                                <%= payment.provider || "—" %>
+                            </strong>
+
+                        </div>
+
+
+                        <div class="detail-info-row">
+
+                            <span>
+                                Payé le
+                            </span>
+
+                            <strong>
+                                <%= formatDate(payment.paid_at) %>
+                            </strong>
+
+                        </div>
+
+
+                    </div>
+
+
+                <% } else { %>
+
+                    <div class="detail-empty">
+                        Aucun paiement associé.
+                    </div>
+
+                <% } %>
+
+            </section>
+
+
+            <!-- TOTAUX -->
+
+            <section class="detail-card">
+
+                <span class="detail-kicker">
+                    Montants
+                </span>
+
+                <h2>
+                    💰 Récapitulatif
+                </h2>
+
+
+                <div class="detail-totals">
+
+
+                    <div>
+
+                        <span>
+                            Sous-total
+                        </span>
+
+                        <strong>
+                            <%= money(order.subtotal) %>
+                            <%= order.currency %>
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Livraison
+                        </span>
+
+                        <strong>
+                            <%= money(order.delivery_fee) %>
+                            <%= order.currency %>
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Réduction
+                        </span>
+
+                        <strong>
+                            -<%= money(order.discount_amount) %>
+                            <%= order.currency %>
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Taxes
+                        </span>
+
+                        <strong>
+                            <%= money(order.tax_amount) %>
+                            <%= order.currency %>
+                        </strong>
+
+                    </div>
+
+
+                    <div class="grand-total">
+
+                        <span>
+                            Total
+                        </span>
+
+                        <strong>
+                            <%= money(order.total_amount) %>
+                            <%= order.currency %>
+                        </strong>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- NOTE CLIENT -->
+
+            <% if (order.customer_note) { %>
+
+                <section class="detail-card">
+
+                    <span class="detail-kicker">
+                        Note
+                    </span>
+
+                    <h2>
+                        📝 Message client
+                    </h2>
+
+                    <p class="customer-note">
+                        <%= order.customer_note %>
+                    </p>
+
+                </section>
+
+            <% } %>
+
+
+            <!-- WORKFLOW REEL -->
+
+            <section class="detail-card workflow-card">
+
+                <span class="detail-kicker">
+                    Workflow
+                </span>
+
+                <h2>
+                    ⚙️ Changer le statut
+                </h2>
+
+
+                <% if (statusUpdated) { %>
+
+                    <div class="workflow-alert success">
+                        ✅ Le statut a été mis à jour et diffusé au client en temps réel.
+                    </div>
+
+                <% } %>
+
+
+                <% if (statusError) { %>
+
+                    <div class="workflow-alert error">
+                        ⚠️ <%= statusError %>
+                    </div>
+
+                <% } %>
+
+
+                <% if (
+                    allowedNextStatuses &&
+                    allowedNextStatuses.length > 0
+                ) { %>
+
+
+                    <form
+                        action="/admin/commandes/<%= encodeURIComponent(order.reference) %>/statut"
+                        method="POST"
+                        class="workflow-form"
+                        id="orderStatusForm"
+                    >
+
+
+                        <label for="orderNextStatus">
+                            Nouveau statut
+                        </label>
+
+
+                        <select
+                            id="orderNextStatus"
+                            name="status"
+                            required
+                        >
+
+                            <option value="">
+                                Sélectionner
+                            </option>
+
+
+                            <% allowedNextStatuses.forEach(nextStatus => { %>
+
+                                <option value="<%= nextStatus %>">
+                                    <%= statusLabels[nextStatus] || nextStatus %>
+                                </option>
+
+                            <% }) %>
+
+                        </select>
+
+
+                        <label for="orderStatusComment">
+                            Commentaire
+                            <small>(facultatif)</small>
+                        </label>
+
+
+                        <textarea
+                            id="orderStatusComment"
+                            name="comment"
+                            maxlength="1000"
+                            placeholder="Ex. Commande confirmée par le restaurant..."
+                        ></textarea>
+
+
+                        <button
+                            type="submit"
+                            class="workflow-submit"
+                            id="orderStatusSubmit"
+                        >
+                            Mettre à jour le statut
+                        </button>
+
+
+                    </form>
+
+
+                    <p class="workflow-help">
+                        Seules les transitions compatibles avec
+                        <strong><%= orderTypeLabels[order.order_type] || order.order_type %></strong>
+                        sont proposées.
+                    </p>
+
+
+                <% } else { %>
+
+
+                    <div class="workflow-terminal">
+
+                        Cette commande est dans un état final :
+                        <strong>
+                            <%= statusLabels[order.status] || order.status %>
+                        </strong>.
+
+                    </div>
+
+
+                <% } %>
+
+
+            </section>
+
+
+        </aside>
+
+
+    </div>
+
+
+</section>
+
+
+<style>
+
+.admin-order-detail-page {
+
+    padding: 20px;
+}
+
+
+.order-detail-subtitle {
+
+    margin: 8px 0 0;
+
+    color: #786f69;
+
+    font-size: 13px;
+}
+
+
+.order-detail-top-actions {
+
+    display: flex;
+
+    gap: 8px;
+
+    flex-wrap: wrap;
+}
+
+
+.detail-button {
+
+    min-height: 42px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 16px;
+
+    border-radius: 999px;
+
+    text-decoration: none;
+
+    font-size: 12px;
+    font-weight: 900;
+}
+
+
+.detail-button.secondary {
+
+    border: 1px solid #e1ddd8;
+
+    background: #fff;
+
+    color: #181512;
+}
+
+
+.order-detail-highlight {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 10px;
+
+    margin-bottom: 16px;
+}
+
+
+.order-detail-highlight > div {
+
+    min-height: 105px;
+
+    padding: 20px;
+
+    border-radius: 19px;
+
+    background: #fff;
+}
+
+
+.detail-label {
+
+    display: block;
+
+    margin-bottom: 9px;
+
+    color: #7a726c;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    text-transform: uppercase;
+
+    letter-spacing: .4px;
+}
+
+
+.detail-main-status {
+
+    color: #ff7900;
+
+    font-size: 19px;
+}
+
+
+.detail-main-total {
+
+    font-size: 20px;
+}
+
+
+.order-detail-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1.45fr)
+        minmax(320px, .65fr);
+
+    gap: 16px;
+
+    align-items: start;
+}
+
+
+.order-detail-main,
+.order-detail-side {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 14px;
+}
+
+
+.detail-card {
+
+    padding: 22px;
+
+    border-radius: 20px;
+
+    background: #fff;
+}
+
+
+.detail-card-header {
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 18px;
+}
+
+
+.detail-card h2 {
+
+    margin: 4px 0 0;
+
+    font-size: 18px;
+}
+
+
+.detail-kicker {
+
+    color: #ff7900;
+
+    font-size: 10px;
+    font-weight: 900;
+
+    text-transform: uppercase;
+
+    letter-spacing: .5px;
+}
+
+
+.detail-count {
+
+    min-height: 27px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    padding: 0 10px;
+
+    border-radius: 999px;
+
+    background: #fff0df;
+
+    color: #a75000;
+
+    font-size: 10px;
+    font-weight: 900;
+}
+
+
+.admin-order-items {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+
+.admin-order-item {
+
+    display: grid;
+
+    grid-template-columns:
+        64px minmax(0,1fr) auto;
+
+    gap: 13px;
+
+    align-items: start;
+
+    padding-bottom: 13px;
+
+    border-bottom: 1px dashed #e5ded7;
+}
+
+
+.admin-order-item:last-child {
+
+    padding-bottom: 0;
+
+    border-bottom: 0;
+}
+
+
+.admin-order-item-image {
+
+    width: 64px;
+    height: 64px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    border-radius: 13px;
+
+    background: #fff4e6;
+
+    font-size: 25px;
+}
+
+
+.admin-order-item-image img {
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+
+.admin-order-item-info > strong {
+
+    display: block;
+
+    margin-bottom: 4px;
+
+    font-size: 13px;
+}
+
+
+.admin-order-item-info > span {
+
+    color: #776f69;
+
+    font-size: 10px;
+}
+
+
+.admin-order-item-options {
+
+    margin-top: 7px;
+
+    color: #6f665e;
+
+    font-size: 10px;
+
+    line-height: 1.55;
+}
+
+
+.admin-order-item-note {
+
+    margin-top: 7px;
+
+    padding: 7px 9px;
+
+    border-radius: 9px;
+
+    background: #fff8ef;
+
+    color: #795c42;
+
+    font-size: 10px;
+}
+
+
+.admin-order-item-total {
+
+    white-space: nowrap;
+
+    font-size: 12px;
+}
+
+
+.admin-history {
+
+    display: flex;
+
+    flex-direction: column;
+}
+
+
+.admin-history-event {
+
+    position: relative;
+
+    display: grid;
+
+    grid-template-columns:
+        14px minmax(0,1fr);
+
+    gap: 11px;
+
+    padding-bottom: 20px;
+}
+
+
+.admin-history-event:not(:last-child)::after {
+
+    content: "";
+
+    position: absolute;
+
+    top: 13px;
+    left: 5px;
+
+    width: 2px;
+    height: calc(100% - 4px);
+
+    background: #eadfd5;
+}
+
+
+.admin-history-dot {
+
+    width: 12px;
+    height: 12px;
+
+    margin-top: 2px;
+
+    border-radius: 50%;
+
+    background: #ff7900;
+}
+
+
+.admin-history-event strong {
+
+    display: block;
+
+    font-size: 12px;
+}
+
+
+.admin-history-event p {
+
+    margin: 4px 0;
+
+    color: #6f6862;
+
+    font-size: 11px;
+}
+
+
+.admin-history-event small {
+
+    color: #99908a;
+
+    font-size: 9px;
+}
+
+
+.detail-info-list {
+
+    display: flex;
+
+    flex-direction: column;
+}
+
+
+.detail-info-row {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 18px;
+
+    padding: 9px 0;
+
+    border-bottom: 1px dashed #e9e3dd;
+
+    font-size: 11px;
+}
+
+
+.detail-info-row:last-child {
+
+    border-bottom: 0;
+}
+
+
+.detail-info-row span {
+
+    color: #7a736d;
+}
+
+
+.detail-info-row strong {
+
+    max-width: 60%;
+
+    text-align: right;
+}
+
+
+.detail-inline-link {
+
+    display: inline-flex;
+
+    margin-top: 12px;
+
+    color: #ff7900;
+
+    text-decoration: none;
+
+    font-size: 11px;
+    font-weight: 900;
+}
+
+
+.delivery-address-box {
+
+    color: #625b55;
+
+    font-size: 11px;
+
+    line-height: 1.7;
+}
+
+
+.delivery-address-box > strong {
+
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: #171310;
+}
+
+
+.delivery-instruction {
+
+    margin-top: 8px;
+
+    padding: 9px;
+
+    border-radius: 10px;
+
+    background: #fff8ef;
+}
+
+
+.detail-totals {
+
+    display: flex;
+
+    flex-direction: column;
+}
+
+
+.detail-totals > div {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 8px 0;
+
+    font-size: 11px;
+}
+
+
+.detail-totals span {
+
+    color: #776f69;
+}
+
+
+.detail-totals .grand-total {
+
+    margin-top: 6px;
+
+    padding-top: 13px;
+
+    border-top: 1px solid #ded7d1;
+
+    font-size: 16px;
+    font-weight: 1000;
+}
+
+
+.detail-totals .grand-total strong {
+
+    color: #ff7900;
+}
+
+
+.customer-note {
+
+    margin: 10px 0 0;
+
+    color: #655e58;
+
+    font-size: 12px;
+
+    line-height: 1.65;
+}
+
+
+.detail-empty {
+
+    padding: 12px;
+
+    border-radius: 12px;
+
+    background: #faf7f4;
+
+    color: #776f69;
+
+    font-size: 11px;
+}
+
+
+.workflow-card {
+
+    border: 1px solid #f3dfcb;
+
+    background: #fffaf5;
+}
+
+
+.workflow-form {
+
+    display: grid;
+
+    gap: 8px;
+
+    margin-top: 16px;
+}
+
+
+.workflow-form label {
+
+    margin-top: 5px;
+
+    color: #5f554c;
+
+    font-size: 11px;
+
+    font-weight: 900;
+}
+
+
+.workflow-form label small {
+
+    color: #9a9087;
+
+    font-weight: 600;
+}
+
+
+.workflow-form select,
+.workflow-form textarea {
+
+    width: 100%;
+
+    box-sizing: border-box;
+
+    border: 1px solid #ddd4cb;
+
+    border-radius: 12px;
+
+    background: #fff;
+
+    font: inherit;
+
+    outline: none;
+}
+
+
+.workflow-form select {
+
+    min-height: 45px;
+
+    padding: 0 12px;
+}
+
+
+.workflow-form textarea {
+
+    min-height: 90px;
+
+    padding: 12px;
+
+    resize: vertical;
+}
+
+
+.workflow-form select:focus,
+.workflow-form textarea:focus {
+
+    border-color: #ff7900;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(255,121,0,.08);
+}
+
+
+.workflow-submit {
+
+    min-height: 44px;
+
+    margin-top: 5px;
+
+    border: 0;
+
+    border-radius: 999px;
+
+    background: #ff7900;
+
+    color: #fff;
+
+    font: inherit;
+
+    font-size: 11px;
+
+    font-weight: 1000;
+
+    cursor: pointer;
+}
+
+
+.workflow-submit:disabled {
+
+    opacity: .55;
+
+    cursor: wait;
+}
+
+
+.workflow-help {
+
+    margin: 12px 0 0;
+
+    color: #76685c;
+
+    font-size: 10px;
+
+    line-height: 1.6;
+}
+
+
+.workflow-alert {
+
+    margin-top: 13px;
+
+    padding: 11px 12px;
+
+    border-radius: 12px;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    line-height: 1.5;
+}
+
+
+.workflow-alert.success {
+
+    background: #eaf8ef;
+
+    color: #277347;
+}
+
+
+.workflow-alert.error {
+
+    background: #fff0f0;
+
+    color: #a93535;
+}
+
+
+.workflow-terminal {
+
+    margin-top: 14px;
+
+    padding: 12px;
+
+    border-radius: 12px;
+
+    background: #f3f1ee;
+
+    color: #655d56;
+
+    font-size: 11px;
+
+    line-height: 1.6;
+}
+
+
+@media(max-width:1050px) {
+
+    .order-detail-highlight {
+
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+
+    .order-detail-grid {
+
+        grid-template-columns:
+            1fr;
+    }
+}
+
+
+@media(max-width:600px) {
+
+    .admin-order-detail-page {
+
+        padding: 12px;
+    }
+
+
+    .order-detail-highlight {
+
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .admin-order-item {
+
+        grid-template-columns:
+            52px minmax(0,1fr);
+    }
+
+
+    .admin-order-item-image {
+
+        width: 52px;
+        height: 52px;
+    }
+
+
+    .admin-order-item-total {
+
+        grid-column: 2;
+    }
+
+
+    .detail-info-row {
+
+        flex-direction: column;
+
+        gap: 4px;
+    }
+
+
+    .detail-info-row strong {
+
+        max-width: none;
+
+        text-align: left;
+    }
+}
+
+
+.delivery-operation-card {
+
+    border: 1px solid #eee0d3;
+}
+
+
+.delivery-current {
+
+    display: grid;
+
+    gap: 8px;
+
+    margin-top: 14px;
+
+    padding: 12px;
+
+    border-radius: 12px;
+
+    background: #faf7f4;
+}
+
+
+.delivery-current > div {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    font-size: 11px;
+}
+
+
+.delivery-current span {
+
+    color: #7a726c;
+}
+
+
+.delivery-assign-form {
+
+    display: grid;
+
+    gap: 8px;
+
+    margin-top: 16px;
+}
+
+
+.delivery-assign-form label {
+
+    margin-top: 4px;
+
+    color: #5f554c;
+
+    font-size: 11px;
+
+    font-weight: 900;
+}
+
+
+.delivery-assign-form input {
+
+    width: 100%;
+
+    min-height: 43px;
+
+    box-sizing: border-box;
+
+    padding: 0 12px;
+
+    border: 1px solid #ddd4cb;
+
+    border-radius: 11px;
+
+    background: #fff;
+
+    outline: none;
+}
+
+
+.delivery-assign-form input:focus {
+
+    border-color: #ff7900;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(255,121,0,.08);
+}
+
+
+</style>
+
+<script>
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const form =
+            document.getElementById(
+                "orderStatusForm"
+            );
+
+        const button =
+            document.getElementById(
+                "orderStatusSubmit"
+            );
+
+
+        if (
+            !form ||
+            !button
+        ) {
+            return;
+        }
+
+
+        form.addEventListener(
+            "submit",
+            function () {
+
+                button.disabled =
+                    true;
+
+                button.textContent =
+                    "Mise à jour...";
+            }
+        );
+    }
+);
+</script>
+
+<script>
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const form =
+            document.getElementById(
+                "deliveryAssignForm"
+            );
+
+        const button =
+            document.getElementById(
+                "deliveryAssignSubmit"
+            );
+
+
+        if (
+            !form ||
+            !button
+        ) {
+            return;
+        }
+
+
+        form.addEventListener(
+            "submit",
+            function () {
+
+                button.disabled =
+                    true;
+
+                button.textContent =
+                    "Affectation...";
+            }
+        );
+    }
+);
+</script>
+

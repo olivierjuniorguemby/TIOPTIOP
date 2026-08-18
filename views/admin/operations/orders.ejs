@@ -1,649 +1,1053 @@
-  <!-- =========================
-       EN-TÊTE
-  ========================== -->
+<%
+    const money = value =>
+        Number(value || 0)
+            .toLocaleString(
+                "fr-FR",
+                {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2
+                }
+            );
+
+
+    const formatDate = value => {
+
+        if (!value) {
+            return "—";
+        }
+
+        const date =
+            new Date(value);
+
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        ) {
+            return "—";
+        }
+
+        return date.toLocaleString(
+            "fr-FR",
+            {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            }
+        );
+    };
+
+
+    const customerName = order =>
+        order.customer_display_name
+        ||
+        [
+            order.customer_first_name,
+            order.customer_last_name
+        ]
+            .filter(Boolean)
+            .join(" ")
+        ||
+        order.customer_email
+        ||
+        "Client invité";
+
+
+    const statusLabels = {
+        RECEIVED: "Reçue",
+        CONFIRMED: "Confirmée",
+        PREPARING: "Préparation",
+        READY: "Prête",
+        PICKED_UP: "Retirée",
+        ON_THE_WAY: "En route",
+        DELIVERED: "Livrée",
+        CANCELLED: "Annulée",
+        REFUNDED: "Remboursée"
+    };
+
+
+    const paymentLabels = {
+        CARD: "Carte",
+        MOBILE_MONEY: "Mobile Money",
+        CASH: "Espèces"
+    };
+
+
+    const paymentStatusLabels = {
+        PENDING: "En attente",
+        AUTHORIZED: "Autorisé",
+        PAID: "Payé",
+        FAILED: "Échoué",
+        CANCELLED: "Annulé",
+        PARTIAL: "Partiel",
+        REFUNDED: "Remboursé"
+    };
+%>
+
 
 <section class="admin-heading">
-  <div>
-    <span class="eyebrow">Administration</span>
-    <h1>🧾 Commandes</h1>
-  </div>
-  <button class="button primary">+ Nouvelle commande</button>
+
+    <div>
+
+        <span class="eyebrow">
+            Administration
+        </span>
+
+        <h1>
+            🧾 Commandes
+        </h1>
+
+        <p class="admin-orders-subtitle">
+            Consultez toutes les commandes réelles enregistrées dans TiopTiop.
+        </p>
+
+    </div>
+
+
+    <a
+        href="/admin/pos"
+        class="button primary"
+    >
+        + Nouvelle commande
+    </a>
+
 </section>
+
+
 <section class="admin-orders-page">
 
 
+    <!-- =====================================================
+         KPI
+    ====================================================== -->
+
+    <div class="order-kpis">
 
 
+        <article class="order-kpi">
 
-  <!-- =========================
-       FILTRES
-  ========================== -->
-  <div class="admin-orders-filters">
+            <span>
+                Toutes
+            </span>
 
-    <input
-      type="text"
-      id="orderSearch"
-      placeholder="Commande, client, produit"
+            <strong>
+                <%= Number(stats?.total_orders || 0) %>
+            </strong>
+
+        </article>
+
+
+        <article class="order-kpi">
+
+            <span>
+                Nouvelles
+            </span>
+
+            <strong>
+                <%= Number(stats?.received_orders || 0) %>
+            </strong>
+
+        </article>
+
+
+        <article class="order-kpi">
+
+            <span>
+                En préparation
+            </span>
+
+            <strong>
+                <%= Number(stats?.preparing_orders || 0) %>
+            </strong>
+
+        </article>
+
+
+        <article class="order-kpi">
+
+            <span>
+                En livraison
+            </span>
+
+            <strong>
+                <%= Number(stats?.on_the_way_orders || 0) %>
+            </strong>
+
+        </article>
+
+
+        <article class="order-kpi revenue">
+
+            <span>
+                CA commandes
+            </span>
+
+            <strong>
+                <%= money(stats?.revenue || 0) %> XAF
+            </strong>
+
+        </article>
+
+
+    </div>
+
+
+    <!-- =====================================================
+         FILTRES SERVEUR
+    ====================================================== -->
+
+    <form
+        class="admin-orders-filters"
+        action="/admin/commandes"
+        method="GET"
     >
 
-    <select id="statusFilter">
-      <option value="">Tous statuts</option>
-      <option value="confirmee">Confirmée</option>
-      <option value="preparation">Préparation</option>
-      <option value="prete">Prête</option>
-      <option value="route">En route</option>
-      <option value="livree">Livrée</option>
-      <option value="annulee">Annulée</option>
-    </select>
 
-    <select id="paymentFilter">
-      <option value="">Tous paiements</option>
-      <option value="carte">Carte</option>
-      <option value="mobile">Mobile Money</option>
-      <option value="especes">Espèces</option>
-    </select>
-
-    <select id="channelFilter">
-      <option value="">Tous canaux</option>
-      <option value="web">Web</option>
-      <option value="pos">POS</option>
-      <option value="telephone">Téléphone</option>
-      <option value="whatsapp">WhatsApp</option>
-    </select>
-
-    <input
-      type="number"
-      id="amountFilter"
-      placeholder="Montant min"
-    >
-
-    <button
-      type="button"
-      class="btn-admin-primary"
-      onclick="filterAdminOrders()"
-    >
-      Filtrer
-    </button>
-
-  </div>
-
-
-  <!-- =========================
-       TABLEAU
-  ========================== -->
-  <div class="admin-orders-table-wrapper">
-
-    <table class="admin-orders-table">
-
-      <thead>
-        <tr>
-          <th>Commande</th>
-          <th>Client</th>
-          <th>Canal</th>
-          <th>Total</th>
-          <th>Paiement</th>
-          <th>Statut</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-
-      <tbody>
-
-        <!-- COMMANDE 1 -->
-        <tr
-          class="order-row"
-          data-reference="TIOP-41969"
-          data-client="Client Démo"
-          data-products="Beignets Mikate, Café au Lait"
-          data-channel="Web"
-          data-payment="Espèces"
-          data-payment-status="EN_ATTENTE"
-          data-status="En route"
-          data-total="12,40 €"
-          data-date="À l'instant"
+        <input
+            type="search"
+            name="search"
+            placeholder="Référence, client, produit, restaurant"
+            value="<%= filters?.search || '' %>"
         >
 
-          <td>
-            <strong>TIOP-41969</strong>
-            <small>À l'instant</small>
-          </td>
 
-          <td>Client Démo</td>
+        <select name="status">
 
-          <td>Web</td>
+            <option value="">
+                Tous statuts
+            </option>
 
-          <td>12,40 €</td>
+            <% Object.entries(statusLabels).forEach(([value, label]) => { %>
 
-          <td>
-            <span>Espèces</span>
-            <span class="payment-badge waiting">
-              EN_ATTENTE
-            </span>
-          </td>
+                <option
+                    value="<%= value %>"
+                    <%= filters?.status === value
+                        ? "selected"
+                        : ""
+                    %>
+                >
+                    <%= label %>
+                </option>
 
-          <td>
-            <span class="order-status route">
-              En route
-            </span>
-          </td>
+            <% }) %>
 
-          <td>
-            <div class="order-actions">
-
-              <button
-                type="button"
-                class="btn-admin-light"
-                onclick="openOrderModal(this)"
-              >
-                Voir
-              </button>
-
-              <button
-                type="button"
-                class="btn-admin-primary btn-small"
-              >
-                Étape suivante
-              </button>
-
-            </div>
-          </td>
-
-        </tr>
+        </select>
 
 
-        <!-- COMMANDE 2 -->
-        <tr
-          class="order-row"
-          data-reference="TIOP-00124"
-          data-client="Client Démo"
-          data-products="Poulet Braisé Tiop, Jus de Bissap"
-          data-channel="Web"
-          data-payment="Espèces"
-          data-payment-status="EN_ATTENTE"
-          data-status="Préparation"
-          data-total="27,30 €"
-          data-date="Aujourd'hui 19:42"
+        <select name="payment_method">
+
+            <option value="">
+                Tous paiements
+            </option>
+
+            <option
+                value="CARD"
+                <%= filters?.payment_method === "CARD"
+                    ? "selected"
+                    : ""
+                %>
+            >
+                Carte
+            </option>
+
+            <option
+                value="MOBILE_MONEY"
+                <%= filters?.payment_method === "MOBILE_MONEY"
+                    ? "selected"
+                    : ""
+                %>
+            >
+                Mobile Money
+            </option>
+
+            <option
+                value="CASH"
+                <%= filters?.payment_method === "CASH"
+                    ? "selected"
+                    : ""
+                %>
+            >
+                Espèces
+            </option>
+
+        </select>
+
+
+        <select name="channel">
+
+            <option value="">
+                Tous canaux
+            </option>
+
+            <% [
+                "WEB",
+                "MOBILE",
+                "POS",
+                "PHONE",
+                "WHATSAPP",
+                "ADMIN"
+            ].forEach(value => { %>
+
+                <option
+                    value="<%= value %>"
+                    <%= filters?.channel === value
+                        ? "selected"
+                        : ""
+                    %>
+                >
+                    <%= value %>
+                </option>
+
+            <% }) %>
+
+        </select>
+
+
+        <select name="restaurant_id">
+
+            <option value="">
+                Tous restaurants
+            </option>
+
+            <% (restaurants || []).forEach(restaurant => { %>
+
+                <option
+                    value="<%= restaurant.id %>"
+                    <%= Number(filters?.restaurant_id)
+                        === Number(restaurant.id)
+                            ? "selected"
+                            : ""
+                    %>
+                >
+                    <%= restaurant.name %>
+                </option>
+
+            <% }) %>
+
+        </select>
+
+
+        <input
+            type="number"
+            name="min_amount"
+            min="0"
+            step="1"
+            placeholder="Montant min."
+            value="<%= filters?.min_amount || '' %>"
         >
 
-          <td>
-            <strong>TIOP-00124</strong>
-            <small>Aujourd'hui 19:42</small>
-          </td>
 
-          <td>Client Démo</td>
+        <button
+            type="submit"
+            class="btn-admin-primary"
+        >
+            Filtrer
+        </button>
 
-          <td>Web</td>
 
-          <td>27,30 €</td>
+        <a
+            href="/admin/commandes"
+            class="btn-admin-reset"
+        >
+            Réinitialiser
+        </a>
 
-          <td>
-            <span>Espèces</span>
 
-            <span class="payment-badge waiting">
-              EN_ATTENTE
-            </span>
-          </td>
+    </form>
 
-          <td>
-            <span class="order-status preparation">
-              Préparation
-            </span>
-          </td>
 
-          <td>
+    <!-- =====================================================
+         RESULTATS
+    ====================================================== -->
 
-            <div class="order-actions">
+    <div class="admin-orders-result-count">
 
-              <button
-                type="button"
-                class="btn-admin-light"
-                onclick="openOrderModal(this)"
-              >
-                Voir
-              </button>
+        <strong>
+            <%= (orders || []).length %>
+        </strong>
 
-              <button
-                type="button"
-                class="btn-admin-primary btn-small"
-              >
-                Étape suivante
-              </button>
+        commande(s) affichée(s)
+
+    </div>
+
+
+    <div class="admin-orders-table-wrapper">
+
+
+        <% if (
+            !orders ||
+            orders.length === 0
+        ) { %>
+
+
+            <div class="admin-orders-empty">
+
+                <div>
+                    🧾
+                </div>
+
+                <h2>
+                    Aucune commande
+                </h2>
+
+                <p>
+                    Aucune commande ne correspond aux critères sélectionnés.
+                </p>
 
             </div>
 
-          </td>
 
-        </tr>
+        <% } else { %>
 
-      </tbody>
 
-    </table>
+            <table class="admin-orders-table">
 
-  </div>
+
+                <thead>
+
+                    <tr>
+                        <th>Commande</th>
+                        <th>Client</th>
+                        <th>Restaurant</th>
+                        <th>Canal</th>
+                        <th>Total</th>
+                        <th>Paiement</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+
+                    <% orders.forEach(order => { %>
+
+
+                        <tr>
+
+
+                            <td>
+
+                                <a
+                                    href="/admin/commandes/<%= encodeURIComponent(order.reference) %>"
+                                    class="order-reference"
+                                >
+                                    <%= order.reference %>
+                                </a>
+
+                                <small>
+                                    <%= formatDate(order.created_at) %>
+                                </small>
+
+                                <small>
+                                    <%= order.order_type %>
+                                    ·
+                                    <%= Number(order.total_quantity || 0) %> article(s)
+                                </small>
+
+                            </td>
+
+
+                            <td>
+
+                                <strong>
+                                    <%= customerName(order) %>
+                                </strong>
+
+                                <small>
+                                    <%= order.customer_email || "—" %>
+                                </small>
+
+                                <% if (order.customer_phone) { %>
+
+                                    <small>
+                                        <%= order.customer_phone %>
+                                    </small>
+
+                                <% } %>
+
+                            </td>
+
+
+                            <td>
+
+                                <strong>
+                                    <%= order.restaurant_name %>
+                                </strong>
+
+                                <small>
+                                    <%= [
+                                        order.restaurant_district,
+                                        order.restaurant_city
+                                    ]
+                                        .filter(Boolean)
+                                        .join(" · ")
+                                    %>
+                                </small>
+
+                            </td>
+
+
+                            <td>
+
+                                <span class="channel-badge">
+                                    <%= order.channel %>
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                <strong class="order-total">
+                                    <%= money(order.total_amount) %>
+                                    <%= order.currency || "XAF" %>
+                                </strong>
+
+                            </td>
+
+
+                            <td>
+
+                                <span>
+                                    <%= paymentLabels[order.payment_method]
+                                        || order.payment_method
+                                        || "—"
+                                    %>
+                                </span>
+
+                                <span
+                                    class="
+                                        payment-badge
+                                        payment-<%= String(order.payment_status || 'UNKNOWN').toLowerCase() %>
+                                    "
+                                >
+                                    <%= paymentStatusLabels[order.payment_status]
+                                        || order.payment_status
+                                        || "—"
+                                    %>
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                <span
+                                    class="
+                                        order-status
+                                        status-<%= String(order.status).toLowerCase() %>
+                                    "
+                                >
+                                    <%= statusLabels[order.status]
+                                        || order.status
+                                    %>
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                <div class="order-actions">
+
+                                    <a
+                                        href="/admin/commandes/<%= encodeURIComponent(order.reference) %>"
+                                        class="btn-admin-light"
+                                    >
+                                        Voir
+                                    </a>
+
+                                </div>
+
+                            </td>
+
+
+                        </tr>
+
+
+                        <% if (order.items_summary) { %>
+
+                            <tr class="order-products-row">
+
+                                <td colspan="8">
+
+                                    <strong>
+                                        Articles :
+                                    </strong>
+
+                                    <%= order.items_summary %>
+
+                                </td>
+
+                            </tr>
+
+                        <% } %>
+
+
+                    <% }) %>
+
+
+                </tbody>
+
+
+            </table>
+
+
+        <% } %>
+
+
+    </div>
+
 
 </section>
 
 
-<!-- =====================================================
-     MODAL DÉTAIL COMMANDE
-====================================================== -->
-
-<div
-  id="adminOrderModal"
-  class="admin-order-modal"
-  aria-hidden="true"
->
-
-  <div
-    class="admin-order-modal-overlay"
-    onclick="closeOrderModal()"
-  ></div>
-
-
-  <div
-    class="admin-order-modal-content"
-    role="dialog"
-    aria-modal="true"
-  >
-
-    <!-- HEADER -->
-
-    <div class="admin-order-modal-header">
-
-      <h2>
-        Commande
-        <span id="modalOrderReference"></span>
-      </h2>
-
-      <button
-        type="button"
-        class="admin-order-modal-close"
-        onclick="closeOrderModal()"
-      >
-        ×
-      </button>
-
-    </div>
-
-
-    <!-- CONTENU -->
-
-    <div class="admin-order-modal-grid">
-
-      <!-- COLONNE GAUCHE -->
-
-      <div class="admin-order-modal-column">
-
-        <p>
-          <strong>Client :</strong>
-          <span id="modalOrderClient"></span>
-        </p>
-
-        <p>
-          <strong>Canal :</strong>
-          <span id="modalOrderChannel"></span>
-        </p>
-
-        <p>
-          <strong>Produits :</strong>
-          <span id="modalOrderProducts"></span>
-        </p>
-
-        <p>
-          <strong>Total :</strong>
-          <span id="modalOrderTotal"></span>
-        </p>
-
-      </div>
-
-
-      <!-- COLONNE DROITE -->
-
-      <div class="admin-order-modal-column">
-
-        <p>
-          <strong>Statut :</strong>
-          <span id="modalOrderStatus"></span>
-        </p>
-
-        <p>
-          <strong>Paiement :</strong>
-          <span id="modalOrderPayment"></span>
-        </p>
-
-        <p>
-          <strong>État :</strong>
-          <span id="modalOrderPaymentStatus"></span>
-        </p>
-
-
-        <button
-          type="button"
-          id="confirmCashButton"
-          class="btn-admin-primary confirm-cash-button"
-          onclick="confirmCashPayment()"
-        >
-          Confirmer espèces reçues
-        </button>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-
 <style>
-  /* =========================================================
-   COMMANDES ADMIN
-========================================================= */
 
 .admin-orders-page {
+
     padding: 20px;
 }
 
-.admin-orders-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-    margin-bottom: 20px;
-}
 
-.admin-orders-header h1 {
-    margin: 7px 0 0;
-    font-size: 32px;
-}
+.admin-orders-subtitle {
 
-.admin-badge {
-    display: inline-flex;
-    padding: 6px 12px;
-    background: #fff0df;
-    color: #ff7900;
-    border-radius: 30px;
-    font-size: 11px;
-    font-weight: 800;
+    margin: 8px 0 0;
+
+    color: #77706a;
+
+    font-size: 14px;
 }
 
 
-/* FILTRES */
+.order-kpis {
 
-.admin-orders-filters {
-    background: #fff;
-    border-radius: 18px;
-    padding: 12px;
     display: grid;
-    grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr auto;
-    gap: 8px;
+
+    grid-template-columns:
+        repeat(5, minmax(0, 1fr));
+
+    gap: 12px;
+
     margin-bottom: 16px;
 }
 
+
+.order-kpi {
+
+    min-height: 105px;
+
+    padding: 20px;
+
+    border-radius: 18px;
+
+    background: #fff;
+}
+
+
+.order-kpi span {
+
+    display: block;
+
+    margin-bottom: 12px;
+
+    color: #776f6a;
+
+    font-size: 12px;
+}
+
+
+.order-kpi strong {
+
+    display: block;
+
+    font-size: 27px;
+
+    line-height: 1;
+
+    color: #171310;
+}
+
+
+.order-kpi.revenue strong {
+
+    color: #ff7900;
+
+    font-size: 22px;
+}
+
+
+.admin-orders-filters {
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(220px, 1.6fr)
+        repeat(5, minmax(135px, 1fr))
+        auto
+        auto;
+
+    gap: 8px;
+
+    padding: 12px;
+
+    margin-bottom: 14px;
+
+    border-radius: 18px;
+
+    background: #fff;
+}
+
+
 .admin-orders-filters input,
 .admin-orders-filters select {
+
     width: 100%;
+
     min-height: 44px;
+
+    padding: 0 12px;
+
     border: 1px solid #ddd8d3;
-    background: white;
+
     border-radius: 11px;
-    padding: 0 13px;
+
+    background: #fff;
+
     outline: none;
 }
 
+
 .admin-orders-filters input:focus,
 .admin-orders-filters select:focus {
+
     border-color: #ff7900;
 }
 
 
-/* BUTTON */
+.btn-admin-primary,
+.btn-admin-reset,
+.btn-admin-light {
+
+    min-height: 42px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 16px;
+
+    border-radius: 999px;
+
+    text-decoration: none;
+
+    font-size: 12px;
+    font-weight: 900;
+}
+
 
 .btn-admin-primary {
-    border: none;
-    background: #ff7900;
-    color: #fff;
-    padding: 12px 20px;
-    border-radius: 30px;
-    text-decoration: none;
-    font-weight: 800;
-    cursor: pointer;
-    white-space: nowrap;
-}
 
-.btn-admin-primary:hover {
-    background: #e96f00;
-}
-
-.btn-small {
-    padding: 10px 16px;
-}
-
-.btn-admin-light {
-    background: #fff;
-    color: #181512;
     border: 0;
-    border-radius: 25px;
-    padding: 10px 17px;
-    font-weight: 800;
+
+    background: #ff7900;
+
+    color: #fff;
+
     cursor: pointer;
-    box-shadow: 0 4px 18px rgba(0,0,0,.05);
 }
 
 
-/* TABLE */
+.btn-admin-reset,
+.btn-admin-light {
+
+    border: 1px solid #e2ddd8;
+
+    background: #fff;
+
+    color: #171310;
+}
+
+
+.admin-orders-result-count {
+
+    margin:
+        0 0 12px 4px;
+
+    color: #776f6a;
+
+    font-size: 12px;
+}
+
+
+.admin-orders-result-count strong {
+
+    color: #171310;
+}
+
 
 .admin-orders-table-wrapper {
-    background: #fff;
-    border-radius: 18px;
+
     overflow-x: auto;
+
+    border-radius: 18px;
+
+    background: #fff;
 }
 
+
 .admin-orders-table {
+
     width: 100%;
+
+    min-width: 1150px;
+
     border-collapse: collapse;
 }
 
+
 .admin-orders-table th {
-    background: #faf7f4;
+
+    padding: 14px;
+
     text-align: left;
-    padding: 15px;
+
+    background: #faf7f4;
+
+    color: #171310;
+
+    font-size: 12px;
+}
+
+
+.admin-orders-table td {
+
+    padding: 15px 14px;
+
+    border-top: 1px solid #eee9e5;
+
+    vertical-align: middle;
+
     font-size: 13px;
 }
 
-.admin-orders-table td {
-    padding: 15px;
-    border-top: 1px solid #eee9e5;
-    vertical-align: middle;
-}
 
-.admin-orders-table td > strong,
-.admin-orders-table td > small {
+.admin-orders-table td strong,
+.admin-orders-table td small {
+
     display: block;
 }
+
 
 .admin-orders-table td small {
+
     margin-top: 4px;
-    color: #777;
-}
 
-.order-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
+    color: #7a736d;
 
-
-/* BADGES */
-
-.payment-badge {
-    display: block;
-    width: fit-content;
-    margin-top: 3px;
-    padding: 4px 9px;
-    border-radius: 20px;
     font-size: 10px;
-    font-weight: 800;
 }
 
-.payment-badge.waiting {
+
+.order-reference {
+
+    color: #171310;
+
+    text-decoration: none;
+
+    font-weight: 1000;
+}
+
+
+.order-reference:hover {
+
+    color: #ff7900;
+}
+
+
+.channel-badge,
+.order-status,
+.payment-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    min-height: 26px;
+
+    padding: 0 9px;
+
+    border-radius: 999px;
+
+    font-size: 9px;
+    font-weight: 900;
+}
+
+
+.channel-badge {
+
+    background: #f3f1ee;
+
+    color: #554f49;
+}
+
+
+.order-status {
+
     background: #fff0df;
+
     color: #a75000;
 }
 
-.order-status {
-    display: inline-flex;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 10px;
-    font-weight: 800;
+
+.status-delivered {
+
+    background: #eaf8ef;
+
+    color: #287649;
 }
 
-.order-status.route {
-    background: #e8eefc;
-    color: #1b4d9b;
+
+.status-cancelled,
+.status-refunded {
+
+    background: #fff0f0;
+
+    color: #ad3434;
 }
 
-.order-status.preparation {
+
+.status-on_the_way {
+
+    background: #edf3ff;
+
+    color: #2858a5;
+}
+
+
+.payment-badge {
+
+    display: flex;
+
+    width: fit-content;
+
+    margin-top: 5px;
+
+    background: #f3f1ee;
+
+    color: #59524c;
+}
+
+
+.payment-paid {
+
+    background: #eaf8ef;
+
+    color: #287649;
+}
+
+
+.payment-pending {
+
     background: #fff0df;
-    color: #ad5700;
+
+    color: #a75000;
 }
 
 
-/* =========================================================
-   MODAL
-========================================================= */
+.order-total {
 
-.admin-order-modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
+    white-space: nowrap;
 }
 
-.admin-order-modal.active {
+
+.order-products-row td {
+
+    padding-top: 8px;
+
+    padding-bottom: 12px;
+
+    background: #fffaf5;
+
+    color: #7a6755;
+
+    font-size: 11px;
+}
+
+
+.order-actions {
+
     display: flex;
+
+    gap: 7px;
 }
 
-.admin-order-modal-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, .48);
+
+.admin-orders-empty {
+
+    padding: 60px 25px;
+
+    text-align: center;
 }
 
-.admin-order-modal-content {
-    position: relative;
-    z-index: 2;
 
-    width: min(685px, 95vw);
+.admin-orders-empty > div {
 
-    background: #fff;
-    border-radius: 22px;
+    margin-bottom: 12px;
 
-    padding: 30px 28px;
-
-    box-shadow:
-        0 30px 70px rgba(0,0,0,.25);
-
-    animation: orderModalIn .18s ease-out;
+    font-size: 50px;
 }
 
-@keyframes orderModalIn {
 
-    from {
-        opacity: 0;
-        transform: translateY(12px) scale(.98);
+.admin-orders-empty h2 {
+
+    margin: 0 0 8px;
+}
+
+
+.admin-orders-empty p {
+
+    color: #776f6a;
+}
+
+
+@media(max-width:1200px) {
+
+    .order-kpis {
+
+        grid-template-columns:
+            repeat(3, 1fr);
     }
 
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-
-/* HEADER */
-
-.admin-order-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 32px;
-}
-
-.admin-order-modal-header h2 {
-    margin: 0;
-    font-size: 25px;
-}
-
-.admin-order-modal-close {
-    width: 38px;
-    height: 38px;
-    border: none;
-    border-radius: 50%;
-    background: #f3f3f3;
-    cursor: pointer;
-    font-size: 18px;
-}
-
-
-/* BODY */
-
-.admin-order-modal-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 55px;
-}
-
-.admin-order-modal-column p {
-    margin: 0 0 18px;
-    line-height: 1.5;
-}
-
-.confirm-cash-button {
-    margin-top: 3px;
-}
-
-
-/* =========================================================
-   RESPONSIVE
-========================================================= */
-
-@media(max-width: 1100px) {
 
     .admin-orders-filters {
-        grid-template-columns: repeat(3, 1fr);
-    }
 
+        grid-template-columns:
+            repeat(3, 1fr);
+    }
 }
 
-@media(max-width: 750px) {
 
-    .admin-orders-header {
-        align-items: flex-start;
-        flex-direction: column;
+@media(max-width:750px) {
+
+    .admin-orders-page {
+
+        padding: 12px;
     }
 
+
+    .order-kpis,
     .admin-orders-filters {
-        grid-template-columns: 1fr;
-    }
 
-    .admin-order-modal-grid {
-        grid-template-columns: 1fr;
-        gap: 5px;
+        grid-template-columns:
+            1fr;
     }
-
-    .admin-order-modal-content {
-        padding: 24px 20px;
-    }
-
-    .order-actions {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
 }
+
 </style>
-<script src="/js/admin-orders.js"></script>

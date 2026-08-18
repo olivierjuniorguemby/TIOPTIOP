@@ -1,6 +1,9 @@
 const Order =
     require("../../models/order.model");
 
+const Delivery =
+    require("../../models/delivery.model");
+
 
 /* =========================================================
    HELPER USER
@@ -61,7 +64,8 @@ async function getFullOrder(
     const [
         items,
         payment,
-        history
+        history,
+        delivery
     ] =
         await Promise.all([
 
@@ -75,23 +79,42 @@ async function getFullOrder(
 
             Order.getStatusHistory(
                 order.id
-            )
+            ),
+
+            order.order_type === "DELIVERY"
+                ? Delivery.findByOrderId(
+                    order.id
+                )
+                : null
         ]);
+
+
+    let latestTrackingPoint =
+        null;
+
+
+    if (delivery) {
+
+        latestTrackingPoint =
+            await Delivery.getLatestTrackingPoint(
+                delivery.id
+            );
+    }
 
 
     return {
         order,
         items,
         payment,
-        history
+        history,
+        delivery,
+        latestTrackingPoint
     };
 }
 
 
 /* =========================================================
    GET /commandes
-
-   LISTE DES COMMANDES DU CLIENT
 ========================================================= */
 
 exports.list =
@@ -114,10 +137,6 @@ async function (
             );
         }
 
-
-        /* =================================================
-           FILTRES
-        ================================================= */
 
         const search =
             String(
@@ -145,12 +164,7 @@ async function (
                 : null;
 
 
-        /* =================================================
-           STATUTS AUTORISES
-        ================================================= */
-
         const allowedStatuses = [
-
             "RECEIVED",
             "CONFIRMED",
             "PREPARING",
@@ -171,10 +185,6 @@ async function (
                 : "";
 
 
-        /* =================================================
-           COMMANDES
-        ================================================= */
-
         const orders =
             await Order.findAllByUserId(
                 userId,
@@ -193,10 +203,6 @@ async function (
                 }
             );
 
-
-        /* =================================================
-           RENDER
-        ================================================= */
 
         return res.render(
             "client/orders/list",

@@ -1,740 +1,81 @@
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-
-    const mapElement = document.getElementById("trackingMap");
-
-    if (!mapElement) return;
-
-
-    /* ==========================================
-       COORDONNÉES DE DÉMONSTRATION BRAZZAVILLE
-    ========================================== */
-
-    const restaurant = {
-        lat: -4.2634,
-        lng: 15.2429
-    };
-
-    const client = {
-        lat: -4.2505,
-        lng: 15.2650
-    };
-
-    let driverPosition = {
-        lat: -4.2585,
-        lng: 15.2505
+<%
+    const statusLabels = {
+        RECEIVED: "Commande reçue",
+        CONFIRMED: "Confirmée",
+        PREPARING: "En préparation",
+        READY: "Prête",
+        PICKED_UP: "Retirée",
+        ON_THE_WAY: "En livraison",
+        DELIVERED: "Livrée",
+        CANCELLED: "Annulée",
+        REFUNDED: "Remboursée"
     };
 
 
-    /* ==========================================
-       CRÉATION CARTE
-    ========================================== */
-
-    const map = L.map("trackingMap", {
-        zoomControl: true
-    }).setView(
-        [driverPosition.lat, driverPosition.lng],
-        14
-    );
+    const paymentLabels = {
+        CARD: "Carte bancaire",
+        MOBILE_MONEY: "Mobile Money",
+        CASH: "Espèces"
+    };
 
 
-    /* ==========================================
-       OPEN STREET MAP
-    ========================================== */
-
-    L.tileLayer(
-        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        {
-            maxZoom: 19,
-            attribution: "&copy; OpenStreetMap"
-        }
-    ).addTo(map);
+    const paymentStatusLabels = {
+        PENDING: "En attente",
+        AUTHORIZED: "Autorisé",
+        PAID: "Payé",
+        FAILED: "Échoué",
+        CANCELLED: "Annulé",
+        PARTIAL: "Partiel",
+        REFUNDED: "Remboursé"
+    };
 
 
-    /* ==========================================
-       RESTAURANT
-    ========================================== */
+    const workflows = {
 
-    const restaurantIcon = L.divIcon({
-        className: "tiop-driver-marker",
-        html: `
-            <div class="tiop-driver-icon">
-                🍽️
-            </div>
-        `,
-        iconSize: [48, 48],
-        iconAnchor: [24, 24]
-    });
-
-    const restaurantMarker = L.marker(
-        [restaurant.lat, restaurant.lng],
-        { icon: restaurantIcon }
-    )
-    .addTo(map)
-    .bindPopup("<strong>TiopTiop</strong><br>Restaurant");
-
-
-    /* ==========================================
-       CLIENT
-    ========================================== */
-
-    const clientIcon = L.divIcon({
-        className: "tiop-driver-marker",
-        html: `
-            <div class="tiop-driver-icon">
-                🏠
-            </div>
-        `,
-        iconSize: [48, 48],
-        iconAnchor: [24, 24]
-    });
-
-    const clientMarker = L.marker(
-        [client.lat, client.lng],
-        { icon: clientIcon }
-    )
-    .addTo(map)
-    .bindPopup("<strong>Destination</strong><br>Adresse client");
-
-
-    /* ==========================================
-       LIVREUR
-    ========================================== */
-
-    const driverIcon = L.divIcon({
-        className: "tiop-driver-marker",
-        html: `
-            <div class="tiop-driver-icon">
-                🛵
-            </div>
-        `,
-        iconSize: [48, 48],
-        iconAnchor: [24, 24]
-    });
-
-    const driverMarker = L.marker(
-        [driverPosition.lat, driverPosition.lng],
-        {
-            icon: driverIcon,
-            zIndexOffset: 1000
-        }
-    )
-    .addTo(map)
-    .bindPopup(
-        "<strong>Junior</strong><br>Votre livreur"
-    );
-
-
-    /* ==========================================
-       TRAJET
-    ========================================== */
-
-    const route = L.polyline(
-        [
-            [restaurant.lat, restaurant.lng],
-            [driverPosition.lat, driverPosition.lng],
-            [client.lat, client.lng]
+        DELIVERY: [
+            "RECEIVED",
+            "CONFIRMED",
+            "PREPARING",
+            "READY",
+            "ON_THE_WAY",
+            "DELIVERED"
         ],
-        {
-            weight: 5,
-            opacity: .8
-        }
-    ).addTo(map);
+
+        PICKUP: [
+            "RECEIVED",
+            "CONFIRMED",
+            "PREPARING",
+            "READY",
+            "PICKED_UP"
+        ],
+
+        DINE_IN: [
+            "RECEIVED",
+            "CONFIRMED",
+            "PREPARING",
+            "READY",
+            "DELIVERED"
+        ]
+    };
 
 
-    /* Afficher tout le trajet */
-
-    const group = L.featureGroup([
-        restaurantMarker,
-        clientMarker,
-        driverMarker,
-        route
-    ]);
-
-    map.fitBounds(
-        group.getBounds().pad(0.20)
-    );
+    const currentWorkflow =
+        workflows[order.order_type]
+        ||
+        workflows.DELIVERY;
 
 
-    /* ==========================================
-       SOCKET.IO
-    ========================================== */
-
-    if (typeof io !== "undefined") {
-
-        const socket = io();
-
-        const orderId = <%- JSON.stringify(order.reference) %>;
-
-        socket.emit(
-            "order:join",
-            orderId
+    const currentStatus =
+        String(
+            order.status || "RECEIVED"
         );
 
 
-        socket.on(
-            "driver:location",
-            function (data) {
-
-                if (!data) return;
-
-                if (
-                    data.orderId !== orderId ||
-                    typeof data.lat !== "number" ||
-                    typeof data.lng !== "number"
-                ) {
-                    return;
-                }
-
-                updateDriverPosition(
-                    data.lat,
-                    data.lng
-                );
-            }
+    const currentStatusIndex =
+        currentWorkflow.indexOf(
+            currentStatus
         );
-    }
-
-
-    /* ==========================================
-       DÉPLACEMENT DU LIVREUR
-    ========================================== */
-
-    function updateDriverPosition(lat, lng) {
-
-        driverPosition.lat = lat;
-        driverPosition.lng = lng;
-
-        driverMarker.setLatLng([
-            lat,
-            lng
-        ]);
-
-        route.setLatLngs([
-            [restaurant.lat, restaurant.lng],
-            [lat, lng],
-            [client.lat, client.lng]
-        ]);
-
-        document.getElementById(
-            "gpsStatus"
-        ).textContent = "Position GPS mise à jour";
-    }
-
-
-    /* ==========================================
-       SIMULATION STATUT COMMANDE
-    ========================================== */
-
-    let currentStep = 1;
-
-    const nextButton =
-        document.getElementById("nextTrackingStep");
-
-    if (nextButton) {
-
-        nextButton.addEventListener(
-            "click",
-            function () {
-
-                if (currentStep >= 6) return;
-
-                currentStep++;
-
-                updateTrackingSteps(currentStep);
-            }
-        );
-    }
-
-
-    function updateTrackingSteps(step) {
-
-        document
-            .querySelectorAll(".tracking-step")
-            .forEach(function (element) {
-
-                const elementStep =
-                    Number(element.dataset.step);
-
-                element.classList.remove(
-                    "active",
-                    "completed"
-                );
-
-                if (elementStep < step) {
-                    element.classList.add("completed");
-                }
-
-                if (elementStep === step) {
-                    element.classList.add("active");
-
-                    const small =
-                        element.querySelector("small");
-
-                    if (small) {
-                        small.textContent =
-                            "Étape actuelle";
-                    }
-                }
-            });
-    }
-
-});
-</script>
-<section class="section">
-  <div class="container">
-    <section class="tracking-page">
-
-  <!-- =========================
-       HEADER
-  ========================== -->
-  <div class="tracking-heading">
-    <span class="eyebrow">🛵 Suivi en temps réel</span>
-
-    <h1>
-        🛵 Suivi <%= order.reference %>
-    </h1>
-
-    <p>
-      Suivez votre commande et la position de votre livreur en temps réel.
-      La position GPS est automatiquement mise à jour pendant la livraison.
-    </p>
-  </div>
-
-
-  <!-- =========================
-       CONTENU
-  ========================== -->
-  <div class="tracking-layout">
-
-    <!-- =========================
-         COLONNE GAUCHE
-    ========================== -->
-    <div class="tracking-left">
-
-      <!-- CARTE LEAFLET -->
-      <div class="tracking-map-card">
-        <div id="trackingMap"></div>
-      </div>
-
-
-      <!-- LIVREUR -->
-      <div class="tracking-driver-card">
-
-        <h3>👤 Junior — votre livreur</h3>
-
-        <p>
-          <span id="gpsStatus">Position GPS active</span>
-          · arrivée estimée
-          <strong id="estimatedTime">20–30 min</strong>
-        </p>
-
-        <div class="tracking-driver-actions">
-          <a href="tel:+242060000000" class="tracking-secondary-btn">
-            📞 Appeler
-          </a>
-
-          <a href="/contact" class="tracking-secondary-btn">
-            💬 Contacter
-          </a>
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- =========================
-         COLONNE DROITE
-    ========================== -->
-    <div class="tracking-right">
-
-      <div class="tracking-step active" data-step="1">
-        <span class="tracking-number">1</span>
-
-        <div>
-          <strong>Commande reçue</strong>
-          <small>Étape actuelle</small>
-        </div>
-      </div>
-
-
-      <div class="tracking-step" data-step="2">
-        <span class="tracking-number">2</span>
-
-        <div>
-          <strong>Confirmée</strong>
-          <small>Suivi TiopTiop</small>
-        </div>
-      </div>
-
-
-      <div class="tracking-step" data-step="3">
-        <span class="tracking-number">3</span>
-
-        <div>
-          <strong>En préparation</strong>
-          <small>Suivi TiopTiop</small>
-        </div>
-      </div>
-
-
-      <div class="tracking-step" data-step="4">
-        <span class="tracking-number">4</span>
-
-        <div>
-          <strong>Prête</strong>
-          <small>Suivi TiopTiop</small>
-        </div>
-      </div>
-
-
-      <div class="tracking-step" data-step="5">
-        <span class="tracking-number">5</span>
-
-        <div>
-          <strong>En route</strong>
-          <small>Suivi TiopTiop</small>
-        </div>
-      </div>
-
-
-      <div class="tracking-step" data-step="6">
-        <span class="tracking-number">6</span>
-
-        <div>
-          <strong>Livrée</strong>
-          <small>Suivi TiopTiop</small>
-        </div>
-      </div>
-
-
-      <!-- PAIEMENT -->
-      <div class="tracking-payment">
-
-        <h3>Paiement : Carte</h3>
-
-        <p>
-          Statut :
-          <span class="tracking-paid">PAYÉ</span>
-        </p>
-
-        <!-- seulement pour prototype -->
-        <button
-          type="button"
-          id="nextTrackingStep"
-          class="tracking-primary-btn"
-        >
-          Simuler l’étape suivante
-        </button>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</section>
-  </div>
-</section>
-
-<style>
-  /* =============================================
-   TRACKING TIOPTIOP
-============================================= */
-
-.tracking-page {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 35px 20px 80px;
-}
-
-.tracking-heading {
-  margin-bottom: 70px;
-}
-
-.tracking-live {
-  display: inline-flex;
-  padding: 8px 15px;
-  background: #fff0df;
-  color: #ff7900;
-  border-radius: 30px;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.tracking-heading h1 {
-  margin: 25px 0 10px;
-  font-size: clamp(42px, 6vw, 72px);
-  line-height: .95;
-  letter-spacing: -4px;
-  color: #17130f;
-}
-
-.tracking-heading p {
-  max-width: 650px;
-  color: #746d66;
-  font-size: 17px;
-  line-height: 1.7;
-}
-
-
-/* =========================
-   LAYOUT
-========================= */
-
-.tracking-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 22px;
-  align-items: start;
-}
-
-.tracking-left,
-.tracking-right {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-
-/* =========================
-   MAP
-========================= */
-
-.tracking-map-card {
-  background: #fff;
-  padding: 8px;
-  border-radius: 28px;
-  box-shadow: 0 15px 40px rgba(32, 20, 10, .08);
-  overflow: hidden;
-}
-
-#trackingMap {
-  width: 100%;
-  height: 390px;
-  border-radius: 22px;
-  overflow: hidden;
-  z-index: 1;
-}
-
-
-/* =========================
-   LIVREUR
-========================= */
-
-.tracking-driver-card {
-  background: #fff;
-  padding: 28px;
-  border-radius: 26px;
-  box-shadow: 0 15px 40px rgba(32, 20, 10, .06);
-}
-
-.tracking-driver-card h3 {
-  margin: 0 0 14px;
-  font-size: 17px;
-}
-
-.tracking-driver-card p {
-  color: #77706a;
-  margin-bottom: 20px;
-}
-
-.tracking-driver-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-
-/* =========================
-   ÉTAPES
-========================= */
-
-.tracking-step {
-  min-height: 78px;
-  background: #fff;
-  border: 2px solid transparent;
-  border-radius: 22px;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  transition: .25s ease;
-}
-
-.tracking-step.active {
-  border-color: #ffb36f;
-}
-
-.tracking-step.completed {
-  background: #fffaf5;
-}
-
-.tracking-number {
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
-  border-radius: 50%;
-  background: #f1f1f1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: 900;
-}
-
-.tracking-step.active .tracking-number {
-  background: #ff7900;
-  color: #fff;
-}
-
-.tracking-step.completed .tracking-number {
-  background: #198754;
-  color: #fff;
-}
-
-.tracking-step strong {
-  display: block;
-  font-size: 16px;
-}
-
-.tracking-step small {
-  display: block;
-  margin-top: 3px;
-  color: #817a73;
-  font-size: 14px;
-}
-
-
-/* =========================
-   PAIEMENT
-========================= */
-
-.tracking-payment {
-  background: #fff;
-  padding: 28px;
-  border-radius: 26px;
-}
-
-.tracking-payment h3 {
-  margin-top: 0;
-}
-
-.tracking-payment p {
-  color: #77706a;
-}
-
-.tracking-paid {
-  display: inline-block;
-  margin-left: 6px;
-  padding: 6px 10px;
-  background: #fff0df;
-  color: #c95f00;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-
-/* =========================
-   BOUTONS
-========================= */
-
-.tracking-primary-btn,
-.tracking-secondary-btn {
-  border: 0;
-  text-decoration: none;
-  cursor: pointer;
-  font-weight: 800;
-  transition: .2s;
-}
-
-.tracking-primary-btn {
-  padding: 15px 20px;
-  background: #ff7900;
-  color: #fff;
-  border-radius: 30px;
-}
-
-.tracking-primary-btn:hover {
-  transform: translateY(-2px);
-  background: #e96e00;
-}
-
-.tracking-secondary-btn {
-  background: #fff;
-  color: #1b1714;
-  padding: 13px 20px;
-  border-radius: 30px;
-  box-shadow: 0 8px 25px rgba(0,0,0,.06);
-}
-
-
-/* =========================
-   MARQUEUR LIVREUR
-========================= */
-
-.tiop-driver-marker {
-  background: none;
-  border: none;
-}
-
-.tiop-driver-icon {
-  width: 48px;
-  height: 48px;
-  background: #ff7900;
-  border: 4px solid #fff;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 25px;
-  box-shadow: 0 5px 20px rgba(0,0,0,.25);
-}
-
-
-/* =========================
-   RESPONSIVE
-========================= */
-
-@media (max-width: 900px) {
-
-  .tracking-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .tracking-heading {
-    margin-bottom: 35px;
-  }
-
-  #trackingMap {
-    height: 350px;
-  }
-}
-
-@media (max-width: 600px) {
-
-  .tracking-page {
-    padding: 25px 14px 60px;
-  }
-
-  .tracking-heading h1 {
-    letter-spacing: -2px;
-  }
-
-  #trackingMap {
-    height: 300px;
-  }
-
-  .tracking-step {
-    min-height: 70px;
-  }
-
-  .tracking-driver-card,
-  .tracking-payment {
-    padding: 20px;
-  }
-}
-</style>
+%>
 
 
 <link
@@ -742,163 +83,1541 @@
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 />
 
+<script src="/socket.io/socket.io.js"></script>
+
 <script
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
 </script>
 
+
+<section class="section">
+
+<div class="container">
+
+<section class="tracking-page">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <header class="tracking-heading">
+
+        <span class="tracking-live">
+            🛵 Suivi en temps réel
+        </span>
+
+
+        <h1>
+            Suivi <%= order.reference %>
+        </h1>
+
+
+        <p>
+
+            Le statut de votre commande est synchronisé
+            automatiquement avec l'administration TiopTiop.
+
+        </p>
+
+
+        <div
+            id="liveConnectionState"
+            class="tracking-connection"
+        >
+            Connexion au suivi…
+        </div>
+
+    </header>
+
+
+    <div class="tracking-layout">
+
+
+        <!-- =================================================
+             GAUCHE
+        ================================================== -->
+
+        <div class="tracking-left">
+
+
+            <section class="tracking-map-card">
+
+                <div id="trackingMap"></div>
+
+            </section>
+
+
+            <section class="tracking-driver-card">
+
+                <h3 id="driverCardTitle">
+                    🛵 <%= delivery?.driver_name
+                        ? delivery.driver_name
+                        : "Livraison TiopTiop"
+                    %>
+                </h3>
+
+
+                <p id="driverCardDetails">
+
+                    <% if (delivery?.driver_name) { %>
+
+                        Livreur affecté
+
+                        <% if (delivery.driver_phone) { %>
+                            · 📞 <%= delivery.driver_phone %>
+                        <% } %>
+
+                        <% if (delivery.estimated_arrival) { %>
+
+                            <br>
+
+                            Arrivée estimée :
+                            <strong>
+                                <%= new Date(
+                                    delivery.estimated_arrival
+                                ).toLocaleString(
+                                    "fr-FR"
+                                ) %>
+                            </strong>
+
+                        <% } %>
+
+                    <% } else { %>
+
+                        Votre commande attend encore l'affectation d'un livreur.
+
+                    <% } %>
+
+                </p>
+
+
+                <p>
+
+                    <span id="gpsStatus">
+
+                        <%= latestTrackingPoint
+                            ? "Dernière position GPS enregistrée : "
+                                + new Date(
+                                    latestTrackingPoint.recorded_at
+                                ).toLocaleString(
+                                    "fr-FR"
+                                )
+                            : "Le suivi GPS démarrera lorsque le livreur commencera à transmettre sa position."
+                        %>
+
+                    </span>
+
+                </p>
+
+
+                <div class="tracking-driver-actions">
+
+                    <a
+                        href="/contact"
+                        class="tracking-secondary-btn"
+                    >
+                        💬 Contacter TiopTiop
+                    </a>
+
+                </div>
+
+            </section>
+
+
+        </div>
+
+
+        <!-- =================================================
+             DROITE
+        ================================================== -->
+
+        <div class="tracking-right">
+
+
+            <section class="tracking-status-card">
+
+                <span class="tracking-status-label">
+                    Statut actuel
+                </span>
+
+                <strong
+                    id="currentOrderStatus"
+                    class="tracking-status-current"
+                >
+                    <%= statusLabels[currentStatus]
+                        || currentStatus
+                    %>
+                </strong>
+
+                <small id="lastStatusUpdate">
+
+                    Dernière mise à jour :
+                    <%= order.updated_at
+                        ? new Date(
+                            order.updated_at
+                        ).toLocaleString(
+                            "fr-FR"
+                        )
+                        : "—"
+                    %>
+
+                </small>
+
+            </section>
+
+
+            <section
+                id="trackingSteps"
+                class="tracking-steps"
+            >
+
+
+                <% currentWorkflow
+                    .forEach(
+                        (status, index) => {
+
+                            let stateClass = "";
+
+                            if (
+                                currentStatusIndex >= 0
+                            ) {
+
+                                if (
+                                    index <
+                                    currentStatusIndex
+                                ) {
+
+                                    stateClass =
+                                        "completed";
+                                }
+                                else if (
+                                    index ===
+                                    currentStatusIndex
+                                ) {
+
+                                    stateClass =
+                                        "active";
+                                }
+                            }
+
+                %>
+
+
+                    <div
+                        class="tracking-step <%= stateClass %>"
+                        data-status="<%= status %>"
+                    >
+
+                        <span class="tracking-number">
+                            <%= index + 1 %>
+                        </span>
+
+
+                        <div>
+
+                            <strong>
+                                <%= statusLabels[status]
+                                    || status
+                                %>
+                            </strong>
+
+                            <small>
+
+                                <%= stateClass === "active"
+                                    ? "Étape actuelle"
+                                    : stateClass === "completed"
+                                        ? "Terminée"
+                                        : "À venir"
+                                %>
+
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                <% }) %>
+
+
+            </section>
+
+
+            <% if (
+                currentStatus === "CANCELLED"
+                ||
+                currentStatus === "REFUNDED"
+            ) { %>
+
+
+                <section
+                    id="exceptionStatus"
+                    class="tracking-exception"
+                >
+
+                    <strong>
+                        <%= statusLabels[currentStatus]
+                            || currentStatus
+                        %>
+                    </strong>
+
+                    <span>
+                        Consultez votre historique de commande
+                        pour plus d'informations.
+                    </span>
+
+                </section>
+
+
+            <% } else { %>
+
+
+                <section
+                    id="exceptionStatus"
+                    class="tracking-exception"
+                    hidden
+                ></section>
+
+
+            <% } %>
+
+
+            <section class="tracking-payment">
+
+                <h3>
+                    Paiement
+                </h3>
+
+
+                <p>
+
+                    Moyen :
+                    <strong>
+
+                        <%= payment
+                            ? (
+                                paymentLabels[
+                                    payment.method
+                                ]
+                                ||
+                                payment.method
+                            )
+                            : "—"
+                        %>
+
+                    </strong>
+
+                </p>
+
+
+                <p>
+
+                    Statut :
+
+                    <span class="tracking-paid">
+
+                        <%= payment
+                            ? (
+                                paymentStatusLabels[
+                                    payment.status
+                                ]
+                                ||
+                                payment.status
+                            )
+                            : "—"
+                        %>
+
+                    </span>
+
+                </p>
+
+            </section>
+
+
+            <a
+                href="/commande/confirmation/<%= encodeURIComponent(order.reference) %>"
+                class="tracking-primary-btn"
+            >
+                Voir le détail de la commande
+            </a>
+
+
+        </div>
+
+
+    </div>
+
+
+</section>
+
+</div>
+
+</section>
+
+
+<style>
+
+.tracking-page {
+
+    max-width: 1180px;
+
+    margin: 0 auto;
+
+    padding:
+        35px 20px 80px;
+}
+
+
+.tracking-heading {
+
+    margin-bottom: 45px;
+}
+
+
+.tracking-live {
+
+    display: inline-flex;
+
+    padding: 8px 15px;
+
+    background: #fff0df;
+
+    color: #ff7900;
+
+    border-radius: 30px;
+
+    font-size: 13px;
+
+    font-weight: 800;
+}
+
+
+.tracking-heading h1 {
+
+    margin: 22px 0 10px;
+
+    font-size:
+        clamp(42px, 6vw, 72px);
+
+    line-height: .95;
+
+    letter-spacing: -4px;
+
+    color: #17130f;
+}
+
+
+.tracking-heading p {
+
+    max-width: 680px;
+
+    color: #746d66;
+
+    font-size: 16px;
+
+    line-height: 1.7;
+}
+
+
+.tracking-connection {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    min-height: 28px;
+
+    margin-top: 12px;
+
+    padding: 0 10px;
+
+    border-radius: 999px;
+
+    background: #f2f0ed;
+
+    color: #716962;
+
+    font-size: 10px;
+
+    font-weight: 900;
+}
+
+
+.tracking-connection.connected {
+
+    background: #eaf8ef;
+
+    color: #277347;
+}
+
+
+.tracking-layout {
+
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 22px;
+
+    align-items: start;
+}
+
+
+.tracking-left,
+.tracking-right {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 14px;
+}
+
+
+.tracking-map-card {
+
+    padding: 8px;
+
+    border-radius: 28px;
+
+    background: #fff;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 15px 40px
+        rgba(32,20,10,.08);
+}
+
+
+#trackingMap {
+
+    width: 100%;
+
+    height: 390px;
+
+    border-radius: 22px;
+
+    overflow: hidden;
+
+    z-index: 1;
+}
+
+
+.tracking-driver-card,
+.tracking-payment,
+.tracking-status-card {
+
+    padding: 25px;
+
+    border-radius: 24px;
+
+    background: #fff;
+
+    box-shadow:
+        0 15px 40px
+        rgba(32,20,10,.05);
+}
+
+
+.tracking-driver-card h3,
+.tracking-payment h3 {
+
+    margin:
+        0 0 12px;
+}
+
+
+.tracking-driver-card p,
+.tracking-payment p {
+
+    color: #77706a;
+
+    line-height: 1.55;
+}
+
+
+.tracking-driver-actions {
+
+    display: flex;
+
+    gap: 10px;
+
+    flex-wrap: wrap;
+}
+
+
+.tracking-status-label {
+
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #817970;
+
+    font-size: 10px;
+
+    font-weight: 900;
+
+    text-transform: uppercase;
+}
+
+
+.tracking-status-current {
+
+    display: block;
+
+    color: #ff7900;
+
+    font-size: 24px;
+}
+
+
+.tracking-status-card small {
+
+    display: block;
+
+    margin-top: 8px;
+
+    color: #8a8179;
+}
+
+
+.tracking-steps {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+
+.tracking-step {
+
+    min-height: 76px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 16px;
+
+    padding: 16px;
+
+    border: 2px solid transparent;
+
+    border-radius: 22px;
+
+    background: #fff;
+
+    transition: .25s ease;
+}
+
+
+.tracking-step.active {
+
+    border-color: #ffb36f;
+}
+
+
+.tracking-step.completed {
+
+    background: #fffaf5;
+}
+
+
+.tracking-number {
+
+    width: 40px;
+    height: 40px;
+
+    min-width: 40px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #f1f1f1;
+
+    font-weight: 900;
+}
+
+
+.tracking-step.active
+.tracking-number {
+
+    background: #ff7900;
+
+    color: #fff;
+}
+
+
+.tracking-step.completed
+.tracking-number {
+
+    background: #198754;
+
+    color: #fff;
+}
+
+
+.tracking-step strong {
+
+    display: block;
+
+    font-size: 15px;
+}
+
+
+.tracking-step small {
+
+    display: block;
+
+    margin-top: 3px;
+
+    color: #817a73;
+
+    font-size: 12px;
+}
+
+
+.tracking-exception {
+
+    padding: 18px;
+
+    border-radius: 18px;
+
+    background: #fff0f0;
+
+    color: #a73535;
+}
+
+
+.tracking-exception strong,
+.tracking-exception span {
+
+    display: block;
+}
+
+
+.tracking-exception span {
+
+    margin-top: 5px;
+
+    font-size: 11px;
+}
+
+
+.tracking-paid {
+
+    display: inline-flex;
+
+    margin-left: 6px;
+
+    padding: 6px 10px;
+
+    border-radius: 20px;
+
+    background: #fff0df;
+
+    color: #c95f00;
+
+    font-size: 11px;
+
+    font-weight: 900;
+}
+
+
+.tracking-primary-btn,
+.tracking-secondary-btn {
+
+    min-height: 43px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 18px;
+
+    border-radius: 999px;
+
+    text-decoration: none;
+
+    font-size: 11px;
+
+    font-weight: 900;
+}
+
+
+.tracking-primary-btn {
+
+    background: #ff7900;
+
+    color: #fff;
+}
+
+
+.tracking-secondary-btn {
+
+    border: 1px solid #e1dcd7;
+
+    background: #fff;
+
+    color: #1b1714;
+}
+
+
+@media(max-width:900px) {
+
+    .tracking-layout {
+
+        grid-template-columns:
+            1fr;
+    }
+
+
+    #trackingMap {
+
+        height: 350px;
+    }
+}
+
+
+@media(max-width:600px) {
+
+    .tracking-page {
+
+        padding:
+            25px 14px 60px;
+    }
+
+
+    .tracking-heading h1 {
+
+        letter-spacing: -2px;
+    }
+
+
+    #trackingMap {
+
+        height: 300px;
+    }
+}
+
+</style>
+
+
 <script>
-document.addEventListener("DOMContentLoaded", function () {
 
-    console.log("Leaflet chargé :", typeof L);
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
-    const mapContainer =
-        document.getElementById("trackingMap");
+        const orderReference =
+            <%- JSON.stringify(order.reference) %>;
 
-    console.log(
-        "Conteneur carte :",
-        mapContainer
-    );
 
-    if (!mapContainer) {
-        console.error(
-            "ERREUR : #trackingMap n'existe pas."
+        const orderType =
+            <%- JSON.stringify(order.order_type) %>;
+
+
+        let currentStatus =
+            <%- JSON.stringify(currentStatus) %>;
+
+
+        const statusLabels =
+            <%- JSON.stringify(statusLabels) %>;
+
+
+        const workflows =
+            <%- JSON.stringify(workflows) %>;
+
+
+        const currentStatusElement =
+            document.getElementById(
+                "currentOrderStatus"
+            );
+
+
+        const lastUpdateElement =
+            document.getElementById(
+                "lastStatusUpdate"
+            );
+
+
+        const connectionElement =
+            document.getElementById(
+                "liveConnectionState"
+            );
+
+
+        const exceptionElement =
+            document.getElementById(
+                "exceptionStatus"
+            );
+
+
+        /* =================================================
+           STATUS UI
+        ================================================= */
+
+        function renderStatus(
+            status,
+            changedAt = null
+        ) {
+
+            currentStatus =
+                status;
+
+
+            if (currentStatusElement) {
+
+                currentStatusElement.textContent =
+                    statusLabels[status]
+                    ||
+                    status;
+            }
+
+
+            if (lastUpdateElement) {
+
+                lastUpdateElement.textContent =
+                    "Dernière mise à jour : "
+                    +
+                    (
+                        changedAt
+                            ? new Date(
+                                changedAt
+                            ).toLocaleString(
+                                "fr-FR"
+                            )
+                            : new Date()
+                                .toLocaleString(
+                                    "fr-FR"
+                                )
+                    );
+            }
+
+
+            const workflow =
+                workflows[orderType]
+                ||
+                workflows.DELIVERY;
+
+
+            const currentIndex =
+                workflow.indexOf(
+                    status
+                );
+
+
+            document
+                .querySelectorAll(
+                    ".tracking-step"
+                )
+                .forEach(
+                    (element, index) => {
+
+                        element.classList.remove(
+                            "active",
+                            "completed"
+                        );
+
+
+                        const small =
+                            element.querySelector(
+                                "small"
+                            );
+
+
+                        if (
+                            currentIndex >= 0
+                            &&
+                            index <
+                            currentIndex
+                        ) {
+
+                            element.classList.add(
+                                "completed"
+                            );
+
+                            if (small) {
+
+                                small.textContent =
+                                    "Terminée";
+                            }
+                        }
+                        else if (
+                            currentIndex >= 0
+                            &&
+                            index ===
+                            currentIndex
+                        ) {
+
+                            element.classList.add(
+                                "active"
+                            );
+
+                            if (small) {
+
+                                small.textContent =
+                                    "Étape actuelle";
+                            }
+                        }
+                        else {
+
+                            if (small) {
+
+                                small.textContent =
+                                    "À venir";
+                            }
+                        }
+                    }
+                );
+
+
+            if (
+                status === "CANCELLED"
+                ||
+                status === "REFUNDED"
+            ) {
+
+                if (exceptionElement) {
+
+                    exceptionElement.hidden =
+                        false;
+
+                    exceptionElement.innerHTML =
+                        `
+                            <strong>
+                                ${escapeHtml(
+                                    statusLabels[status]
+                                    ||
+                                    status
+                                )}
+                            </strong>
+
+                            <span>
+                                Consultez le détail de la commande
+                                pour plus d'informations.
+                            </span>
+                        `;
+                }
+            }
+            else if (exceptionElement) {
+
+                exceptionElement.hidden =
+                    true;
+
+                exceptionElement.innerHTML =
+                    "";
+            }
+        }
+
+
+        function escapeHtml(value) {
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+            div.textContent =
+                String(
+                    value || ""
+                );
+
+            return div.innerHTML;
+        }
+
+
+        /* =================================================
+           SOCKET.IO
+        ================================================= */
+
+        if (
+            typeof io !== "undefined"
+        ) {
+
+            const socket =
+                io();
+
+
+            socket.on(
+                "connect",
+                function () {
+
+                    if (connectionElement) {
+
+                        connectionElement.textContent =
+                            "● Suivi connecté";
+
+                        connectionElement.classList.add(
+                            "connected"
+                        );
+                    }
+
+
+                    socket.emit(
+                        "order:join",
+                        orderReference
+                    );
+                }
+            );
+
+
+            socket.on(
+                "disconnect",
+                function () {
+
+                    if (connectionElement) {
+
+                        connectionElement.textContent =
+                            "Reconnexion au suivi…";
+
+                        connectionElement.classList.remove(
+                            "connected"
+                        );
+                    }
+                }
+            );
+
+
+            socket.on(
+                "order:status",
+                function (data) {
+
+                    if (
+                        !data
+                        ||
+                        data.reference !==
+                            orderReference
+                    ) {
+
+                        return;
+                    }
+
+
+                    renderStatus(
+                        data.status,
+                        data.changedAt
+                    );
+                }
+            );
+
+
+            socket.on(
+                "delivery:assigned",
+                function (data) {
+
+                    if (
+                        !data
+                        ||
+                        data.reference !==
+                            orderReference
+                    ) {
+
+                        return;
+                    }
+
+
+                    const title =
+                        document.getElementById(
+                            "driverCardTitle"
+                        );
+
+
+                    const details =
+                        document.getElementById(
+                            "driverCardDetails"
+                        );
+
+
+                    if (title) {
+
+                        title.textContent =
+                            "🛵 "
+                            +
+                            (
+                                data.driverName
+                                ||
+                                "Livraison TiopTiop"
+                            );
+                    }
+
+
+                    if (details) {
+
+                        let text =
+                            "Livreur affecté";
+
+
+                        if (data.driverPhone) {
+
+                            text +=
+                                " · 📞 "
+                                +
+                                data.driverPhone;
+                        }
+
+
+                        if (
+                            data.estimatedArrival
+                        ) {
+
+                            text +=
+                                " · arrivée estimée : "
+                                +
+                                new Date(
+                                    data.estimatedArrival
+                                )
+                                    .toLocaleString(
+                                        "fr-FR"
+                                    );
+                        }
+
+
+                        details.textContent =
+                            text;
+                    }
+                }
+            );
+
+
+            /*
+             * Préparé pour 13.5 / 13.6.
+             */
+
+            socket.on(
+                "driver:location",
+                function (data) {
+
+                    if (
+                        !data
+                        ||
+                        data.orderId !==
+                            orderReference
+                    ) {
+
+                        return;
+                    }
+
+
+                    updateDriverPosition(
+                        data.lat,
+                        data.lng
+                    );
+                }
+            );
+        }
+
+
+        /* =================================================
+           LEAFLET
+
+           La carte est conservée, mais les coordonnées
+           restaurant/client/livreur sont encore de démo.
+           Leur remplacement par deliveries +
+           delivery_tracking_points arrive en 13.5 / 13.6.
+        ================================================= */
+
+        const mapElement =
+            document.getElementById(
+                "trackingMap"
+            );
+
+
+        let driverMarker =
+            null;
+
+
+        let route =
+            null;
+
+
+        const restaurant = {
+            lat: -4.2634,
+            lng: 15.2429
+        };
+
+
+        const client = {
+            lat: -4.2505,
+            lng: 15.2650
+        };
+
+
+        let driverPosition = {
+
+            lat:
+                <%= latestTrackingPoint
+                    ? Number(latestTrackingPoint.latitude)
+                    : -4.2585
+                %>,
+
+            lng:
+                <%= latestTrackingPoint
+                    ? Number(latestTrackingPoint.longitude)
+                    : 15.2505
+                %>
+        };
+
+
+        if (
+            mapElement
+            &&
+            typeof L !== "undefined"
+        ) {
+
+            const map =
+                L
+                    .map(
+                        "trackingMap"
+                    )
+                    .setView(
+                        [
+                            driverPosition.lat,
+                            driverPosition.lng
+                        ],
+                        14
+                    );
+
+
+            L
+                .tileLayer(
+                    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                    {
+                        maxZoom: 19,
+
+                        attribution:
+                            "&copy; OpenStreetMap"
+                    }
+                )
+                .addTo(
+                    map
+                );
+
+
+            const restaurantMarker =
+                L
+                    .marker([
+                        restaurant.lat,
+                        restaurant.lng
+                    ])
+                    .addTo(
+                        map
+                    )
+                    .bindPopup(
+                        "<strong>🍽️ TiopTiop</strong><br>Restaurant"
+                    );
+
+
+            const clientMarker =
+                L
+                    .marker([
+                        client.lat,
+                        client.lng
+                    ])
+                    .addTo(
+                        map
+                    )
+                    .bindPopup(
+                        "<strong>🏠 Destination</strong>"
+                    );
+
+
+            const driverIcon =
+                L.divIcon({
+                    className:
+                        "",
+
+                    html:
+                        `
+                            <div style="
+                                width:50px;
+                                height:50px;
+                                background:#ff7900;
+                                border:4px solid white;
+                                border-radius:50%;
+                                display:flex;
+                                align-items:center;
+                                justify-content:center;
+                                font-size:27px;
+                                box-shadow:0 5px 20px rgba(0,0,0,.3);
+                            ">
+                                🛵
+                            </div>
+                        `,
+
+                    iconSize:
+                        [50, 50],
+
+                    iconAnchor:
+                        [25, 25]
+                });
+
+
+            driverMarker =
+                L
+                    .marker(
+                        [
+                            driverPosition.lat,
+                            driverPosition.lng
+                        ],
+                        {
+                            icon:
+                                driverIcon
+                        }
+                    )
+                    .addTo(
+                        map
+                    )
+                    .bindPopup(
+                        "<strong>Livreur TiopTiop</strong>"
+                    );
+
+
+            route =
+                L
+                    .polyline(
+                        [
+                            [
+                                restaurant.lat,
+                                restaurant.lng
+                            ],
+
+                            [
+                                driverPosition.lat,
+                                driverPosition.lng
+                            ],
+
+                            [
+                                client.lat,
+                                client.lng
+                            ]
+                        ],
+                        {
+                            weight:
+                                5,
+
+                            opacity:
+                                .8
+                        }
+                    )
+                    .addTo(
+                        map
+                    );
+
+
+            const group =
+                L.featureGroup([
+                    restaurantMarker,
+                    clientMarker,
+                    driverMarker,
+                    route
+                ]);
+
+
+            map.fitBounds(
+                group
+                    .getBounds()
+                    .pad(.20)
+            );
+
+
+            setTimeout(
+                function () {
+
+                    map.invalidateSize();
+
+                },
+                250
+            );
+        }
+
+
+        function updateDriverPosition(
+            lat,
+            lng
+        ) {
+
+            if (
+                typeof lat !== "number"
+                ||
+                typeof lng !== "number"
+                ||
+                !driverMarker
+            ) {
+
+                return;
+            }
+
+
+            driverPosition = {
+                lat,
+                lng
+            };
+
+
+            driverMarker.setLatLng(
+                [
+                    lat,
+                    lng
+                ]
+            );
+
+
+            if (route) {
+
+                route.setLatLngs([
+                    [
+                        restaurant.lat,
+                        restaurant.lng
+                    ],
+
+                    [
+                        lat,
+                        lng
+                    ],
+
+                    [
+                        client.lat,
+                        client.lng
+                    ]
+                ]);
+            }
+
+
+            const gpsStatus =
+                document.getElementById(
+                    "gpsStatus"
+                );
+
+
+            if (gpsStatus) {
+
+                gpsStatus.textContent =
+                    "Position GPS mise à jour";
+            }
+        }
+
+
+        /*
+         * Synchronise l'affichage initial.
+         */
+
+        renderStatus(
+            currentStatus,
+            <%- JSON.stringify(order.updated_at || null) %>
         );
-        return;
     }
+);
 
-    if (typeof L === "undefined") {
-        console.error(
-            "ERREUR : Leaflet n'est pas chargé."
-        );
-        return;
-    }
-
-    // Centre de Brazzaville
-    const restaurant = [-4.2634, 15.2429];
-
-    // Client
-    const client = [-4.2505, 15.2650];
-
-    // Livreur
-    const driver = [-4.2575, 15.2520];
-
-
-    /* ==============================
-       CRÉATION DE LA CARTE
-    ============================== */
-
-    const map = L.map("trackingMap").setView(
-        restaurant,
-        14
-    );
-
-
-    /* ==============================
-       OPENSTREETMAP
-    ============================== */
-
-    L.tileLayer(
-        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        {
-            maxZoom: 19,
-            attribution:
-                '&copy; OpenStreetMap contributors'
-        }
-    ).addTo(map);
-
-
-    /* ==============================
-       RESTAURANT
-    ============================== */
-
-    L.marker(restaurant)
-        .addTo(map)
-        .bindPopup(
-            "<strong>🍽️ TiopTiop</strong><br>Restaurant"
-        );
-
-
-    /* ==============================
-       LIVREUR
-    ============================== */
-
-    const driverIcon = L.divIcon({
-
-        className: "",
-
-        html: `
-            <div style="
-                width:50px;
-                height:50px;
-                background:#ff7900;
-                border:4px solid white;
-                border-radius:50%;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-size:27px;
-                box-shadow:0 5px 20px rgba(0,0,0,.3);
-            ">
-                🛵
-            </div>
-        `,
-
-        iconSize: [50, 50],
-        iconAnchor: [25, 25]
-
-    });
-
-
-    const driverMarker = L.marker(
-        driver,
-        {
-            icon: driverIcon
-        }
-    )
-    .addTo(map)
-    .bindPopup(
-        "<strong>Junior</strong><br>Votre livreur"
-    );
-
-
-    /* ==============================
-       CLIENT
-    ============================== */
-
-    L.marker(client)
-        .addTo(map)
-        .bindPopup(
-            "<strong>🏠 Vous</strong><br>Adresse de livraison"
-        );
-
-
-    /* ==============================
-       TRAJET
-    ============================== */
-
-    L.polyline(
-        [
-            restaurant,
-            driver,
-            client
-        ],
-        {
-            weight: 6,
-            opacity: 0.8
-        }
-    ).addTo(map);
-
-
-    /* Correction affichage Leaflet */
-
-    setTimeout(function () {
-        map.invalidateSize();
-    }, 300);
-
-
-    console.log(
-        "✅ Carte TiopTiop initialisée"
-    );
-
-});
 </script>
