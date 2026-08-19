@@ -272,11 +272,23 @@ async function findByReference(
         SELECT
             o.*,
 
+            /* ================================
+               RESTAURANT
+            ================================= */
+
             r.name AS restaurant_name,
             r.address AS restaurant_address,
             r.district AS restaurant_district,
             r.city AS restaurant_city,
             r.phone AS restaurant_phone,
+
+            r.latitude AS restaurant_latitude,
+            r.longitude AS restaurant_longitude,
+
+
+            /* ================================
+               ADRESSE DE LIVRAISON
+            ================================= */
 
             ua.label AS delivery_address_label,
             ua.recipient_name,
@@ -286,6 +298,11 @@ async function findByReference(
             ua.district AS delivery_district,
             ua.city AS delivery_city,
             ua.country_code AS delivery_country_code,
+
+            /* GPS CLIENT */
+            ua.latitude AS delivery_latitude,
+            ua.longitude AS delivery_longitude,
+
             ua.delivery_instructions
 
         FROM orders o
@@ -299,7 +316,15 @@ async function findByReference(
         WHERE o.reference = ?
     `;
 
-    const params = [reference];
+
+    const params = [
+        reference
+    ];
+
+
+    /* =========================================
+       SECURITE CLIENT
+    ========================================= */
 
     if (userId !== null) {
 
@@ -307,18 +332,23 @@ async function findByReference(
             AND o.user_id = ?
         `;
 
-        params.push(userId);
+        params.push(
+            userId
+        );
     }
+
 
     sql += `
         LIMIT 1
     `;
+
 
     const rows =
         await db.query(
             sql,
             params
         );
+
 
     return rows[0] || null;
 }
