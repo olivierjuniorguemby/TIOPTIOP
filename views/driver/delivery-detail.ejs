@@ -49,6 +49,87 @@
       </div>
     </section>
 
+
+
+    <% if (delivery.status === "ON_THE_WAY") { %>
+
+      <section class="driver-detail-card driver-gps-card">
+
+        <h2>
+          📡 GPS temps réel
+        </h2>
+
+        <p class="driver-gps-intro">
+          Laissez cette page ouverte pendant la livraison.
+          Votre position sera envoyée au client en temps réel.
+        </p>
+
+        <div
+          id="gpsPermissionNotice"
+          class="driver-gps-status"
+        >
+          GPS arrêté.
+        </div>
+
+        <div class="driver-gps-values">
+
+          <div>
+            <span>Latitude</span>
+            <strong id="gpsLatitude">—</strong>
+          </div>
+
+          <div>
+            <span>Longitude</span>
+            <strong id="gpsLongitude">—</strong>
+          </div>
+
+          <div>
+            <span>Précision</span>
+            <strong id="gpsAccuracy">—</strong>
+          </div>
+
+          <div>
+            <span>Vitesse</span>
+            <strong id="gpsSpeed">—</strong>
+          </div>
+
+          <div>
+            <span>Dernier envoi</span>
+            <strong id="gpsLastSent">—</strong>
+          </div>
+
+        </div>
+
+        <div class="driver-gps-actions">
+
+          <button
+            type="button"
+            id="startGpsButton"
+            class="driver-action primary"
+          >
+            📍 Démarrer le GPS
+          </button>
+
+          <button
+            type="button"
+            id="stopGpsButton"
+            class="driver-action secondary"
+            disabled
+          >
+            Arrêter le GPS
+          </button>
+
+        </div>
+
+        <small class="driver-gps-help">
+          Le navigateur peut demander l'autorisation d'accéder à votre position.
+          Sur téléphone, le GPS doit rester autorisé pendant la livraison.
+        </small>
+
+      </section>
+
+    <% } %>
+
     <section class="driver-detail-card driver-actions-card">
       <h2>🛵 Actions</h2>
 
@@ -113,4 +194,816 @@
 .driver-reject-form input{min-height:42px;padding:0 11px;border:1px solid #ddd5cf;border-radius:10px}.driver-waiting,.driver-completed{padding:12px;border-radius:11px}.driver-waiting{background:#fff0df;color:#79552f}.driver-completed{background:#eaf8ef;color:#267247;font-weight:900}
 .driver-message{margin-top:12px;padding:11px;border-radius:11px}.driver-message.success{background:#eaf8ef;color:#267247}.driver-message.error{background:#fff0f0;color:#a73535}
 @media(max-width:750px){.driver-detail-grid{grid-template-columns:1fr}}
+
+.driver-gps-card {
+
+    border:
+        1px solid #f0dfce;
+}
+
+
+.driver-gps-intro {
+
+    margin-bottom:
+        12px;
+}
+
+
+.driver-gps-status {
+
+    padding:
+        11px 12px;
+
+    margin-bottom:
+        12px;
+
+    border-radius:
+        11px;
+
+    background:
+        #f3f1ee;
+
+    color:
+        #6d665f;
+
+    font-size:
+        11px;
+
+    font-weight:
+        800;
+}
+
+
+.driver-gps-status.active {
+
+    background:
+        #eaf8ef;
+
+    color:
+        #267247;
+}
+
+
+.driver-gps-status.error {
+
+    background:
+        #fff0f0;
+
+    color:
+        #a73535;
+}
+
+
+.driver-gps-values {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap:
+        8px;
+
+    margin-bottom:
+        12px;
+}
+
+
+.driver-gps-values > div {
+
+    padding:
+        10px;
+
+    border-radius:
+        10px;
+
+    background:
+        #faf7f4;
+}
+
+
+.driver-gps-values span,
+.driver-gps-values strong {
+
+    display:
+        block;
+}
+
+
+.driver-gps-values span {
+
+    margin-bottom:
+        4px;
+
+    color:
+        #817970;
+
+    font-size:
+        9px;
+}
+
+
+.driver-gps-values strong {
+
+    font-size:
+        11px;
+}
+
+
+.driver-gps-actions {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap:
+        8px;
+}
+
+
+.driver-action.secondary {
+
+    border:
+        1px solid #ddd6d0;
+
+    background:
+        #fff;
+
+    color:
+        #17130f;
+}
+
+
+.driver-action:disabled {
+
+    opacity:
+        .55;
+
+    cursor:
+        not-allowed;
+}
+
+
+.driver-gps-help {
+
+    display:
+        block;
+
+    margin-top:
+        10px;
+
+    color:
+        #857c74;
+
+    line-height:
+        1.5;
+}
+
+
+@media(max-width:500px) {
+
+    .driver-gps-values,
+    .driver-gps-actions {
+
+        grid-template-columns:
+            1fr;
+    }
+}
+
 </style>
+
+
+<% if (delivery.status === "ON_THE_WAY") { %>
+
+<script>
+
+document.addEventListener(
+  "DOMContentLoaded",
+  function () {
+
+    const reference =
+      <%- JSON.stringify(delivery.order_reference) %>;
+
+
+    const startButton =
+      document.getElementById(
+        "startGpsButton"
+      );
+
+
+    const stopButton =
+      document.getElementById(
+        "stopGpsButton"
+      );
+
+
+    const statusElement =
+      document.getElementById(
+        "gpsPermissionNotice"
+      );
+
+
+    const latitudeElement =
+      document.getElementById(
+        "gpsLatitude"
+      );
+
+
+    const longitudeElement =
+      document.getElementById(
+        "gpsLongitude"
+      );
+
+
+    const accuracyElement =
+      document.getElementById(
+        "gpsAccuracy"
+      );
+
+
+    const speedElement =
+      document.getElementById(
+        "gpsSpeed"
+      );
+
+
+    const lastSentElement =
+      document.getElementById(
+        "gpsLastSent"
+      );
+
+
+    let watchId =
+      null;
+
+
+    let wakeLock =
+      null;
+
+
+    let lastSentAt =
+      0;
+
+
+    let lastSentPosition =
+      null;
+
+
+    /* =====================================================
+       DISTANCE HAVERSINE EN METRES
+    ====================================================== */
+
+    function distanceMeters(
+      a,
+      b
+    ) {
+
+      if (
+        !a ||
+        !b
+      ) {
+
+        return Infinity;
+      }
+
+
+      const earthRadius =
+        6371000;
+
+
+      const toRad =
+        degrees =>
+          degrees
+          *
+          Math.PI
+          /
+          180;
+
+
+      const lat1 =
+        toRad(
+          a.latitude
+        );
+
+
+      const lat2 =
+        toRad(
+          b.latitude
+        );
+
+
+      const deltaLat =
+        toRad(
+          b.latitude
+          -
+          a.latitude
+        );
+
+
+      const deltaLng =
+        toRad(
+          b.longitude
+          -
+          a.longitude
+        );
+
+
+      const h =
+        Math.sin(
+          deltaLat / 2
+        ) ** 2
+        +
+        Math.cos(
+          lat1
+        )
+        *
+        Math.cos(
+          lat2
+        )
+        *
+        Math.sin(
+          deltaLng / 2
+        ) ** 2;
+
+
+      return earthRadius
+        *
+        2
+        *
+        Math.atan2(
+          Math.sqrt(h),
+          Math.sqrt(1 - h)
+        );
+    }
+
+
+    /* =====================================================
+       WAKE LOCK
+    ====================================================== */
+
+    async function requestWakeLock() {
+
+      if (
+        !(
+          "wakeLock"
+          in navigator
+        )
+      ) {
+
+        return;
+      }
+
+
+      try {
+
+        wakeLock =
+          await navigator
+            .wakeLock
+            .request(
+              "screen"
+            );
+
+      }
+      catch (error) {
+
+        console.debug(
+          "Wake Lock indisponible :",
+          error
+        );
+      }
+    }
+
+
+    document.addEventListener(
+      "visibilitychange",
+      function () {
+
+        if (
+          document.visibilityState ===
+            "visible"
+          &&
+          watchId !==
+            null
+        ) {
+
+          requestWakeLock();
+        }
+      }
+    );
+
+
+    /* =====================================================
+       ENVOI SERVEUR
+    ====================================================== */
+
+    async function sendPosition(
+      position
+    ) {
+
+      const coords =
+        position.coords;
+
+
+      const currentPosition = {
+        latitude:
+          coords.latitude,
+
+        longitude:
+          coords.longitude
+      };
+
+
+      const now =
+        Date.now();
+
+
+      const elapsed =
+        now
+        -
+        lastSentAt;
+
+
+      const moved =
+        distanceMeters(
+          lastSentPosition,
+          currentPosition
+        );
+
+
+      /*
+       * Premier point toujours envoyé.
+       * Ensuite :
+       * - minimum 5 secondes ;
+       * - ou déplacement d'au moins 5 m.
+       */
+
+      if (
+        lastSentAt !== 0
+        &&
+        elapsed < 5000
+        &&
+        moved < 5
+      ) {
+
+        return;
+      }
+
+
+      latitudeElement.textContent =
+        coords.latitude
+          .toFixed(7);
+
+
+      longitudeElement.textContent =
+        coords.longitude
+          .toFixed(7);
+
+
+      accuracyElement.textContent =
+        Number.isFinite(
+          coords.accuracy
+        )
+          ? Math.round(
+              coords.accuracy
+            )
+            + " m"
+          : "—";
+
+
+      speedElement.textContent =
+        Number.isFinite(
+          coords.speed
+        )
+        &&
+        coords.speed >= 0
+
+          ? (
+              coords.speed * 3.6
+            )
+              .toFixed(1)
+            + " km/h"
+
+          : "—";
+
+
+      try {
+
+        const response =
+          await fetch(
+            "/livreur/livraisons/"
+            +
+            encodeURIComponent(
+              reference
+            )
+            +
+            "/position",
+            {
+              method:
+                "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              body:
+                JSON.stringify({
+                  latitude:
+                    coords.latitude,
+
+                  longitude:
+                    coords.longitude,
+
+                  heading:
+                    Number.isFinite(
+                      coords.heading
+                    )
+                      ? coords.heading
+                      : null,
+
+                  speed_mps:
+                    Number.isFinite(
+                      coords.speed
+                    )
+                      ? coords.speed
+                      : null,
+
+                  accuracy_meters:
+                    Number.isFinite(
+                      coords.accuracy
+                    )
+                      ? coords.accuracy
+                      : null
+                })
+            }
+          );
+
+
+        const data =
+          await response.json();
+
+
+        if (
+          !response.ok
+          ||
+          !data.ok
+        ) {
+
+          throw new Error(
+            data.message
+            ||
+            "Envoi GPS refusé."
+          );
+        }
+
+
+        if (
+          data.inserted
+        ) {
+
+          lastSentAt =
+            now;
+
+
+          lastSentPosition =
+            currentPosition;
+
+
+          lastSentElement.textContent =
+            new Date()
+              .toLocaleTimeString(
+                "fr-FR"
+              );
+        }
+
+
+        statusElement.textContent =
+          data.rateLimited
+            ? "GPS actif · fréquence limitée par le serveur."
+            : "GPS actif · position transmise au client.";
+
+
+        statusElement.classList.remove(
+          "error"
+        );
+
+
+        statusElement.classList.add(
+          "active"
+        );
+
+      }
+      catch (error) {
+
+        statusElement.textContent =
+          "Erreur d'envoi GPS : "
+          +
+          error.message;
+
+
+        statusElement.classList.remove(
+          "active"
+        );
+
+
+        statusElement.classList.add(
+          "error"
+        );
+      }
+    }
+
+
+    /* =====================================================
+       ERREUR GEOLOCATION
+    ====================================================== */
+
+    function handleGpsError(
+      error
+    ) {
+
+      const messages = {
+
+        1:
+          "Permission GPS refusée.",
+
+        2:
+          "Position GPS indisponible.",
+
+        3:
+          "Délai GPS dépassé."
+      };
+
+
+      statusElement.textContent =
+        messages[
+          error.code
+        ]
+        ||
+        error.message
+        ||
+        "Erreur GPS.";
+
+
+      statusElement.classList.remove(
+        "active"
+      );
+
+
+      statusElement.classList.add(
+        "error"
+      );
+    }
+
+
+    /* =====================================================
+       DEMARRER
+    ====================================================== */
+
+    async function startGps() {
+
+      if (
+        !(
+          "geolocation"
+          in navigator
+        )
+      ) {
+
+        statusElement.textContent =
+          "Ce navigateur ne prend pas en charge la géolocalisation.";
+
+
+        statusElement.classList.add(
+          "error"
+        );
+
+
+        return;
+      }
+
+
+      if (
+        watchId !==
+        null
+      ) {
+
+        return;
+      }
+
+
+      statusElement.textContent =
+        "Demande d'autorisation GPS…";
+
+
+      await requestWakeLock();
+
+
+      watchId =
+        navigator
+          .geolocation
+          .watchPosition(
+            sendPosition,
+            handleGpsError,
+            {
+              enableHighAccuracy:
+                true,
+
+              maximumAge:
+                3000,
+
+              timeout:
+                15000
+            }
+          );
+
+
+      startButton.disabled =
+        true;
+
+
+      stopButton.disabled =
+        false;
+    }
+
+
+    /* =====================================================
+       ARRETER
+    ====================================================== */
+
+    function stopGps() {
+
+      if (
+        watchId !==
+        null
+      ) {
+
+        navigator
+          .geolocation
+          .clearWatch(
+            watchId
+          );
+
+
+        watchId =
+          null;
+      }
+
+
+      if (wakeLock) {
+
+        wakeLock
+          .release()
+          .catch(
+            () => {}
+          );
+
+
+        wakeLock =
+          null;
+      }
+
+
+      startButton.disabled =
+        false;
+
+
+      stopButton.disabled =
+        true;
+
+
+      statusElement.textContent =
+        "GPS arrêté.";
+
+
+      statusElement.classList.remove(
+        "active",
+        "error"
+      );
+    }
+
+
+    startButton.addEventListener(
+      "click",
+      startGps
+    );
+
+
+    stopButton.addEventListener(
+      "click",
+      stopGps
+    );
+
+
+    window.addEventListener(
+      "beforeunload",
+      stopGps
+    );
+  }
+);
+
+</script>
+
+<% } %>
+

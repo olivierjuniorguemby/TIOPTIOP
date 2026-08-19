@@ -1,17 +1,31 @@
 const router =
     require("express").Router();
 
+
 const auth =
-    require("../../controllers/driver/auth.controller");
+    require(
+        "../../controllers/driver/auth.controller"
+    );
+
 
 const driver =
-    require("../../controllers/driver/driver.controller");
+    require(
+        "../../controllers/driver/driver.controller"
+    );
+
 
 const {
     requireDriver,
     driverGuestOnly
 } =
-    require("../../middleware/driver-auth");
+    require(
+        "../../middleware/driver-auth"
+    );
+
+
+/* =========================================================
+   AUTH LIVREUR
+========================================================= */
 
 router.get(
     "/connexion",
@@ -19,11 +33,13 @@ router.get(
     auth.loginPage
 );
 
+
 router.post(
     "/connexion",
     driverGuestOnly,
     auth.login
 );
+
 
 router.post(
     "/deconnexion",
@@ -31,11 +47,17 @@ router.post(
     auth.logout
 );
 
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
 router.get(
     "/",
     requireDriver,
     driver.dashboard
 );
+
 
 router.post(
     "/disponibilite",
@@ -43,11 +65,21 @@ router.post(
     driver.availability
 );
 
+
+/* =========================================================
+   DETAIL LIVRAISON
+========================================================= */
+
 router.get(
     "/livraisons/:reference",
     requireDriver,
     driver.detail
 );
+
+
+/* =========================================================
+   ACTIONS LIVRAISON
+========================================================= */
 
 router.post(
     "/livraisons/:reference/accepter",
@@ -55,11 +87,13 @@ router.post(
     driver.accept
 );
 
+
 router.post(
     "/livraisons/:reference/refuser",
     requireDriver,
     driver.reject
 );
+
 
 router.post(
     "/livraisons/:reference/recuperer",
@@ -67,11 +101,13 @@ router.post(
     driver.pickup
 );
 
+
 router.post(
     "/livraisons/:reference/demarrer",
     requireDriver,
     driver.start
 );
+
 
 router.post(
     "/livraisons/:reference/arrive",
@@ -79,10 +115,24 @@ router.post(
     driver.arrived
 );
 
+
 router.post(
     "/livraisons/:reference/livree",
     requireDriver,
     driver.delivered
 );
 
-module.exports = router;
+
+/* =========================================================
+   GPS REEL - 13.6
+========================================================= */
+
+router.post(
+    "/livraisons/:reference/position",
+    requireDriver,
+    driver.position
+);
+
+
+module.exports =
+    router;

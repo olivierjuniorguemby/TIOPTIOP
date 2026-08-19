@@ -422,3 +422,178 @@ exports.delivered = async (req, res) => {
         );
     }
 };
+
+
+/* =========================================================
+   GPS REEL LIVREUR
+   POST /livreur/livraisons/:reference/position
+
+   Cette route est protégée par requireDriver.
+========================================================= */
+
+exports.position =
+async function (
+    req,
+    res
+) {
+
+    const reference =
+        getReference(
+            req
+        );
+
+
+    try {
+
+        const result =
+            await Delivery.recordTrackingPoint({
+
+                driverId:
+                    driverId(
+                        req
+                    ),
+
+                reference,
+
+                latitude:
+                    req.body.latitude,
+
+                longitude:
+                    req.body.longitude,
+
+                heading:
+                    req.body.heading,
+
+                speedMps:
+                    req.body.speed_mps,
+
+                accuracyMeters:
+                    req.body.accuracy_meters
+            });
+
+
+        /*
+         * Si le serveur a limité la fréquence,
+         * on ne réémet pas inutilement l'ancien point.
+         */
+
+        if (
+            result.inserted
+        ) {
+
+            const io =
+                req.app.get(
+                    "io"
+                );
+
+
+            if (io) {
+
+                io
+                    .to(
+                        `order:${reference}`
+                    )
+                    .emit(
+                        "driver:location",
+                        {
+                            orderId:
+                                reference,
+
+                            reference,
+
+                            deliveryId:
+                                result.deliveryId,
+
+                            lat:
+                                result.latitude,
+
+                            lng:
+                                result.longitude,
+
+                            heading:
+                                result.heading,
+
+                            speedKmh:
+                                result.speedKmh,
+
+                            accuracyMeters:
+                                result.accuracyMeters,
+
+                            recordedAt:
+                                result.recordedAt
+                        }
+                    );
+            }
+        }
+
+
+        return res.status(
+            result.inserted
+                ? 201
+                : 200
+        ).json({
+            ok:
+                true,
+
+            inserted:
+                result.inserted,
+
+            rateLimited:
+                result.rateLimited,
+
+            point: {
+                latitude:
+                    result.latitude,
+
+                longitude:
+                    result.longitude,
+
+                heading:
+                    result.heading,
+
+                speedKmh:
+                    result.speedKmh,
+
+                accuracyMeters:
+                    result.accuracyMeters,
+
+                recordedAt:
+                    result.recordedAt
+            }
+        });
+
+    }
+    catch (error) {
+
+        console.error(
+            "Erreur GPS livreur :",
+            error
+        );
+
+
+        const businessCodes = [
+            "GPS_INVALID_COORDINATES",
+            "GPS_DELIVERY_NOT_FOUND",
+            "GPS_DELIVERY_NOT_ACCEPTED",
+            "GPS_DELIVERY_NOT_ACTIVE"
+        ];
+
+
+        return res.status(
+            businessCodes.includes(
+                error.code
+            )
+                ? 400
+                : 500
+        ).json({
+            ok:
+                false,
+
+            message:
+                error.message
+                ||
+                "Impossible d'enregistrer la position."
+        });
+    }
+};
+

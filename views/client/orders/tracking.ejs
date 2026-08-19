@@ -75,6 +75,86 @@
         currentWorkflow.indexOf(
             currentStatus
         );
+
+
+    const restaurantLat =
+        delivery &&
+        delivery.restaurant_latitude !== null
+        &&
+        delivery.restaurant_latitude !== undefined
+
+            ? Number(
+                delivery.restaurant_latitude
+            )
+
+            : null;
+
+
+    const restaurantLng =
+        delivery &&
+        delivery.restaurant_longitude !== null
+        &&
+        delivery.restaurant_longitude !== undefined
+
+            ? Number(
+                delivery.restaurant_longitude
+            )
+
+            : null;
+
+
+    const destinationLat =
+        delivery &&
+        delivery.delivery_latitude !== null
+        &&
+        delivery.delivery_latitude !== undefined
+
+            ? Number(
+                delivery.delivery_latitude
+            )
+
+            : null;
+
+
+    const destinationLng =
+        delivery &&
+        delivery.delivery_longitude !== null
+        &&
+        delivery.delivery_longitude !== undefined
+
+            ? Number(
+                delivery.delivery_longitude
+            )
+
+            : null;
+
+
+    const initialDriverLat =
+        latestTrackingPoint
+        &&
+        latestTrackingPoint.latitude !== null
+        &&
+        latestTrackingPoint.latitude !== undefined
+
+            ? Number(
+                latestTrackingPoint.latitude
+            )
+
+            : null;
+
+
+    const initialDriverLng =
+        latestTrackingPoint
+        &&
+        latestTrackingPoint.longitude !== null
+        &&
+        latestTrackingPoint.longitude !== undefined
+
+            ? Number(
+                latestTrackingPoint.longitude
+            )
+
+            : null;
 %>
 
 
@@ -97,10 +177,6 @@
 <section class="tracking-page">
 
 
-    <!-- =====================================================
-         HEADER
-    ====================================================== -->
-
     <header class="tracking-heading">
 
         <span class="tracking-live">
@@ -114,10 +190,8 @@
 
 
         <p>
-
-            Le statut de votre commande est synchronisé
-            automatiquement avec l'administration TiopTiop.
-
+            Le statut et la position du livreur sont synchronisés
+            en temps réel avec TiopTiop.
         </p>
 
 
@@ -134,10 +208,6 @@
     <div class="tracking-layout">
 
 
-        <!-- =================================================
-             GAUCHE
-        ================================================== -->
-
         <div class="tracking-left">
 
 
@@ -145,16 +215,25 @@
 
                 <div id="trackingMap"></div>
 
+
+                <div
+                    id="mapMissingCoordinates"
+                    class="tracking-map-warning"
+                    hidden
+                ></div>
+
             </section>
 
 
             <section class="tracking-driver-card">
 
                 <h3 id="driverCardTitle">
-                    🛵 <%= delivery?.driver_name
-                        ? delivery.driver_name
-                        : "Livraison TiopTiop"
+
+                    🛵
+                    <%= delivery?.driver_name
+                        || "Livraison TiopTiop"
                     %>
+
                 </h3>
 
 
@@ -173,6 +252,7 @@
                             <br>
 
                             Arrivée estimée :
+
                             <strong>
                                 <%= new Date(
                                     delivery.estimated_arrival
@@ -185,7 +265,8 @@
 
                     <% } else { %>
 
-                        Votre commande attend encore l'affectation d'un livreur.
+                        Votre commande attend encore
+                        l'affectation d'un livreur.
 
                     <% } %>
 
@@ -194,21 +275,73 @@
 
                 <p>
 
-                    <span id="driverOperationalStatus"></span><br><span id="gpsStatus">
+                    <span id="driverOperationalStatus"></span>
 
-                        <%= latestTrackingPoint
-                            ? "Dernière position GPS enregistrée : "
-                                + new Date(
-                                    latestTrackingPoint.recorded_at
-                                ).toLocaleString(
-                                    "fr-FR"
-                                )
-                            : "Le suivi GPS démarrera lorsque le livreur commencera à transmettre sa position."
-                        %>
+                    <br>
+
+                    <span id="gpsStatus">
+
+                        <% if (latestTrackingPoint) { %>
+
+                            Dernière position GPS :
+
+                            <%= new Date(
+                                latestTrackingPoint.recorded_at
+                            ).toLocaleString(
+                                "fr-FR"
+                            ) %>
+
+                        <% } else { %>
+
+                            En attente de la première position GPS du livreur.
+
+                        <% } %>
 
                     </span>
 
                 </p>
+
+
+                <div
+                    id="gpsMetrics"
+                    class="tracking-gps-metrics"
+                    <%= latestTrackingPoint
+                        ? ""
+                        : "hidden"
+                    %>
+                >
+
+                    <span>
+                        Précision :
+                        <strong id="gpsAccuracyClient">
+                            <%= latestTrackingPoint?.accuracy_meters !== null
+                                && latestTrackingPoint?.accuracy_meters !== undefined
+                                    ? Math.round(
+                                        Number(
+                                            latestTrackingPoint.accuracy_meters
+                                        )
+                                    ) + " m"
+                                    : "—"
+                            %>
+                        </strong>
+                    </span>
+
+
+                    <span>
+                        Vitesse :
+                        <strong id="gpsSpeedClient">
+                            <%= latestTrackingPoint?.speed_kmh !== null
+                                && latestTrackingPoint?.speed_kmh !== undefined
+                                    ? Number(
+                                        latestTrackingPoint.speed_kmh
+                                    ).toFixed(1)
+                                        + " km/h"
+                                    : "—"
+                            %>
+                        </strong>
+                    </span>
+
+                </div>
 
 
                 <div class="tracking-driver-actions">
@@ -227,10 +360,6 @@
 
         </div>
 
-
-        <!-- =================================================
-             DROITE
-        ================================================== -->
 
         <div class="tracking-right">
 
@@ -253,6 +382,7 @@
                 <small id="lastStatusUpdate">
 
                     Dernière mise à jour :
+
                     <%= order.updated_at
                         ? new Date(
                             order.updated_at
@@ -277,7 +407,9 @@
                     .forEach(
                         (status, index) => {
 
-                            let stateClass = "";
+                            let stateClass =
+                                "";
+
 
                             if (
                                 currentStatusIndex >= 0
@@ -344,17 +476,24 @@
             </section>
 
 
-            <% if (
-                currentStatus === "CANCELLED"
-                ||
-                currentStatus === "REFUNDED"
-            ) { %>
+            <section
+                id="exceptionStatus"
+                class="tracking-exception"
+                <%= (
+                    currentStatus === "CANCELLED"
+                    ||
+                    currentStatus === "REFUNDED"
+                )
+                    ? ""
+                    : "hidden"
+                %>
+            >
 
-
-                <section
-                    id="exceptionStatus"
-                    class="tracking-exception"
-                >
+                <% if (
+                    currentStatus === "CANCELLED"
+                    ||
+                    currentStatus === "REFUNDED"
+                ) { %>
 
                     <strong>
                         <%= statusLabels[currentStatus]
@@ -367,20 +506,9 @@
                         pour plus d'informations.
                     </span>
 
-                </section>
+                <% } %>
 
-
-            <% } else { %>
-
-
-                <section
-                    id="exceptionStatus"
-                    class="tracking-exception"
-                    hidden
-                ></section>
-
-
-            <% } %>
+            </section>
 
 
             <section class="tracking-payment">
@@ -393,8 +521,8 @@
                 <p>
 
                     Moyen :
-                    <strong>
 
+                    <strong>
                         <%= payment
                             ? (
                                 paymentLabels[
@@ -405,7 +533,6 @@
                             )
                             : "—"
                         %>
-
                     </strong>
 
                 </p>
@@ -458,458 +585,48 @@
 
 <style>
 
-.tracking-page {
-
-    max-width: 1180px;
-
-    margin: 0 auto;
-
-    padding:
-        35px 20px 80px;
+.tracking-page{
+max-width:1180px;margin:0 auto;padding:35px 20px 80px
 }
-
-
-.tracking-heading {
-
-    margin-bottom: 45px;
-}
-
-
-.tracking-live {
-
-    display: inline-flex;
-
-    padding: 8px 15px;
-
-    background: #fff0df;
-
-    color: #ff7900;
-
-    border-radius: 30px;
-
-    font-size: 13px;
-
-    font-weight: 800;
-}
-
-
-.tracking-heading h1 {
-
-    margin: 22px 0 10px;
-
-    font-size:
-        clamp(42px, 6vw, 72px);
-
-    line-height: .95;
-
-    letter-spacing: -4px;
-
-    color: #17130f;
-}
-
-
-.tracking-heading p {
-
-    max-width: 680px;
-
-    color: #746d66;
-
-    font-size: 16px;
-
-    line-height: 1.7;
-}
-
-
-.tracking-connection {
-
-    display: inline-flex;
-
-    align-items: center;
-
-    min-height: 28px;
-
-    margin-top: 12px;
-
-    padding: 0 10px;
-
-    border-radius: 999px;
-
-    background: #f2f0ed;
-
-    color: #716962;
-
-    font-size: 10px;
-
-    font-weight: 900;
-}
-
-
-.tracking-connection.connected {
-
-    background: #eaf8ef;
-
-    color: #277347;
-}
-
-
-.tracking-layout {
-
-    display: grid;
-
-    grid-template-columns:
-        1fr 1fr;
-
-    gap: 22px;
-
-    align-items: start;
-}
-
-
-.tracking-left,
-.tracking-right {
-
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 14px;
-}
-
-
-.tracking-map-card {
-
-    padding: 8px;
-
-    border-radius: 28px;
-
-    background: #fff;
-
-    overflow: hidden;
-
-    box-shadow:
-        0 15px 40px
-        rgba(32,20,10,.08);
-}
-
-
-#trackingMap {
-
-    width: 100%;
-
-    height: 390px;
-
-    border-radius: 22px;
-
-    overflow: hidden;
-
-    z-index: 1;
-}
-
-
-.tracking-driver-card,
-.tracking-payment,
-.tracking-status-card {
-
-    padding: 25px;
-
-    border-radius: 24px;
-
-    background: #fff;
-
-    box-shadow:
-        0 15px 40px
-        rgba(32,20,10,.05);
-}
-
-
-.tracking-driver-card h3,
-.tracking-payment h3 {
-
-    margin:
-        0 0 12px;
-}
-
-
-.tracking-driver-card p,
-.tracking-payment p {
-
-    color: #77706a;
-
-    line-height: 1.55;
-}
-
-
-.tracking-driver-actions {
-
-    display: flex;
-
-    gap: 10px;
-
-    flex-wrap: wrap;
-}
-
-
-.tracking-status-label {
-
-    display: block;
-
-    margin-bottom: 7px;
-
-    color: #817970;
-
-    font-size: 10px;
-
-    font-weight: 900;
-
-    text-transform: uppercase;
-}
-
-
-.tracking-status-current {
-
-    display: block;
-
-    color: #ff7900;
-
-    font-size: 24px;
-}
-
-
-.tracking-status-card small {
-
-    display: block;
-
-    margin-top: 8px;
-
-    color: #8a8179;
-}
-
-
-.tracking-steps {
-
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 12px;
-}
-
-
-.tracking-step {
-
-    min-height: 76px;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 16px;
-
-    padding: 16px;
-
-    border: 2px solid transparent;
-
-    border-radius: 22px;
-
-    background: #fff;
-
-    transition: .25s ease;
-}
-
-
-.tracking-step.active {
-
-    border-color: #ffb36f;
-}
-
-
-.tracking-step.completed {
-
-    background: #fffaf5;
-}
-
-
-.tracking-number {
-
-    width: 40px;
-    height: 40px;
-
-    min-width: 40px;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 50%;
-
-    background: #f1f1f1;
-
-    font-weight: 900;
-}
-
-
-.tracking-step.active
-.tracking-number {
-
-    background: #ff7900;
-
-    color: #fff;
-}
-
-
-.tracking-step.completed
-.tracking-number {
-
-    background: #198754;
-
-    color: #fff;
-}
-
-
-.tracking-step strong {
-
-    display: block;
-
-    font-size: 15px;
-}
-
-
-.tracking-step small {
-
-    display: block;
-
-    margin-top: 3px;
-
-    color: #817a73;
-
-    font-size: 12px;
-}
-
-
-.tracking-exception {
-
-    padding: 18px;
-
-    border-radius: 18px;
-
-    background: #fff0f0;
-
-    color: #a73535;
-}
-
-
-.tracking-exception strong,
-.tracking-exception span {
-
-    display: block;
-}
-
-
-.tracking-exception span {
-
-    margin-top: 5px;
-
-    font-size: 11px;
-}
-
-
-.tracking-paid {
-
-    display: inline-flex;
-
-    margin-left: 6px;
-
-    padding: 6px 10px;
-
-    border-radius: 20px;
-
-    background: #fff0df;
-
-    color: #c95f00;
-
-    font-size: 11px;
-
-    font-weight: 900;
-}
-
-
-.tracking-primary-btn,
-.tracking-secondary-btn {
-
-    min-height: 43px;
-
-    display: inline-flex;
-
-    align-items: center;
-    justify-content: center;
-
-    padding: 0 18px;
-
-    border-radius: 999px;
-
-    text-decoration: none;
-
-    font-size: 11px;
-
-    font-weight: 900;
-}
-
-
-.tracking-primary-btn {
-
-    background: #ff7900;
-
-    color: #fff;
-}
-
-
-.tracking-secondary-btn {
-
-    border: 1px solid #e1dcd7;
-
-    background: #fff;
-
-    color: #1b1714;
-}
-
-
-@media(max-width:900px) {
-
-    .tracking-layout {
-
-        grid-template-columns:
-            1fr;
-    }
-
-
-    #trackingMap {
-
-        height: 350px;
-    }
-}
-
-
-@media(max-width:600px) {
-
-    .tracking-page {
-
-        padding:
-            25px 14px 60px;
-    }
-
-
-    .tracking-heading h1 {
-
-        letter-spacing: -2px;
-    }
-
-
-    #trackingMap {
-
-        height: 300px;
-    }
-}
+.tracking-heading{margin-bottom:45px}
+.tracking-live{display:inline-flex;padding:8px 15px;background:#fff0df;color:#ff7900;border-radius:30px;font-size:13px;font-weight:800}
+.tracking-heading h1{margin:22px 0 10px;font-size:clamp(42px,6vw,72px);line-height:.95;letter-spacing:-4px;color:#17130f}
+.tracking-heading p{max-width:680px;color:#746d66;font-size:16px;line-height:1.7}
+.tracking-connection{display:inline-flex;align-items:center;min-height:28px;margin-top:12px;padding:0 10px;border-radius:999px;background:#f2f0ed;color:#716962;font-size:10px;font-weight:900}
+.tracking-connection.connected{background:#eaf8ef;color:#277347}
+.tracking-layout{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.tracking-left,.tracking-right{display:flex;flex-direction:column;gap:14px}
+.tracking-map-card{position:relative;padding:8px;border-radius:28px;background:#fff;overflow:hidden;box-shadow:0 15px 40px rgba(32,20,10,.08)}
+#trackingMap{width:100%;height:390px;border-radius:22px;overflow:hidden;z-index:1}
+.tracking-map-warning{position:absolute;left:20px;right:20px;bottom:20px;z-index:500;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.95);color:#7a5b3d;font-size:10px;font-weight:800;box-shadow:0 4px 18px rgba(0,0,0,.12)}
+.tracking-driver-card,.tracking-payment,.tracking-status-card{padding:25px;border-radius:24px;background:#fff;box-shadow:0 15px 40px rgba(32,20,10,.05)}
+.tracking-driver-card h3,.tracking-payment h3{margin:0 0 12px}
+.tracking-driver-card p,.tracking-payment p{color:#77706a;line-height:1.55}
+.tracking-driver-actions{display:flex;gap:10px;flex-wrap:wrap}
+.tracking-status-label{display:block;margin-bottom:7px;color:#817970;font-size:10px;font-weight:900;text-transform:uppercase}
+.tracking-status-current{display:block;color:#ff7900;font-size:24px}
+.tracking-status-card small{display:block;margin-top:8px;color:#8a8179}
+.tracking-steps{display:flex;flex-direction:column;gap:12px}
+.tracking-step{min-height:76px;display:flex;align-items:center;gap:16px;padding:16px;border:2px solid transparent;border-radius:22px;background:#fff;transition:.25s ease}
+.tracking-step.active{border-color:#ffb36f}
+.tracking-step.completed{background:#fffaf5}
+.tracking-number{width:40px;height:40px;min-width:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#f1f1f1;font-weight:900}
+.tracking-step.active .tracking-number{background:#ff7900;color:#fff}
+.tracking-step.completed .tracking-number{background:#198754;color:#fff}
+.tracking-step strong{display:block;font-size:15px}
+.tracking-step small{display:block;margin-top:3px;color:#817a73;font-size:12px}
+.tracking-exception{padding:18px;border-radius:18px;background:#fff0f0;color:#a73535}
+.tracking-exception strong,.tracking-exception span{display:block}
+.tracking-exception span{margin-top:5px;font-size:11px}
+.tracking-paid{display:inline-flex;margin-left:6px;padding:6px 10px;border-radius:20px;background:#fff0df;color:#c95f00;font-size:11px;font-weight:900}
+.tracking-primary-btn,.tracking-secondary-btn{min-height:43px;display:inline-flex;align-items:center;justify-content:center;padding:0 18px;border-radius:999px;text-decoration:none;font-size:11px;font-weight:900}
+.tracking-primary-btn{background:#ff7900;color:#fff}
+.tracking-secondary-btn{border:1px solid #e1dcd7;background:#fff;color:#1b1714}
+.tracking-gps-metrics{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.tracking-gps-metrics span{display:inline-flex;padding:7px 9px;border-radius:999px;background:#faf7f4;color:#746d66;font-size:9px}
+.tracking-gps-metrics strong{margin-left:4px;color:#17130f}
+@media(max-width:900px){.tracking-layout{grid-template-columns:1fr}#trackingMap{height:350px}}
+@media(max-width:600px){.tracking-page{padding:25px 14px 60px}.tracking-heading h1{letter-spacing:-2px}#trackingMap{height:300px}}
 
 </style>
 
@@ -940,6 +657,36 @@ document.addEventListener(
             <%- JSON.stringify(workflows) %>;
 
 
+        const restaurant = {
+
+            lat:
+                <%- JSON.stringify(restaurantLat) %>,
+
+            lng:
+                <%- JSON.stringify(restaurantLng) %>
+        };
+
+
+        const destination = {
+
+            lat:
+                <%- JSON.stringify(destinationLat) %>,
+
+            lng:
+                <%- JSON.stringify(destinationLng) %>
+        };
+
+
+        let driverPosition = {
+
+            lat:
+                <%- JSON.stringify(initialDriverLat) %>,
+
+            lng:
+                <%- JSON.stringify(initialDriverLng) %>
+        };
+
+
         const currentStatusElement =
             document.getElementById(
                 "currentOrderStatus"
@@ -964,8 +711,71 @@ document.addEventListener(
             );
 
 
+        const gpsStatusElement =
+            document.getElementById(
+                "gpsStatus"
+            );
+
+
+        const gpsMetricsElement =
+            document.getElementById(
+                "gpsMetrics"
+            );
+
+
+        const gpsAccuracyElement =
+            document.getElementById(
+                "gpsAccuracyClient"
+            );
+
+
+        const gpsSpeedElement =
+            document.getElementById(
+                "gpsSpeedClient"
+            );
+
+
+        const mapWarning =
+            document.getElementById(
+                "mapMissingCoordinates"
+            );
+
+
+        function isCoordinate(
+            value
+        ) {
+
+            return typeof value ===
+                "number"
+                &&
+                Number.isFinite(
+                    value
+                );
+        }
+
+
+        function escapeHtml(
+            value
+        ) {
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+
+            div.textContent =
+                String(
+                    value || ""
+                );
+
+
+            return div.innerHTML;
+        }
+
+
         /* =================================================
-           STATUS UI
+           STATUT COMMANDE
         ================================================= */
 
         function renderStatus(
@@ -977,7 +787,9 @@ document.addEventListener(
                 status;
 
 
-            if (currentStatusElement) {
+            if (
+                currentStatusElement
+            ) {
 
                 currentStatusElement.textContent =
                     statusLabels[status]
@@ -986,22 +798,19 @@ document.addEventListener(
             }
 
 
-            if (lastUpdateElement) {
+            if (
+                lastUpdateElement
+            ) {
 
                 lastUpdateElement.textContent =
                     "Dernière mise à jour : "
                     +
-                    (
+                    new Date(
                         changedAt
-                            ? new Date(
-                                changedAt
-                            ).toLocaleString(
-                                "fr-FR"
-                            )
-                            : new Date()
-                                .toLocaleString(
-                                    "fr-FR"
-                                )
+                        ||
+                        Date.now()
+                    ).toLocaleString(
+                        "fr-FR"
                     );
             }
 
@@ -1023,7 +832,10 @@ document.addEventListener(
                     ".tracking-step"
                 )
                 .forEach(
-                    (element, index) => {
+                    (
+                        element,
+                        index
+                    ) => {
 
                         element.classList.remove(
                             "active",
@@ -1048,8 +860,8 @@ document.addEventListener(
                                 "completed"
                             );
 
-                            if (small) {
 
+                            if (small) {
                                 small.textContent =
                                     "Terminée";
                             }
@@ -1065,19 +877,16 @@ document.addEventListener(
                                 "active"
                             );
 
-                            if (small) {
 
+                            if (small) {
                                 small.textContent =
                                     "Étape actuelle";
                             }
                         }
-                        else {
+                        else if (small) {
 
-                            if (small) {
-
-                                small.textContent =
-                                    "À venir";
-                            }
+                            small.textContent =
+                                "À venir";
                         }
                     }
                 );
@@ -1089,32 +898,31 @@ document.addEventListener(
                 status === "REFUNDED"
             ) {
 
-                if (exceptionElement) {
+                exceptionElement.hidden =
+                    false;
 
-                    exceptionElement.hidden =
-                        false;
 
-                    exceptionElement.innerHTML =
-                        `
-                            <strong>
-                                ${escapeHtml(
-                                    statusLabels[status]
-                                    ||
-                                    status
-                                )}
-                            </strong>
+                exceptionElement.innerHTML =
+                    `
+                        <strong>
+                            ${escapeHtml(
+                                statusLabels[status]
+                                ||
+                                status
+                            )}
+                        </strong>
 
-                            <span>
-                                Consultez le détail de la commande
-                                pour plus d'informations.
-                            </span>
-                        `;
-                }
+                        <span>
+                            Consultez le détail de la commande
+                            pour plus d'informations.
+                        </span>
+                    `;
             }
-            else if (exceptionElement) {
+            else {
 
                 exceptionElement.hidden =
                     true;
+
 
                 exceptionElement.innerHTML =
                     "";
@@ -1122,298 +930,43 @@ document.addEventListener(
         }
 
 
-        function escapeHtml(value) {
-
-            const div =
-                document.createElement(
-                    "div"
-                );
-
-            div.textContent =
-                String(
-                    value || ""
-                );
-
-            return div.innerHTML;
-        }
-
-
         /* =================================================
-           SOCKET.IO
+           LEAFLET - VRAIES COORDONNEES
         ================================================= */
 
-        if (
-            typeof io !== "undefined"
-        ) {
-
-            const socket =
-                io();
-
-
-            /*
-             * 13.5.1
-             * Le serveur garantit qu'un socket ne garde
-             * qu'une seule room de commande à la fois.
-             */
-            let joinedOrderReference =
-                null;
+        const map =
+            L
+                .map(
+                    "trackingMap"
+                )
+                .setView(
+                    [0, 0],
+                    2
+                );
 
 
-            socket.on(
-                "connect",
-                function () {
+        L
+            .tileLayer(
+                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+                    maxZoom:
+                        19,
 
-                    if (connectionElement) {
-
-                        connectionElement.textContent =
-                            "● Suivi connecté";
-
-                        connectionElement.classList.add(
-                            "connected"
-                        );
-                    }
-
-
-                    socket.emit(
-                        "order:join",
-                        orderReference
-                    );
-
-
-                    joinedOrderReference =
-                        orderReference;
+                    attribution:
+                        "&copy; OpenStreetMap"
                 }
+            )
+            .addTo(
+                map
             );
 
 
-            socket.on(
-                "disconnect",
-                function () {
-
-                    if (connectionElement) {
-
-                        connectionElement.textContent =
-                            "Reconnexion au suivi…";
-
-                        connectionElement.classList.remove(
-                            "connected"
-                        );
-                    }
-                }
-            );
+        let restaurantMarker =
+            null;
 
 
-            socket.on(
-                "order:status",
-                function (data) {
-
-                    if (
-                        !data
-                        ||
-                        String(
-                            data.reference || ""
-                        ) !==
-                            String(
-                                orderReference
-                            )
-                    ) {
-
-                        return;
-                    }
-
-
-                    renderStatus(
-                        data.status,
-                        data.changedAt
-                    );
-                }
-            );
-
-
-            socket.on(
-                "delivery:assigned",
-                function (data) {
-
-                    if (
-                        !data
-                        ||
-                        String(
-                            data.reference || ""
-                        ) !==
-                            String(
-                                orderReference
-                            )
-                    ) {
-
-                        return;
-                    }
-
-
-                    const title =
-                        document.getElementById(
-                            "driverCardTitle"
-                        );
-
-
-                    const details =
-                        document.getElementById(
-                            "driverCardDetails"
-                        );
-
-
-                    if (title) {
-
-                        title.textContent =
-                            "🛵 "
-                            +
-                            (
-                                data.driverName
-                                ||
-                                "Livraison TiopTiop"
-                            );
-                    }
-
-
-                    if (details) {
-
-                        let text =
-                            "Livreur affecté";
-
-
-                        if (data.driverPhone) {
-
-                            text +=
-                                " · 📞 "
-                                +
-                                data.driverPhone;
-                        }
-
-
-                        if (
-                            data.estimatedArrival
-                        ) {
-
-                            text +=
-                                " · arrivée estimée : "
-                                +
-                                new Date(
-                                    data.estimatedArrival
-                                )
-                                    .toLocaleString(
-                                        "fr-FR"
-                                    );
-                        }
-
-
-                        details.textContent =
-                            text;
-                    }
-                }
-            );
-
-
-            /*
-             * Préparé pour 13.5 / 13.6.
-             */
-
-            socket.on(
-                "delivery:status",
-                function (data) {
-
-                    if (
-                        !data
-                        ||
-                        String(
-                            data.reference || ""
-                        ) !==
-                            String(
-                                orderReference
-                            )
-                    ) {
-                        return;
-                    }
-
-                    const element =
-                        document.getElementById(
-                            "driverOperationalStatus"
-                        );
-
-                    if (element) {
-                        element.textContent =
-                            data.message
-                            ||
-                            ("Livraison : " + data.status);
-                    }
-                }
-            );
-
-
-
-
-            /*
-             * Lorsqu'on quitte cette page de suivi,
-             * on quitte explicitement la room.
-             */
-            window.addEventListener(
-                "beforeunload",
-                function () {
-
-                    if (
-                        socket.connected
-                        &&
-                        joinedOrderReference
-                    ) {
-
-                        socket.emit(
-                            "order:leave",
-                            joinedOrderReference
-                        );
-                    }
-                }
-            );
-
-
-            socket.on(
-                "driver:location",
-                function (data) {
-
-                    if (
-                        !data
-                        ||
-                        String(
-                            data.orderId || ""
-                        ) !==
-                            String(
-                                orderReference
-                            )
-                    ) {
-
-                        return;
-                    }
-
-
-                    updateDriverPosition(
-                        data.lat,
-                        data.lng
-                    );
-                }
-            );
-        }
-
-
-        /* =================================================
-           LEAFLET
-
-           La carte est conservée, mais les coordonnées
-           restaurant/client/livreur sont encore de démo.
-           Leur remplacement par deliveries +
-           delivery_tracking_points arrive en 13.5 / 13.6.
-        ================================================= */
-
-        const mapElement =
-            document.getElementById(
-                "trackingMap"
-            );
+        let destinationMarker =
+            null;
 
 
         let driverMarker =
@@ -1424,70 +977,48 @@ document.addEventListener(
             null;
 
 
-        const restaurant = {
-            lat: -4.2634,
-            lng: 15.2429
-        };
+        const driverIcon =
+            L.divIcon({
+                className:
+                    "",
 
+                html:
+                    `
+                        <div style="
+                            width:50px;
+                            height:50px;
+                            background:#ff7900;
+                            border:4px solid white;
+                            border-radius:50%;
+                            display:flex;
+                            align-items:center;
+                            justify-content:center;
+                            font-size:27px;
+                            box-shadow:0 5px 20px rgba(0,0,0,.3);
+                        ">
+                            🛵
+                        </div>
+                    `,
 
-        const client = {
-            lat: -4.2505,
-            lng: 15.2650
-        };
+                iconSize:
+                    [50, 50],
 
-
-        let driverPosition = {
-
-            lat:
-                <%= latestTrackingPoint
-                    ? Number(latestTrackingPoint.latitude)
-                    : -4.2585
-                %>,
-
-            lng:
-                <%= latestTrackingPoint
-                    ? Number(latestTrackingPoint.longitude)
-                    : 15.2505
-                %>
-        };
+                iconAnchor:
+                    [25, 25]
+            });
 
 
         if (
-            mapElement
+            isCoordinate(
+                restaurant.lat
+            )
             &&
-            typeof L !== "undefined"
+            isCoordinate(
+                restaurant.lng
+            )
         ) {
 
-            const map =
-                L
-                    .map(
-                        "trackingMap"
-                    )
-                    .setView(
-                        [
-                            driverPosition.lat,
-                            driverPosition.lng
-                        ],
-                        14
-                    );
-
-
-            L
-                .tileLayer(
-                    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                    {
-                        maxZoom: 19,
-
-                        attribution:
-                            "&copy; OpenStreetMap"
-                    }
-                )
-                .addTo(
-                    map
-                );
-
-
-            const restaurantMarker =
+            restaurantMarker =
                 L
                     .marker([
                         restaurant.lat,
@@ -1497,15 +1028,26 @@ document.addEventListener(
                         map
                     )
                     .bindPopup(
-                        "<strong>🍽️ TiopTiop</strong><br>Restaurant"
+                        "<strong>🍽️ Restaurant TiopTiop</strong>"
                     );
+        }
 
 
-            const clientMarker =
+        if (
+            isCoordinate(
+                destination.lat
+            )
+            &&
+            isCoordinate(
+                destination.lng
+            )
+        ) {
+
+            destinationMarker =
                 L
                     .marker([
-                        client.lat,
-                        client.lng
+                        destination.lat,
+                        destination.lng
                     ])
                     .addTo(
                         map
@@ -1513,129 +1055,265 @@ document.addEventListener(
                     .bindPopup(
                         "<strong>🏠 Destination</strong>"
                     );
+        }
+        else if (mapWarning) {
+
+            mapWarning.hidden =
+                false;
 
 
-            const driverIcon =
-                L.divIcon({
-                    className:
-                        "",
-
-                    html:
-                        `
-                            <div style="
-                                width:50px;
-                                height:50px;
-                                background:#ff7900;
-                                border:4px solid white;
-                                border-radius:50%;
-                                display:flex;
-                                align-items:center;
-                                justify-content:center;
-                                font-size:27px;
-                                box-shadow:0 5px 20px rgba(0,0,0,.3);
-                            ">
-                                🛵
-                            </div>
-                        `,
-
-                    iconSize:
-                        [50, 50],
-
-                    iconAnchor:
-                        [25, 25]
-                });
-
-
-            driverMarker =
-                L
-                    .marker(
-                        [
-                            driverPosition.lat,
-                            driverPosition.lng
-                        ],
-                        {
-                            icon:
-                                driverIcon
-                        }
-                    )
-                    .addTo(
-                        map
-                    )
-                    .bindPopup(
-                        "<strong>Livreur TiopTiop</strong>"
-                    );
-
-
-            route =
-                L
-                    .polyline(
-                        [
-                            [
-                                restaurant.lat,
-                                restaurant.lng
-                            ],
-
-                            [
-                                driverPosition.lat,
-                                driverPosition.lng
-                            ],
-
-                            [
-                                client.lat,
-                                client.lng
-                            ]
-                        ],
-                        {
-                            weight:
-                                5,
-
-                            opacity:
-                                .8
-                        }
-                    )
-                    .addTo(
-                        map
-                    );
-
-
-            const group =
-                L.featureGroup([
-                    restaurantMarker,
-                    clientMarker,
-                    driverMarker,
-                    route
-                ]);
-
-
-            map.fitBounds(
-                group
-                    .getBounds()
-                    .pad(.20)
-            );
-
-
-            setTimeout(
-                function () {
-
-                    map.invalidateSize();
-
-                },
-                250
-            );
+            mapWarning.textContent =
+                "L'adresse de livraison ne possède pas encore de coordonnées GPS. Le livreur reste suivi, mais le marqueur destination ne peut pas être positionné.";
         }
 
 
-        function updateDriverPosition(
+        function ensureDriverMarker(
             lat,
             lng
         ) {
 
             if (
-                typeof lat !== "number"
-                ||
-                typeof lng !== "number"
-                ||
                 !driverMarker
+            ) {
+
+                driverMarker =
+                    L
+                        .marker(
+                            [
+                                lat,
+                                lng
+                            ],
+                            {
+                                icon:
+                                    driverIcon
+                            }
+                        )
+                        .addTo(
+                            map
+                        )
+                        .bindPopup(
+                            "<strong>🛵 Votre livreur</strong>"
+                        );
+            }
+            else {
+
+                driverMarker.setLatLng(
+                    [
+                        lat,
+                        lng
+                    ]
+                );
+            }
+        }
+
+
+        function renderRoute() {
+
+            const points =
+                [];
+
+
+            if (
+                restaurantMarker
+            ) {
+
+                points.push([
+                    restaurant.lat,
+                    restaurant.lng
+                ]);
+            }
+
+
+            if (
+                isCoordinate(
+                    driverPosition.lat
+                )
+                &&
+                isCoordinate(
+                    driverPosition.lng
+                )
+            ) {
+
+                points.push([
+                    driverPosition.lat,
+                    driverPosition.lng
+                ]);
+            }
+
+
+            if (
+                destinationMarker
+            ) {
+
+                points.push([
+                    destination.lat,
+                    destination.lng
+                ]);
+            }
+
+
+            if (
+                route
+            ) {
+
+                route.remove();
+
+
+                route =
+                    null;
+            }
+
+
+            if (
+                points.length >= 2
+            ) {
+
+                route =
+                    L
+                        .polyline(
+                            points,
+                            {
+                                weight:
+                                    5,
+
+                                opacity:
+                                    .8
+                            }
+                        )
+                        .addTo(
+                            map
+                        );
+            }
+        }
+
+
+        function fitMap() {
+
+            const layers =
+                [];
+
+
+            if (
+                restaurantMarker
+            ) {
+                layers.push(
+                    restaurantMarker
+                );
+            }
+
+
+            if (
+                destinationMarker
+            ) {
+                layers.push(
+                    destinationMarker
+                );
+            }
+
+
+            if (
+                driverMarker
+            ) {
+                layers.push(
+                    driverMarker
+                );
+            }
+
+
+            if (
+                layers.length === 1
+            ) {
+
+                map.setView(
+                    layers[0]
+                        .getLatLng(),
+                    15
+                );
+            }
+            else if (
+                layers.length > 1
+            ) {
+
+                map.fitBounds(
+                    L
+                        .featureGroup(
+                            layers
+                        )
+                        .getBounds()
+                        .pad(.20)
+                );
+            }
+            else {
+
+                /*
+                 * Aucune coordonnée disponible :
+                 * carte monde neutre, pas de fausse localisation.
+                 */
+
+                map.setView(
+                    [0, 0],
+                    2
+                );
+            }
+
+
+            setTimeout(
+                () =>
+                    map.invalidateSize(),
+                200
+            );
+        }
+
+
+        if (
+            isCoordinate(
+                driverPosition.lat
+            )
+            &&
+            isCoordinate(
+                driverPosition.lng
+            )
+        ) {
+
+            ensureDriverMarker(
+                driverPosition.lat,
+                driverPosition.lng
+            );
+        }
+
+
+        renderRoute();
+        fitMap();
+
+
+        /* =================================================
+           POSITION LIVREUR
+        ================================================= */
+
+        function updateDriverPosition(
+            data
+        ) {
+
+            const lat =
+                Number(
+                    data.lat
+                );
+
+
+            const lng =
+                Number(
+                    data.lng
+                );
+
+
+            if (
+                !Number.isFinite(
+                    lat
+                )
+                ||
+                !Number.isFinite(
+                    lng
+                )
             ) {
 
                 return;
@@ -1648,52 +1326,366 @@ document.addEventListener(
             };
 
 
-            driverMarker.setLatLng(
-                [
-                    lat,
-                    lng
-                ]
+            ensureDriverMarker(
+                lat,
+                lng
             );
 
 
-            if (route) {
-
-                route.setLatLngs([
-                    [
-                        restaurant.lat,
-                        restaurant.lng
-                    ],
-
-                    [
-                        lat,
-                        lng
-                    ],
-
-                    [
-                        client.lat,
-                        client.lng
-                    ]
-                ]);
-            }
+            renderRoute();
 
 
-            const gpsStatus =
-                document.getElementById(
-                    "gpsStatus"
+            /*
+             * On ne refait pas fitBounds à chaque point,
+             * sinon la carte "saute".
+             * On centre doucement si le marqueur sort de la vue.
+             */
+
+            const driverLatLng =
+                L.latLng(
+                    lat,
+                    lng
                 );
 
 
-            if (gpsStatus) {
+            if (
+                !map
+                    .getBounds()
+                    .pad(-.15)
+                    .contains(
+                        driverLatLng
+                    )
+            ) {
 
-                gpsStatus.textContent =
-                    "Position GPS mise à jour";
+                map.panTo(
+                    driverLatLng
+                );
+            }
+
+
+            if (
+                gpsStatusElement
+            ) {
+
+                gpsStatusElement.textContent =
+                    "Position GPS reçue : "
+                    +
+                    new Date(
+                        data.recordedAt
+                        ||
+                        Date.now()
+                    )
+                        .toLocaleTimeString(
+                            "fr-FR"
+                        );
+            }
+
+
+            if (
+                gpsMetricsElement
+            ) {
+
+                gpsMetricsElement.hidden =
+                    false;
+            }
+
+
+            if (
+                gpsAccuracyElement
+            ) {
+
+                gpsAccuracyElement.textContent =
+                    Number.isFinite(
+                        Number(
+                            data.accuracyMeters
+                        )
+                    )
+
+                        ? Math.round(
+                            Number(
+                                data.accuracyMeters
+                            )
+                        )
+                            + " m"
+
+                        : "—";
+            }
+
+
+            if (
+                gpsSpeedElement
+            ) {
+
+                gpsSpeedElement.textContent =
+                    Number.isFinite(
+                        Number(
+                            data.speedKmh
+                        )
+                    )
+
+                        ? Number(
+                            data.speedKmh
+                        )
+                            .toFixed(1)
+                            + " km/h"
+
+                        : "—";
             }
         }
 
 
-        /*
-         * Synchronise l'affichage initial.
-         */
+        /* =================================================
+           SOCKET.IO
+        ================================================= */
+
+        const socket =
+            io();
+
+
+        let joinedOrderReference =
+            null;
+
+
+        socket.on(
+            "connect",
+            function () {
+
+                connectionElement.textContent =
+                    "● Suivi connecté";
+
+
+                connectionElement.classList.add(
+                    "connected"
+                );
+
+
+                socket.emit(
+                    "order:join",
+                    orderReference
+                );
+
+
+                joinedOrderReference =
+                    orderReference;
+            }
+        );
+
+
+        socket.on(
+            "disconnect",
+            function () {
+
+                connectionElement.textContent =
+                    "Reconnexion au suivi…";
+
+
+                connectionElement.classList.remove(
+                    "connected"
+                );
+            }
+        );
+
+
+        socket.on(
+            "order:status",
+            function (
+                data
+            ) {
+
+                if (
+                    !data
+                    ||
+                    String(
+                        data.reference || ""
+                    )
+                    !==
+                    String(
+                        orderReference
+                    )
+                ) {
+                    return;
+                }
+
+
+                renderStatus(
+                    data.status,
+                    data.changedAt
+                );
+            }
+        );
+
+
+        socket.on(
+            "delivery:assigned",
+            function (
+                data
+            ) {
+
+                if (
+                    !data
+                    ||
+                    String(
+                        data.reference || ""
+                    )
+                    !==
+                    String(
+                        orderReference
+                    )
+                ) {
+                    return;
+                }
+
+
+                const title =
+                    document.getElementById(
+                        "driverCardTitle"
+                    );
+
+
+                const details =
+                    document.getElementById(
+                        "driverCardDetails"
+                    );
+
+
+                title.textContent =
+                    "🛵 "
+                    +
+                    (
+                        data.driverName
+                        ||
+                        "Livraison TiopTiop"
+                    );
+
+
+                let text =
+                    "Livreur affecté";
+
+
+                if (
+                    data.driverPhone
+                ) {
+
+                    text +=
+                        " · 📞 "
+                        +
+                        data.driverPhone;
+                }
+
+
+                if (
+                    data.estimatedArrival
+                ) {
+
+                    text +=
+                        " · arrivée estimée : "
+                        +
+                        new Date(
+                            data.estimatedArrival
+                        )
+                            .toLocaleString(
+                                "fr-FR"
+                            );
+                }
+
+
+                details.textContent =
+                    text;
+            }
+        );
+
+
+        socket.on(
+            "delivery:status",
+            function (
+                data
+            ) {
+
+                if (
+                    !data
+                    ||
+                    String(
+                        data.reference || ""
+                    )
+                    !==
+                    String(
+                        orderReference
+                    )
+                ) {
+                    return;
+                }
+
+
+                const element =
+                    document.getElementById(
+                        "driverOperationalStatus"
+                    );
+
+
+                if (
+                    element
+                ) {
+
+                    element.textContent =
+                        data.message
+                        ||
+                        (
+                            "Livraison : "
+                            +
+                            data.status
+                        );
+                }
+            }
+        );
+
+
+        socket.on(
+            "driver:location",
+            function (
+                data
+            ) {
+
+                if (
+                    !data
+                    ||
+                    String(
+                        data.orderId || ""
+                    )
+                    !==
+                    String(
+                        orderReference
+                    )
+                ) {
+
+                    return;
+                }
+
+
+                updateDriverPosition(
+                    data
+                );
+            }
+        );
+
+
+        window.addEventListener(
+            "beforeunload",
+            function () {
+
+                if (
+                    socket.connected
+                    &&
+                    joinedOrderReference
+                ) {
+
+                    socket.emit(
+                        "order:leave",
+                        joinedOrderReference
+                    );
+                }
+            }
+        );
+
 
         renderStatus(
             currentStatus,
