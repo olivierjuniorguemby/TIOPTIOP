@@ -1,152 +1,47 @@
-<!--<section class="section">
+<section class="section">
   <div class="container narrow panel">
     <span class="eyebrow">🔐 Compte</span>
     <h1>Connexion</h1>
-    <form method="post" action="/connexion" class="form">
+
+    <% if (typeof error !== "undefined" && error) { %>
+      <div class="auth-error">⚠️ <%= error %></div>
+    <% } %>
+
+    <form method="POST" action="/connexion" class="form" id="loginForm">
       <label>Email
-        <input class="field" name="email" type="email" value="celestin@tioptiop.cg" required>
+        <input class="field" name="email" type="email" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" required>
       </label>
+
       <label>Mot de passe
-        <input class="field" name="password" type="password" value="demo1234" required>
+        <input class="field" name="password" type="password" autocomplete="current-password" required>
       </label>
-      <button class="button primary">Se connecter</button>
+
+      <div class="auth-forgot"><a href="/mot-de-passe-oublie">Mot de passe oublié ?</a></div>
+
+      <button class="button primary" type="submit" id="loginSubmit">Se connecter</button>
     </form>
-    <p>Compte de démonstration : celestin@tioptiop.cg / demo1234</p>
+
+    <p class="auth-switch">Pas encore de compte ? <a href="/inscription">Créer un compte</a></p>
   </div>
-</section>-->
-
-<section class="section">
-
-    <div class="container narrow panel">
-
-        <span class="eyebrow">
-            🔐 Compte
-        </span>
-
-        <h1>
-            Connexion
-        </h1>
-
-
-        <% if (
-            typeof error !== "undefined"
-            &&
-            error
-        ) { %>
-
-            <div class="auth-error">
-
-                ⚠️
-                <%= error %>
-
-            </div>
-
-        <% } %>
-
-
-        <form
-            method="POST"
-            action="/connexion"
-            class="form"
-        >
-
-            <label>
-
-                Email
-
-                <input
-                    class="field"
-                    name="email"
-                    type="email"
-                    value="<%= typeof email !== 'undefined' ? email : '' %>"
-                    autocomplete="email"
-                    required
-                >
-
-            </label>
-
-
-            <label>
-
-                Mot de passe
-
-                <input
-                    class="field"
-                    name="password"
-                    type="password"
-                    autocomplete="current-password"
-                    required
-                >
-
-            </label>
-
-
-            <button
-                class="button primary"
-                type="submit"
-            >
-
-                Se connecter
-
-            </button>
-
-        </form>
-
-
-        <p class="auth-switch">
-
-            Pas encore de compte ?
-
-            <a href="/inscription">
-                Créer un compte
-            </a>
-
-        </p>
-
-    </div>
-
 </section>
 
-
 <style>
-
-.auth-error {
-
-    margin: 15px 0;
-
-    padding: 13px 15px;
-
-    border-radius: 13px;
-
-    background: #fdebea;
-
-    color: #962c25;
-
-    font-size: 13px;
-    font-weight: 800;
-}
-
-
-.auth-switch {
-
-    margin:
-        18px
-        0
-        0;
-
-    text-align: center;
-
-    color: #746d66;
-
-    font-size: 14px;
-}
-
-
-.auth-switch a {
-
-    color: #ff7900;
-
-    font-weight: 900;
-}
-
+.auth-error{margin:15px 0;padding:13px 15px;border-radius:13px;background:#fdebea;color:#962c25;font-size:13px;font-weight:800}
+.auth-forgot{display:flex;justify-content:flex-end;margin-top:-4px}.auth-forgot a,.auth-switch a{color:#ff7900;font-weight:900;text-decoration:none}.auth-switch{margin:18px 0 0;text-align:center;color:#746d66;font-size:14px}
 </style>
+
+<script>
+document.addEventListener("DOMContentLoaded",()=>{
+  const form=document.getElementById("loginForm");
+  const button=document.getElementById("loginSubmit");
+  if(!form||!button)return;
+  let submitting=false;
+  form.addEventListener("submit",event=>{
+    if(submitting){event.preventDefault();return;}
+    if(!form.checkValidity()){event.preventDefault();form.reportValidity();return;}
+    submitting=true;
+    button.disabled=true;
+    button.textContent="Connexion...";
+  });
+});
+</script>

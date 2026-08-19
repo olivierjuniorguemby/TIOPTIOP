@@ -37,6 +37,7 @@ async function findByEmail(email) {
             ON up.user_id = u.id
 
         WHERE LOWER(u.email) = LOWER(?)
+          AND u.account_type = 'CUSTOMER'
 
         LIMIT 1
     `, [

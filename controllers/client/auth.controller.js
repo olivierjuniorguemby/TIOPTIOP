@@ -72,6 +72,17 @@ function getSafeReturnTo(
 
 
 /* =========================================================
+   HASH BCRYPT UTILISABLE
+========================================================= */
+
+function isUsableBcryptHash(hash) {
+    return typeof hash === "string"
+        && hash.length === 60
+        && /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(hash);
+}
+
+
+/* =========================================================
    CONNEXION - PAGE
 
    GET /connexion
@@ -227,14 +238,54 @@ async function (
 
 
         /* =================================================
+           COMPTE CLIENT + HASH VALIDE
+        ================================================= */
+
+        if (
+            user.account_type !== "CUSTOMER"
+        ) {
+            return render(
+                res,
+                "client/auth/login",
+                "Connexion",
+                {
+                    error: "Email ou mot de passe incorrect.",
+                    email,
+                    returnTo: req.session?.returnTo || null
+                }
+            );
+        }
+
+        if (!isUsableBcryptHash(user.password_hash)) {
+            console.warn("[AUTH] Hash invalide/non initialisé pour userId=", user.id);
+            return render(
+                res,
+                "client/auth/login",
+                "Connexion",
+                {
+                    error: "Ce compte de test n'a pas encore de mot de passe valide. Réinitialisez son mot de passe.",
+                    email,
+                    returnTo: req.session?.returnTo || null
+                }
+            );
+        }
+
+        /* =================================================
            VERIFICATION MOT DE PASSE
         ================================================= */
 
-        const passwordValid =
-            await bcrypt.compare(
+        let passwordValid = false;
+
+        try {
+            passwordValid = await bcrypt.compare(
                 password,
                 user.password_hash
             );
+        }
+        catch (bcryptError) {
+            console.error("[AUTH] Erreur bcrypt :", bcryptError);
+            passwordValid = false;
+        }
 
 
         if (!passwordValid) {
@@ -273,97 +324,47 @@ async function (
 
 
         /* =================================================
-           SESSION CLIENT
+           OPERATIONS SECONDAIRES AVANT SESSION
+
+           IMPORTANT 13.4.1 :
+           aucune demi-session client n'est créée avant la
+           fin des opérations secondaires.
         ================================================= */
 
-        req.session.user = {
-
-            id:
-                user.id,
-
-            publicId:
-                user.public_id,
-
-            email:
-                user.email,
-
-            phone:
-                user.phone,
-
-            firstName:
-                user.first_name,
-
-            lastName:
-                user.last_name,
-
-            displayName:
-                user.display_name
-                ||
-                [
-                    user.first_name,
-                    user.last_name
-                ]
-                    .filter(Boolean)
-                    .join(" "),
-
-            avatarUrl:
-                user.avatar_url
-                ||
-                null
-        };
-
-
-        /*
-         * IMPORTANT :
-         *
-         * on ne touche jamais à :
-         *
-         * req.session.admin
-         *
-         * La connexion client et la connexion admin
-         * restent indépendantes.
-         */
-
-
-        /* =================================================
-           DERNIERE CONNEXION
-        ================================================= */
-
-        await User.updateLastLogin(
-            user.id
-        );
-
-
-        /* =================================================
-           FUSION DU PANIER INVITE
-
-           Exemple :
-           
-           visiteur
-             ↓
-           ajoute produits
-             ↓
-           /checkout
-             ↓
-           /connexion
-             ↓
-           connexion
-             ↓
-           panier invité fusionné au compte
-        ================================================= */
+        try {
+            await User.updateLastLogin(user.id);
+        }
+        catch (lastLoginError) {
+            console.error("[AUTH] updateLastLogin non bloquant :", lastLoginError);
+        }
 
         if (
             CartController &&
-            typeof CartController.mergeAfterLogin
-                === "function"
+            typeof CartController.mergeAfterLogin === "function"
         ) {
-
-            await CartController.mergeAfterLogin(
-                req,
-                user.id
-            );
+            try {
+                await CartController.mergeAfterLogin(req, user.id);
+            }
+            catch (cartError) {
+                console.error("[AUTH] Fusion panier non bloquante :", cartError);
+                req.session.cartMergeWarning = true;
+            }
         }
 
+        /* =================================================
+           SESSION CLIENT - CREEE EN DERNIER
+        ================================================= */
+
+        req.session.user = {
+            id: user.id,
+            publicId: user.public_id,
+            email: user.email,
+            phone: user.phone,
+            firstName: user.first_name,
+            lastName: user.last_name,
+            displayName: user.display_name || [user.first_name,user.last_name].filter(Boolean).join(" "),
+            avatarUrl: user.avatar_url || null
+        };
 
         /* =================================================
            SUPPRESSION DESTINATION TEMPORAIRE
@@ -869,6 +870,21 @@ async function (
 };
 
 
+
+/* =========================================================
+   MOT DE PASSE OUBLIE - PAGE
+========================================================= */
+
+exports.forgotPasswordPage = (req, res) => {
+    return render(
+        res,
+        "client/auth/forgot-password",
+        "Mot de passe oublié",
+        { info: null }
+    );
+};
+
+
 /* =========================================================
    DECONNEXION CLIENT
 
@@ -903,6 +919,7 @@ exports.logout = (
 
     delete req.session.user;
     delete req.session.returnTo;
+    delete req.session.cartMergeWarning;
 
 
     return req.session.save(
@@ -921,7 +938,7 @@ exports.logout = (
 
 
             return res.redirect(
-                "/"
+                "/connexion"
             );
         }
     );

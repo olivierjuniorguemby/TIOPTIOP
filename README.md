@@ -89,3 +89,7 @@ Ce test vérifie :
 - la syntaxe Node.js ;
 - la présence des layouts et partials ;
 - l'absence d'include EJS dans les pages.
+
+## node scripts/set-user-password.js "junior@example.com" "TestTiop123!"
+## node scripts/check-user-password.js "junior@example.com" "TestTiop123!"
+## node -e "const bcrypt=require('bcryptjs'); bcrypt.compare('Admin@123456789','$2b$12$oZgqdTPVwspwu4MqrTmHyOpxkww2RNr87DkhUg9bcVlQd7P.Q71z6').then(console.log)"
