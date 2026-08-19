@@ -806,59 +806,45 @@
                             id="deliveryAssignForm"
                         >
 
-                            <label>
-                                Nom du livreur
-                            </label>
+                            <label>Livreur *</label>
 
-                            <input
-                                type="text"
-                                name="driver_name"
-                                maxlength="160"
-                                value="<%= delivery?.driver_name || '' %>"
-                                placeholder="Ex. Jean Pierre"
-                                required
-                            >
+                            <select name="driver_id" required>
+                                <option value="">Sélectionner un livreur</option>
 
+                                <% (drivers || []).forEach(driverItem => { %>
+                                    <option
+                                        value="<%= driverItem.id %>"
+                                        <%= Number(delivery?.driver_id) === Number(driverItem.id) ? "selected" : "" %>
+                                    >
+                                        <%= driverItem.display_name || [driverItem.first_name, driverItem.last_name].filter(Boolean).join(" ") %>
+                                        · <%= driverItem.phone %>
+                                        · <%= driverItem.availability_status %>
+                                    </option>
+                                <% }) %>
+                            </select>
 
-                            <label>
-                                Téléphone
-                            </label>
+                            <% if (!drivers || drivers.length === 0) { %>
+                                <p class="delivery-no-drivers">
+                                    Aucun compte livreur actif.
+                                    <a href="/admin/livreurs">Créer un livreur</a>
+                                </p>
+                            <% } %>
 
-                            <input
-                                type="text"
-                                name="driver_phone"
-                                maxlength="40"
-                                value="<%= delivery?.driver_phone || '' %>"
-                                placeholder="+242..."
-                                required
-                            >
-
-
-                            <label>
-                                Arrivée estimée
-                            </label>
+                            <label>Arrivée estimée</label>
 
                             <input
                                 type="datetime-local"
                                 name="estimated_arrival"
-                                value="<%= delivery?.estimated_arrival
-                                    ? new Date(delivery.estimated_arrival)
-                                        .toISOString()
-                                        .slice(0,16)
-                                    : ''
-                                %>"
+                                value="<%= delivery?.estimated_arrival ? new Date(delivery.estimated_arrival).toISOString().slice(0,16) : '' %>"
                             >
-
 
                             <button
                                 type="submit"
                                 class="workflow-submit"
                                 id="deliveryAssignSubmit"
+                                <%= !drivers || drivers.length === 0 ? "disabled" : "" %>
                             >
-                                <%= delivery?.driver_name
-                                    ? "Modifier l'affectation"
-                                    : "Affecter le livreur"
-                                %>
+                                <%= delivery?.driver_id ? "Réaffecter le livreur" : "Affecter le livreur" %>
                             </button>
 
                         </form>
@@ -2102,6 +2088,7 @@
 }
 
 
+.delivery-assign-form select,
 .delivery-assign-form input {
 
     width: 100%;
@@ -2132,6 +2119,7 @@
 }
 
 
+.delivery-no-drivers{margin:0;padding:10px;border-radius:10px;background:#fff0df;color:#7a5a39;font-size:10px}.delivery-no-drivers a{color:#ff7900;font-weight:900}
 </style>
 
 <script>

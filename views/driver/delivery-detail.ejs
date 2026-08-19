@@ -1,0 +1,116 @@
+<section class="driver-delivery-detail">
+  <a href="/livreur" class="driver-back">← Mes livraisons</a>
+
+  <header>
+    <span>Livraison</span>
+    <h1><%= delivery.order_reference %></h1>
+    <p><%= delivery.restaurant_name %> → <%= delivery.delivery_district || delivery.delivery_city || "Destination" %></p>
+  </header>
+
+  <% if (success) { %><div class="driver-message success">✅ <%= success %></div><% } %>
+  <% if (error) { %><div class="driver-message error">⚠️ <%= error %></div><% } %>
+
+  <div class="driver-detail-grid">
+    <section class="driver-detail-card">
+      <h2>📍 Destination</h2>
+      <strong><%= delivery.recipient_name || "Client" %></strong>
+      <p>
+        <%= delivery.address_line1 || "" %>
+        <% if (delivery.address_line2) { %><br><%= delivery.address_line2 %><% } %>
+        <br>
+        <%= [delivery.delivery_district,delivery.delivery_city].filter(Boolean).join(" · ") %>
+      </p>
+      <% if (delivery.recipient_phone) { %>
+        <a href="tel:<%= delivery.recipient_phone %>">📞 <%= delivery.recipient_phone %></a>
+      <% } %>
+      <% if (delivery.delivery_instructions) { %>
+        <div class="driver-note">📝 <%= delivery.delivery_instructions %></div>
+      <% } %>
+    </section>
+
+    <section class="driver-detail-card">
+      <h2>🏪 Restaurant</h2>
+      <strong><%= delivery.restaurant_name %></strong>
+      <p>
+        <%= delivery.restaurant_address || "" %><br>
+        <%= [delivery.restaurant_district,delivery.restaurant_city].filter(Boolean).join(" · ") %>
+      </p>
+      <% if (delivery.restaurant_phone) { %>
+        <a href="tel:<%= delivery.restaurant_phone %>">📞 <%= delivery.restaurant_phone %></a>
+      <% } %>
+    </section>
+
+    <section class="driver-detail-card">
+      <h2>⚙️ État</h2>
+      <div class="driver-status-lines">
+        <div><span>Commande</span><strong><%= delivery.order_status %></strong></div>
+        <div><span>Livraison</span><strong><%= delivery.status %></strong></div>
+        <div><span>Affectation</span><strong><%= delivery.acceptance_status %></strong></div>
+      </div>
+    </section>
+
+    <section class="driver-detail-card driver-actions-card">
+      <h2>🛵 Actions</h2>
+
+      <% if (delivery.status === "ASSIGNED" && delivery.acceptance_status === "PENDING") { %>
+        <form action="/livreur/livraisons/<%= encodeURIComponent(delivery.order_reference) %>/accepter" method="POST">
+          <button class="driver-action primary">✓ Accepter la livraison</button>
+        </form>
+
+        <form action="/livreur/livraisons/<%= encodeURIComponent(delivery.order_reference) %>/refuser" method="POST" class="driver-reject-form">
+          <input type="text" name="reason" maxlength="500" placeholder="Motif du refus">
+          <button class="driver-action danger">Refuser</button>
+        </form>
+      <% } %>
+
+      <% if (delivery.status === "ASSIGNED" && delivery.acceptance_status === "ACCEPTED") { %>
+        <% if (delivery.order_status === "READY") { %>
+          <form action="/livreur/livraisons/<%= encodeURIComponent(delivery.order_reference) %>/recuperer" method="POST">
+            <button class="driver-action primary">📦 Commande récupérée</button>
+          </form>
+        <% } else { %>
+          <div class="driver-waiting">
+            ⏳ La commande doit être marquée <strong>READY</strong> par le restaurant avant récupération.
+          </div>
+        <% } %>
+      <% } %>
+
+      <% if (delivery.status === "PICKED_UP") { %>
+        <form action="/livreur/livraisons/<%= encodeURIComponent(delivery.order_reference) %>/demarrer" method="POST">
+          <button class="driver-action primary">🛵 Démarrer la livraison</button>
+        </form>
+      <% } %>
+
+      <% if (delivery.status === "ON_THE_WAY") { %>
+        <form action="/livreur/livraisons/<%= encodeURIComponent(delivery.order_reference) %>/arrive" method="POST">
+          <button class="driver-action primary">📍 Je suis arrivé</button>
+        </form>
+
+        <form action="/livreur/livraisons/<%= encodeURIComponent(delivery.order_reference) %>/livree" method="POST">
+          <button class="driver-action success">✓ Commande livrée</button>
+        </form>
+      <% } %>
+
+      <% if (delivery.status === "ARRIVED") { %>
+        <form action="/livreur/livraisons/<%= encodeURIComponent(delivery.order_reference) %>/livree" method="POST">
+          <button class="driver-action success">✓ Confirmer la livraison</button>
+        </form>
+      <% } %>
+
+      <% if (delivery.status === "DELIVERED") { %>
+        <div class="driver-completed">✅ Livraison terminée</div>
+      <% } %>
+    </section>
+  </div>
+</section>
+
+<style>
+.driver-back{display:inline-flex;margin-bottom:18px;color:#ff7900;text-decoration:none;font-weight:900}
+.driver-delivery-detail header span{color:#ff7900;font-weight:900}.driver-delivery-detail header h1{margin:8px 0;font-size:clamp(34px,7vw,58px)}.driver-delivery-detail header p{color:#777}
+.driver-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}.driver-detail-card{padding:20px;border-radius:18px;background:#fff}.driver-detail-card h2{margin:0 0 13px}.driver-detail-card p{color:#716a64;line-height:1.6}.driver-detail-card a{color:#ff7900;font-weight:900}
+.driver-note{margin-top:12px;padding:10px;border-radius:10px;background:#fff8ef;color:#765d45}.driver-status-lines{display:grid;gap:8px}.driver-status-lines>div{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px dashed #e7dfd8}.driver-status-lines span{color:#777}
+.driver-actions-card{display:grid;gap:10px}.driver-actions-card form{display:grid;gap:7px}.driver-action{width:100%;min-height:45px;border:0;border-radius:999px;color:#fff;font-weight:900;cursor:pointer}.driver-action.primary{background:#ff7900}.driver-action.success{background:#198754}.driver-action.danger{background:#bd3434}
+.driver-reject-form input{min-height:42px;padding:0 11px;border:1px solid #ddd5cf;border-radius:10px}.driver-waiting,.driver-completed{padding:12px;border-radius:11px}.driver-waiting{background:#fff0df;color:#79552f}.driver-completed{background:#eaf8ef;color:#267247;font-weight:900}
+.driver-message{margin-top:12px;padding:11px;border-radius:11px}.driver-message.success{background:#eaf8ef;color:#267247}.driver-message.error{background:#fff0f0;color:#a73535}
+@media(max-width:750px){.driver-detail-grid{grid-template-columns:1fr}}
+</style>

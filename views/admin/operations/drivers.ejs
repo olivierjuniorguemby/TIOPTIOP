@@ -1,0 +1,116 @@
+<section class="admin-heading">
+  <div>
+    <span class="eyebrow">Logistique</span>
+    <h1>🛵 Livreurs</h1>
+    <p class="drivers-subtitle">Créez les comptes livreurs et contrôlez leur disponibilité.</p>
+  </div>
+</section>
+
+<section class="admin-drivers-page">
+  <% if (success) { %><div class="driver-message success">✅ <%= success %></div><% } %>
+  <% if (error) { %><div class="driver-message error">⚠️ <%= error %></div><% } %>
+
+  <div class="drivers-grid">
+    <section class="driver-create-card">
+      <span class="driver-kicker">Nouveau</span>
+      <h2>Créer un compte livreur</h2>
+
+      <form action="/admin/livreurs" method="POST" class="driver-form">
+        <div class="driver-two-cols">
+          <label>Prénom *<input type="text" name="first_name" required></label>
+          <label>Nom *<input type="text" name="last_name" required></label>
+        </div>
+
+        <label>Email *<input type="email" name="email" autocomplete="off" required></label>
+        <label>Téléphone *<input type="tel" name="phone" required></label>
+        <label>Mot de passe temporaire *<input type="password" name="password" minlength="8" autocomplete="new-password" required></label>
+
+        <div class="driver-two-cols">
+          <label>
+            Véhicule
+            <select name="vehicle_type">
+              <option value="MOTORBIKE">Moto / scooter</option>
+              <option value="BIKE">Vélo</option>
+              <option value="CAR">Voiture</option>
+              <option value="WALK">À pied</option>
+            </select>
+          </label>
+
+          <label>Immatriculation<input type="text" name="vehicle_plate"></label>
+        </div>
+
+        <button type="submit">+ Créer le livreur</button>
+      </form>
+    </section>
+
+    <section class="driver-list-card">
+      <div class="driver-list-header">
+        <div>
+          <span class="driver-kicker">Équipe</span>
+          <h2>Comptes livreurs</h2>
+        </div>
+        <strong><%= (drivers || []).length %></strong>
+      </div>
+
+      <div class="driver-list">
+        <% if (!drivers || drivers.length === 0) { %>
+          <div class="driver-empty">Aucun livreur créé.</div>
+        <% } %>
+
+        <% (drivers || []).forEach(driver => { %>
+          <article class="driver-row">
+            <div class="driver-avatar">🛵</div>
+
+            <div class="driver-main">
+              <strong>
+                <%= driver.display_name || [driver.first_name, driver.last_name].filter(Boolean).join(" ") %>
+              </strong>
+              <span><%= driver.email %></span>
+              <span><%= driver.phone %></span>
+            </div>
+
+            <div class="driver-meta">
+              <span class="driver-availability availability-<%= String(driver.availability_status).toLowerCase() %>">
+                <%= driver.availability_status %>
+              </span>
+              <small><%= driver.active_deliveries %> active(s) · <%= driver.completed_deliveries %> livrée(s)</small>
+            </div>
+
+            <form action="/admin/livreurs/<%= driver.id %>/statut" method="POST" class="driver-status-form">
+              <select name="status" onchange="this.form.submit()">
+                <% ["ACTIVE","BLOCKED","INACTIVE"].forEach(status => { %>
+                  <option value="<%= status %>" <%= driver.status === status ? "selected" : "" %>>
+                    <%= status %>
+                  </option>
+                <% }) %>
+              </select>
+            </form>
+          </article>
+        <% }) %>
+      </div>
+    </section>
+  </div>
+</section>
+
+<style>
+.admin-drivers-page{padding:20px}.drivers-subtitle{color:#746d66}
+.drivers-grid{display:grid;grid-template-columns:minmax(300px,.75fr) minmax(0,1.4fr);gap:16px;align-items:start}
+.driver-create-card,.driver-list-card{padding:22px;border-radius:20px;background:#fff}
+.driver-kicker{color:#ff7900;font-size:10px;font-weight:900;text-transform:uppercase}
+.driver-create-card h2,.driver-list-card h2{margin:5px 0 18px}
+.driver-form{display:grid;gap:11px}.driver-two-cols{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.driver-form label{display:grid;gap:5px;font-size:11px;font-weight:800}
+.driver-form input,.driver-form select,.driver-status-form select{min-height:42px;padding:0 11px;border:1px solid #ddd7d1;border-radius:10px;background:#fff}
+.driver-form button{min-height:44px;border:0;border-radius:999px;background:#ff7900;color:#fff;font-weight:900;cursor:pointer}
+.driver-list-header{display:flex;justify-content:space-between;align-items:flex-start}.driver-list-header>strong{font-size:28px}
+.driver-list{display:grid;gap:9px}.driver-row{display:grid;grid-template-columns:46px minmax(0,1fr) auto 130px;gap:12px;align-items:center;padding:12px;border:1px solid #eee8e2;border-radius:14px}
+.driver-avatar{width:46px;height:46px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#fff0df}
+.driver-main strong,.driver-main span{display:block}.driver-main span{margin-top:2px;color:#7c746d;font-size:9px}
+.driver-meta{text-align:right}.driver-meta small{display:block;margin-top:5px;color:#7c746d;font-size:9px}
+.driver-availability{display:inline-flex;padding:5px 8px;border-radius:999px;background:#eee;font-size:8px;font-weight:900}
+.availability-available{background:#eaf8ef;color:#257247}.availability-busy{background:#fff0df;color:#a65300}
+.driver-message{margin-bottom:12px;padding:11px 13px;border-radius:12px}.driver-message.success{background:#eaf8ef;color:#257247}.driver-message.error{background:#fff0f0;color:#a73535}
+.driver-empty{padding:25px;text-align:center;color:#756d67}
+@media(max-width:1000px){.drivers-grid{grid-template-columns:1fr}}
+@media(max-width:650px){.driver-two-cols{grid-template-columns:1fr}.driver-row{grid-template-columns:46px minmax(0,1fr)}.driver-meta,.driver-status-form{grid-column:2;text-align:left}}
+</style>

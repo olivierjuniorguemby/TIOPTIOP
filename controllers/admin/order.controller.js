@@ -4,6 +4,9 @@ const Order =
 const Delivery =
     require("../../models/delivery.model");
 
+const Driver =
+    require("../../models/driver.model");
+
 
 /* =========================================================
    HELPERS
@@ -304,7 +307,8 @@ async function (
             items,
             payment,
             history,
-            delivery
+            delivery,
+            drivers
         ] =
             await Promise.all([
 
@@ -324,7 +328,11 @@ async function (
                     ? Delivery.findByOrderId(
                         order.id
                     )
-                    : null
+                    : null,
+
+                order.order_type === "DELIVERY"
+                    ? Driver.findAssignable()
+                    : []
             ]);
 
 
@@ -342,6 +350,7 @@ async function (
                 payment,
                 history,
                 delivery,
+                drivers,
 
                 currentAdminId:
                     adminId(req),

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title || "TiopTiop Livreur" %></title>
+  <link rel="stylesheet" href="/css/shared.css">
+  <style>
+    :root{--orange:#ff7900;--dark:#17130f;--cream:#fff8ef;--line:#eadfd3}
+    *{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--dark);font-family:Arial,Helvetica,sans-serif}
+    .driver-shell{min-height:100vh}.driver-topbar{position:sticky;top:0;z-index:30;min-height:68px;display:flex;align-items:center;justify-content:space-between;gap:15px;padding:0 22px;background:#fff;border-bottom:1px solid var(--line)}
+    .driver-brand{color:var(--dark);text-decoration:none;font-size:20px;font-weight:1000}.driver-brand span{color:var(--orange)}
+    .driver-nav{display:flex;align-items:center;gap:10px}.driver-nav a,.driver-nav button{min-height:38px;display:inline-flex;align-items:center;justify-content:center;padding:0 13px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--dark);text-decoration:none;font-weight:900;cursor:pointer}
+    .driver-content{width:min(1100px,calc(100% - 30px));margin:0 auto;padding:30px 0 70px}
+    @media(max-width:600px){.driver-topbar{padding:0 12px}.driver-name{display:none}}
+  </style>
+</head>
+<body>
+<div class="driver-shell">
+  <header class="driver-topbar">
+    <a href="/livreur" class="driver-brand">Tiop<span>Tiop</span> · Livreur</a>
+
+    <% if (typeof currentDriver !== "undefined" && currentDriver) { %>
+      <div class="driver-nav">
+        <span class="driver-name"><%= currentDriver.displayName || "" %></span>
+        <form action="/livreur/deconnexion" method="POST">
+          <button type="submit">Déconnexion</button>
+        </form>
+      </div>
+    <% } %>
+  </header>
+
+  <main class="driver-content">
+    <%- body %>
+  </main>
+</div>
+</body>
+</html>

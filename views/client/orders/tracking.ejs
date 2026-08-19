@@ -194,7 +194,7 @@
 
                 <p>
 
-                    <span id="gpsStatus">
+                    <span id="driverOperationalStatus"></span><br><span id="gpsStatus">
 
                         <%= latestTrackingPoint
                             ? "Dernière position GPS enregistrée : "
@@ -1150,6 +1150,15 @@ document.addEventListener(
                 io();
 
 
+            /*
+             * 13.5.1
+             * Le serveur garantit qu'un socket ne garde
+             * qu'une seule room de commande à la fois.
+             */
+            let joinedOrderReference =
+                null;
+
+
             socket.on(
                 "connect",
                 function () {
@@ -1169,6 +1178,10 @@ document.addEventListener(
                         "order:join",
                         orderReference
                     );
+
+
+                    joinedOrderReference =
+                        orderReference;
                 }
             );
 
@@ -1197,8 +1210,12 @@ document.addEventListener(
                     if (
                         !data
                         ||
-                        data.reference !==
-                            orderReference
+                        String(
+                            data.reference || ""
+                        ) !==
+                            String(
+                                orderReference
+                            )
                     ) {
 
                         return;
@@ -1220,8 +1237,12 @@ document.addEventListener(
                     if (
                         !data
                         ||
-                        data.reference !==
-                            orderReference
+                        String(
+                            data.reference || ""
+                        ) !==
+                            String(
+                                orderReference
+                            )
                     ) {
 
                         return;
@@ -1296,14 +1317,75 @@ document.addEventListener(
              */
 
             socket.on(
+                "delivery:status",
+                function (data) {
+
+                    if (
+                        !data
+                        ||
+                        String(
+                            data.reference || ""
+                        ) !==
+                            String(
+                                orderReference
+                            )
+                    ) {
+                        return;
+                    }
+
+                    const element =
+                        document.getElementById(
+                            "driverOperationalStatus"
+                        );
+
+                    if (element) {
+                        element.textContent =
+                            data.message
+                            ||
+                            ("Livraison : " + data.status);
+                    }
+                }
+            );
+
+
+
+
+            /*
+             * Lorsqu'on quitte cette page de suivi,
+             * on quitte explicitement la room.
+             */
+            window.addEventListener(
+                "beforeunload",
+                function () {
+
+                    if (
+                        socket.connected
+                        &&
+                        joinedOrderReference
+                    ) {
+
+                        socket.emit(
+                            "order:leave",
+                            joinedOrderReference
+                        );
+                    }
+                }
+            );
+
+
+            socket.on(
                 "driver:location",
                 function (data) {
 
                     if (
                         !data
                         ||
-                        data.orderId !==
-                            orderReference
+                        String(
+                            data.orderId || ""
+                        ) !==
+                            String(
+                                orderReference
+                            )
                     ) {
 
                         return;

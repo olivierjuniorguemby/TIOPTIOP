@@ -17,34 +17,101 @@ const clientRoutes = require("./routes/client/index.routes");
 const authRoutes = require("./routes/client/auth.routes");
 const accountRoutes = require("./routes/client/account.routes");
 const careerRoutes = require("./routes/client/career.routes");
+
 const adminRoutes = require("./routes/admin/index.routes");
+const driverRoutes = require("./routes/driver/index.routes");
 const apiRoutes = require("./routes/api/index.routes");
+
 const clientCartRoutes = require("./routes/client/cart.routes");
 const clientCheckoutRoutes = require("./routes/client/checkout.routes");
-
 const clientOrderRoutes = require("./routes/client/order.routes");
 
 const app = express();
 const server = http.createServer(app);
+
 const io = new Server(server);
 
 app.set("io", io);
 
 app.disable("x-powered-by");
+
 app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
-app.set("layout", "layouts/client");
+app.set(
+    "views",
+    path.join(
+        __dirname,
+        "views"
+    )
+);
 
-app.use(expressLayouts);
-app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: false }));
-app.use(morgan("dev"));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json({ limit: "2mb" }));
-app.use(sessionMiddleware);
-app.use(locals);
+app.set(
+    "layout",
+    "layouts/client"
+);
 
-app.use(express.static(path.join(__dirname, "public")));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(
+    expressLayouts
+);
+
+app.use(
+    helmet({
+        contentSecurityPolicy:
+            false,
+
+        crossOriginResourcePolicy:
+            false
+    })
+);
+
+app.use(
+    morgan("dev")
+);
+
+app.use(
+    express.urlencoded({
+        extended:
+            true
+    })
+);
+
+app.use(
+    express.json({
+        limit:
+            "2mb"
+    })
+);
+
+app.use(
+    sessionMiddleware
+);
+
+app.use(
+    locals
+);
+
+app.use(
+    express.static(
+        path.join(
+            __dirname,
+            "public"
+        )
+    )
+);
+
+app.use(
+    "/uploads",
+    express.static(
+        path.join(
+            __dirname,
+            "uploads"
+        )
+    )
+);
+
+
+/* =========================================================
+   ROUTES CLIENT
+========================================================= */
 
 app.use(
     "/panier",
@@ -61,16 +128,65 @@ app.use(
     clientOrderRoutes
 );
 
-app.use("/", clientRoutes);
-app.use("/", authRoutes);
-app.use("/", accountRoutes);
-app.use("/", careerRoutes);
-app.use("/admin", adminRoutes);
-app.use("/api/v1", apiRoutes);
+app.use(
+    "/",
+    clientRoutes
+);
+
+app.use(
+    "/",
+    authRoutes
+);
+
+app.use(
+    "/",
+    accountRoutes
+);
+
+app.use(
+    "/",
+    careerRoutes
+);
+
+
+/* =========================================================
+   ADMIN / LIVREUR / API
+========================================================= */
+
+app.use(
+    "/admin",
+    adminRoutes
+);
+
+app.use(
+    "/livreur",
+    driverRoutes
+);
+
+app.use(
+    "/api/v1",
+    apiRoutes
+);
+
+
+/* =========================================================
+   SOCKET.IO - ISOLATION DES COMMANDES 13.5.1
+========================================================= */
 
 io.on(
     "connection",
     socket => {
+
+        /* =================================================
+           REJOINDRE UNE COMMANDE
+
+           IMPORTANT :
+           avant de rejoindre la nouvelle commande,
+           le socket QUITTE toutes les anciennes rooms order:*.
+
+           Un socket client ne peut donc jamais rester
+           abonné simultanément aux commandes A et B.
+        ================================================= */
 
         socket.on(
             "order:join",
@@ -81,7 +197,10 @@ io.on(
                         orderReference || ""
                     )
                         .trim()
-                        .slice(0, 60);
+                        .slice(
+                            0,
+                            60
+                        );
 
 
                 if (!reference) {
@@ -89,18 +208,80 @@ io.on(
                 }
 
 
+                for (
+                    const room of socket.rooms
+                ) {
+
+                    if (
+                        room.startsWith(
+                            "order:"
+                        )
+                    ) {
+
+                        socket.leave(
+                            room
+                        );
+                    }
+                }
+
+
                 socket.join(
                     `order:${reference}`
                 );
+
+
+                socket.data.orderReference =
+                    reference;
             }
         );
 
 
-        /*
-         * Conservé pour la future étape GPS.
-         * Le tracking réel de position sera sécurisé
-         * et persisté en 13.5 / 13.6.
-         */
+        /* =================================================
+           QUITTER EXPLICITEMENT UNE COMMANDE
+        ================================================= */
+
+        socket.on(
+            "order:leave",
+            orderReference => {
+
+                const reference =
+                    String(
+                        orderReference || ""
+                    )
+                        .trim()
+                        .slice(
+                            0,
+                            60
+                        );
+
+
+                if (!reference) {
+                    return;
+                }
+
+
+                socket.leave(
+                    `order:${reference}`
+                );
+
+
+                if (
+                    socket.data.orderReference ===
+                    reference
+                ) {
+
+                    delete socket.data.orderReference;
+                }
+            }
+        );
+
+
+        /* =================================================
+           POSITION LIVREUR
+
+           13.6 sécurisera ensuite l'émetteur côté livreur
+           et enregistrera la position dans MySQL.
+        ================================================= */
 
         socket.on(
             "driver:location",
@@ -110,6 +291,7 @@ io.on(
                     !data ||
                     !data.orderId
                 ) {
+
                     return;
                 }
 
@@ -119,7 +301,10 @@ io.on(
                         data.orderId
                     )
                         .trim()
-                        .slice(0, 60);
+                        .slice(
+                            0,
+                            60
+                        );
 
 
                 if (!reference) {
@@ -133,7 +318,12 @@ io.on(
                     )
                     .emit(
                         "driver:location",
-                        data
+                        {
+                            ...data,
+
+                            orderId:
+                                reference
+                        }
                     );
             }
         );
@@ -141,15 +331,55 @@ io.on(
 );
 
 
+/* =========================================================
+   404 / ERREURS
+========================================================= */
 
-app.use(notFound);
-app.use(errorHandler);
+app.use(
+    notFound
+);
 
-const port = Number(process.env.PORT || 3000);
-server.listen(port, () => {
-  console.log(`TiopTiop démarré : http://localhost:${port}`);
-  console.log(`Administration : http://localhost:${port}/admin`);
-  console.log(`API santé : http://localhost:${port}/api/v1/health`);
-});
+app.use(
+    errorHandler
+);
 
-module.exports = { app, server, io };
+
+/* =========================================================
+   SERVEUR
+========================================================= */
+
+const port =
+    Number(
+        process.env.PORT ||
+        3000
+    );
+
+
+server.listen(
+    port,
+    () => {
+
+        console.log(
+            `TiopTiop démarré : http://localhost:${port}`
+        );
+
+        console.log(
+            `Administration : http://localhost:${port}/admin`
+        );
+
+        console.log(
+            `Livreur : http://localhost:${port}/livreur`
+        );
+
+        console.log(
+            `API santé : http://localhost:${port}/api/v1/health`
+        );
+    }
+);
+
+
+module.exports = {
+    app,
+    server,
+    io
+};

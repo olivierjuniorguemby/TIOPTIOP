@@ -1,596 +1,314 @@
-<%
-    const statusLabels = {
-        WAITING: "En attente",
-        ASSIGNED: "Affectée",
-        PICKED_UP: "Récupérée",
-        ON_THE_WAY: "En route",
-        ARRIVED: "Arrivée",
-        DELIVERED: "Livrée",
-        FAILED: "Échec"
-    };
-
-
-    const formatDate = value => {
-
-        if (!value) {
-            return "—";
-        }
-
-        const date =
-            new Date(value);
-
-        if (
-            Number.isNaN(
-                date.getTime()
-            )
-        ) {
-            return "—";
-        }
-
-        return date.toLocaleString(
-            "fr-FR",
-            {
-                dateStyle: "short",
-                timeStyle: "short"
-            }
-        );
-    };
-%>
-
-
 <section class="admin-heading">
-
-    <div class="deliveries-header">
-
-        <span class="admin-section-badge">
-            Administration
-        </span>
-
-        <h1>
-            🛵 Livraisons
-        </h1>
-
-        <p>
-            Affectations et suivi opérationnel des commandes en livraison.
-        </p>
-
-    </div>
-
+  <div class="deliveries-header">
+    <span class="admin-section-badge">Administration</span>
+    <h1>🛵 Livraisons</h1>
+  </div>
 </section>
-
-
 <section class="admin-deliveries-page">
 
+  <!-- EN-TÊTE -->
+  
 
-    <div class="delivery-stats">
 
-        <article class="delivery-stat-card">
-            <span>Total</span>
-            <strong><%= Number(stats?.total || 0) %></strong>
-        </article>
+  <!-- =====================================================
+       STATISTIQUES
+  ====================================================== -->
+  <div class="delivery-stats">
 
-        <article class="delivery-stat-card">
-            <span>En attente</span>
-            <strong><%= Number(stats?.waiting || 0) %></strong>
-        </article>
+    <!-- EN ROUTE -->
+    <article class="delivery-stat-card">
 
-        <article class="delivery-stat-card">
-            <span>Affectées</span>
-            <strong><%= Number(stats?.assigned || 0) %></strong>
-        </article>
+      <div class="delivery-stat-title">
+        <span class="delivery-stat-icon">🛵</span>
+        <h2>En route</h2>
+      </div>
 
-        <article class="delivery-stat-card">
-            <span>En route</span>
-            <strong><%= Number(stats?.on_the_way || 0) %></strong>
-        </article>
+      <strong class="delivery-stat-value">
+        1
+      </strong>
 
-        <article class="delivery-stat-card">
-            <span>Livrées</span>
-            <strong><%= Number(stats?.delivered || 0) %></strong>
-        </article>
+    </article>
 
-    </div>
 
+    <!-- ZONES -->
+    <article class="delivery-stat-card">
 
-    <form
-        action="/admin/livraisons"
-        method="GET"
-        class="delivery-filters"
-    >
+      <div class="delivery-stat-title">
+        <span class="delivery-stat-icon">📍</span>
+        <h2>Zones</h2>
+      </div>
 
-        <input
-            type="search"
-            name="search"
-            placeholder="Commande, livreur, téléphone, client..."
-            value="<%= filters?.search || '' %>"
-        >
+      <p class="delivery-zones">
+        Centre-ville · Poto-Poto · Bacongo
+      </p>
 
+    </article>
 
-        <select name="status">
 
-            <option value="">
-                Tous les statuts
-            </option>
+    <!-- TEMPS MOYEN -->
+    <article class="delivery-stat-card">
 
-            <% Object.entries(statusLabels).forEach(([value, label]) => { %>
+      <div class="delivery-stat-title">
+        <span class="delivery-stat-icon">⏱</span>
+        <h2>Temps moyen</h2>
+      </div>
 
-                <option
-                    value="<%= value %>"
-                    <%= filters?.status === value
-                        ? "selected"
-                        : ""
-                    %>
-                >
-                    <%= label %>
-                </option>
+      <strong class="delivery-stat-value">
+        27 min
+      </strong>
 
-            <% }) %>
+    </article>
 
-        </select>
+  </div>
 
 
-        <button type="submit">
-            Filtrer
-        </button>
+  <!-- =====================================================
+       PRINCIPE PRODUCTION
+  ====================================================== -->
+  <article class="delivery-production-card">
 
+    <h2>Principe production</h2>
 
-        <a href="/admin/livraisons">
-            Réinitialiser
-        </a>
+    <p>
+      L’application livreur transmettra sa position GPS au backend Node.js.
+      Socket.IO/WebSocket poussera les nouvelles coordonnées au navigateur
+      client, qui déplacera le marqueur sur Leaflet/MapLibre/Mapbox.
+    </p>
 
-    </form>
-
-
-    <div class="delivery-table-wrap">
-
-
-        <% if (
-            !deliveries ||
-            deliveries.length === 0
-        ) { %>
-
-            <div class="delivery-empty">
-
-                <div>🛵</div>
-
-                <h2>
-                    Aucune livraison
-                </h2>
-
-                <p>
-                    Les commandes de type livraison apparaîtront ici après création de leur opération de livraison.
-                </p>
-
-            </div>
-
-        <% } else { %>
-
-
-            <table class="delivery-table">
-
-                <thead>
-
-                    <tr>
-                        <th>Commande</th>
-                        <th>Destination</th>
-                        <th>Livreur</th>
-                        <th>Statut</th>
-                        <th>ETA</th>
-                        <th>Dernier GPS</th>
-                        <th>Action</th>
-                    </tr>
-
-                </thead>
-
-
-                <tbody>
-
-                    <% deliveries.forEach(delivery => { %>
-
-                        <tr>
-
-                            <td>
-
-                                <strong>
-                                    <%= delivery.order_reference %>
-                                </strong>
-
-                                <small>
-                                    <%= delivery.restaurant_name %>
-                                </small>
-
-                            </td>
-
-
-                            <td>
-
-                                <strong>
-                                    <%= delivery.recipient_name || "Client" %>
-                                </strong>
-
-                                <small>
-                                    <%= [
-                                        delivery.address_line1,
-                                        delivery.delivery_district,
-                                        delivery.delivery_city
-                                    ]
-                                        .filter(Boolean)
-                                        .join(" · ")
-                                    %>
-                                </small>
-
-                            </td>
-
-
-                            <td>
-
-                                <strong>
-                                    <%= delivery.driver_name || "Non affecté" %>
-                                </strong>
-
-                                <small>
-                                    <%= delivery.driver_phone || "—" %>
-                                </small>
-
-                            </td>
-
-
-                            <td>
-
-                                <span class="delivery-status status-<%= String(delivery.status).toLowerCase() %>">
-                                    <%= statusLabels[delivery.status] || delivery.status %>
-                                </span>
-
-                            </td>
-
-
-                            <td>
-                                <%= formatDate(delivery.estimated_arrival) %>
-                            </td>
-
-
-                            <td>
-                                <%= formatDate(delivery.last_gps_at) %>
-                            </td>
-
-
-                            <td>
-
-                                <a
-                                    href="/admin/commandes/<%= encodeURIComponent(delivery.order_reference) %>"
-                                    class="delivery-view"
-                                >
-                                    Gérer
-                                </a>
-
-                            </td>
-
-                        </tr>
-
-                    <% }) %>
-
-                </tbody>
-
-            </table>
-
-        <% } %>
-
-
-    </div>
-
+  </article>
 
 </section>
 
-
 <style>
+  /* =========================================================
+   ADMIN - LIVRAISONS
+========================================================= */
 
 .admin-deliveries-page {
-
     padding: 18px;
 }
 
 
-.deliveries-header p {
+/* =========================================================
+   HEADER
+========================================================= */
 
-    margin: 8px 0 0;
-
-    color: #776f69;
+.deliveries-header {
+    margin-bottom: 28px;
 }
 
-
 .admin-section-badge {
-
     display: inline-flex;
+    align-items: center;
+
+    background: #fff0df;
+    color: #ff7900;
 
     padding: 6px 12px;
 
     border-radius: 999px;
 
-    background: #fff0df;
-
-    color: #ff7900;
-
-    font-size: 11px;
-
-    font-weight: 900;
+    font-size: 12px;
+    font-weight: 800;
 }
 
+.deliveries-header h1 {
+    margin: 10px 0 0;
+
+    font-size: 38px;
+    line-height: 1;
+
+    font-weight: 800;
+    color: #171310;
+}
+
+
+/* =========================================================
+   STATISTIQUES
+========================================================= */
 
 .delivery-stats {
-
     display: grid;
 
     grid-template-columns:
-        repeat(5, 1fr);
+        repeat(3, minmax(0, 1fr));
 
-    gap: 10px;
+    gap: 18px;
 
-    margin-bottom: 14px;
+    margin-bottom: 18px;
 }
 
+
+/* CARTE */
 
 .delivery-stat-card {
+    background: #ffffff;
 
-    min-height: 110px;
+    min-height: 168px;
 
-    padding: 20px;
+    border-radius: 22px;
 
-    border-radius: 18px;
+    padding: 32px 24px;
 
-    background: #fff;
+    box-sizing: border-box;
 }
 
 
-.delivery-stat-card span {
+/* TITRE */
 
+.delivery-stat-title {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    margin-bottom: 28px;
+}
+
+.delivery-stat-title h2 {
+    margin: 0;
+
+    font-size: 25px;
+    line-height: 1.2;
+
+    color: #171310;
+
+    font-weight: 800;
+}
+
+.delivery-stat-icon {
+    font-size: 22px;
+}
+
+
+/* VALEUR */
+
+.delivery-stat-value {
     display: block;
 
-    margin-bottom: 11px;
+    font-size: 45px;
+    line-height: 1;
 
-    color: #786f69;
-
-    font-size: 11px;
-}
-
-
-.delivery-stat-card strong {
-
-    font-size: 29px;
-}
-
-
-.delivery-filters {
-
-    display: grid;
-
-    grid-template-columns:
-        minmax(240px, 1fr)
-        180px
-        auto
-        auto;
-
-    gap: 8px;
-
-    padding: 12px;
-
-    margin-bottom: 14px;
-
-    border-radius: 17px;
-
-    background: #fff;
-}
-
-
-.delivery-filters input,
-.delivery-filters select {
-
-    min-height: 43px;
-
-    padding: 0 12px;
-
-    border: 1px solid #ddd7d2;
-
-    border-radius: 11px;
-
-    background: #fff;
-}
-
-
-.delivery-filters button,
-.delivery-filters a,
-.delivery-view {
-
-    min-height: 41px;
-
-    display: inline-flex;
-
-    align-items: center;
-    justify-content: center;
-
-    padding: 0 15px;
-
-    border-radius: 999px;
-
-    text-decoration: none;
-
-    font-size: 11px;
-
-    font-weight: 900;
-}
-
-
-.delivery-filters button {
-
-    border: 0;
-
-    background: #ff7900;
-
-    color: #fff;
-
-    cursor: pointer;
-}
-
-
-.delivery-filters a,
-.delivery-view {
-
-    border: 1px solid #e1dcd7;
-
-    background: #fff;
+    font-weight: 800;
 
     color: #171310;
 }
 
 
-.delivery-table-wrap {
+/* ZONES */
 
-    overflow-x: auto;
+.delivery-zones {
+    margin: 0;
 
-    border-radius: 18px;
+    font-size: 16px;
+    line-height: 1.6;
 
-    background: #fff;
+    color: #171310;
 }
 
 
-.delivery-table {
+/* =========================================================
+   PRINCIPE PRODUCTION
+========================================================= */
 
-    width: 100%;
+.delivery-production-card {
+    background: #ffffff;
 
-    min-width: 1050px;
+    border-radius: 22px;
 
-    border-collapse: collapse;
+    padding: 38px 22px;
+
+    min-height: 145px;
+
+    box-sizing: border-box;
+}
+
+.delivery-production-card h2 {
+    margin: 0 0 25px;
+
+    font-size: 25px;
+
+    color: #171310;
+
+    font-weight: 800;
+}
+
+.delivery-production-card p {
+    margin: 0;
+
+    color: #776f6a;
+
+    font-size: 16px;
+
+    line-height: 1.7;
 }
 
 
-.delivery-table th,
-.delivery-table td {
+/* =========================================================
+   TABLETTE
+========================================================= */
 
-    padding: 14px;
-
-    text-align: left;
-
-    border-bottom: 1px solid #eee8e3;
-
-    font-size: 12px;
-}
-
-
-.delivery-table th {
-
-    background: #faf7f4;
-
-    font-size: 11px;
-}
-
-
-.delivery-table td strong,
-.delivery-table td small {
-
-    display: block;
-}
-
-
-.delivery-table td small {
-
-    margin-top: 4px;
-
-    color: #7b746e;
-
-    font-size: 9px;
-}
-
-
-.delivery-status {
-
-    display: inline-flex;
-
-    min-height: 27px;
-
-    align-items: center;
-
-    padding: 0 10px;
-
-    border-radius: 999px;
-
-    background: #f3f1ee;
-
-    font-size: 9px;
-
-    font-weight: 900;
-}
-
-
-.status-assigned {
-
-    background: #fff0df;
-
-    color: #a65200;
-}
-
-
-.status-on_the_way {
-
-    background: #edf3ff;
-
-    color: #315ba4;
-}
-
-
-.status-delivered {
-
-    background: #eaf8ef;
-
-    color: #277347;
-}
-
-
-.status-failed {
-
-    background: #fff0f0;
-
-    color: #a73535;
-}
-
-
-.delivery-empty {
-
-    padding: 60px 25px;
-
-    text-align: center;
-}
-
-
-.delivery-empty > div {
-
-    font-size: 50px;
-}
-
-
-@media(max-width:1000px) {
+@media (max-width: 1000px) {
 
     .delivery-stats {
-
         grid-template-columns:
-            repeat(2, 1fr);
+            repeat(2, minmax(0, 1fr));
     }
 
-
-    .delivery-filters {
-
-        grid-template-columns:
-            1fr 1fr;
+    .delivery-stat-card:last-child {
+        grid-column: 1 / -1;
     }
+
 }
 
 
-@media(max-width:600px) {
+/* =========================================================
+   MOBILE
+========================================================= */
 
-    .delivery-stats,
-    .delivery-filters {
+@media (max-width: 650px) {
 
-        grid-template-columns:
-            1fr;
+    .admin-deliveries-page {
+        padding: 12px;
     }
-}
 
+    .deliveries-header h1 {
+        font-size: 30px;
+    }
+
+    .delivery-stats {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .delivery-stat-card:last-child {
+        grid-column: auto;
+    }
+
+    .delivery-stat-card {
+        min-height: auto;
+        padding: 24px 20px;
+    }
+
+    .delivery-stat-title {
+        margin-bottom: 20px;
+    }
+
+    .delivery-stat-title h2 {
+        font-size: 21px;
+    }
+
+    .delivery-stat-value {
+        font-size: 38px;
+    }
+
+    .delivery-production-card {
+        padding: 28px 20px;
+    }
+
+    .delivery-production-card h2 {
+        font-size: 22px;
+    }
+
+}
 </style>

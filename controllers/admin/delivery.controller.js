@@ -1,45 +1,13 @@
-const Delivery =
-    require("../../models/delivery.model");
+const Delivery = require("../../models/delivery.model");
 
-
-/* =========================================================
-   HELPERS
-========================================================= */
-
-function cleanString(
-    value,
-    maxLength = 160
-) {
-
-    return String(
-        value || ""
-    )
-        .trim()
-        .slice(
-            0,
-            maxLength
-        );
+function cleanString(value, maxLength = 160) {
+    return String(value || "").trim().slice(0, maxLength);
 }
 
-
-/* =========================================================
-   GET /admin/livraisons
-========================================================= */
-
-exports.index =
-async function (
-    req,
-    res,
-    next
-) {
-
+exports.index = async (req, res, next) => {
     try {
-
         const search =
-            cleanString(
-                req.query.search
-            );
-
+            cleanString(req.query.search);
 
         const status =
             cleanString(
@@ -47,7 +15,6 @@ async function (
                 30
             )
                 .toUpperCase();
-
 
         const allowedStatuses = [
             "WAITING",
@@ -59,102 +26,61 @@ async function (
             "FAILED"
         ];
 
-
         const finalStatus =
-            allowedStatuses.includes(
-                status
-            )
+            allowedStatuses.includes(status)
                 ? status
                 : "";
 
-
-        const [
-            deliveries,
-            stats
-        ] =
+        const [deliveries, stats] =
             await Promise.all([
-
                 Delivery.findAllForAdmin({
                     search,
-
-                    status:
-                        finalStatus
+                    status: finalStatus
                 }),
-
                 Delivery.getAdminStats()
             ]);
-
 
         return res.render(
             "admin/operations/deliveries",
             {
-
-                title:
-                    "Livraisons",
-
-                layout:
-                    "layouts/admin",
-
+                title: "Livraisons",
+                layout: "layouts/admin",
                 deliveries,
-
                 stats,
-
                 filters: {
                     search,
-
-                    status:
-                        finalStatus
+                    status: finalStatus
                 }
             }
         );
-
     }
     catch (error) {
-
-        console.error(
-            "Erreur liste livraisons admin :",
-            error
-        );
-
-
         return next(error);
     }
 };
 
-
-/* =========================================================
-   POST /admin/commandes/:reference/livraison/affecter
-========================================================= */
-
-exports.assign =
-async function (
-    req,
-    res,
-    next
-) {
-
+exports.assign = async (req, res) => {
     const reference =
         cleanString(
             req.params.reference,
             60
         );
 
-
     try {
-
-        const driverName =
-            cleanString(
-                req.body.driver_name,
-                160
+        const driverId =
+            Number(
+                req.body.driver_id
             );
 
-
-        const driverPhone =
-            cleanString(
-                req.body.driver_phone,
-                40
+        if (
+            !Number.isInteger(driverId)
+            ||
+            driverId <= 0
+        ) {
+            throw new Error(
+                "Veuillez sélectionner un livreur."
             );
-
+        }
 
         const estimatedArrivalRaw =
             cleanString(
@@ -162,79 +88,54 @@ async function (
                 40
             );
 
-
-        let estimatedArrival =
-            null;
-
+        let estimatedArrival = null;
 
         if (estimatedArrivalRaw) {
-
             const date =
                 new Date(
                     estimatedArrivalRaw
                 );
-
 
             if (
                 Number.isNaN(
                     date.getTime()
                 )
             ) {
-
-                const error =
-                    new Error(
-                        "L'heure estimée d'arrivée est invalide."
-                    );
-
-                error.code =
-                    "ETA_INVALID";
-
-                throw error;
+                throw new Error(
+                    "L'heure d'arrivée estimée est invalide."
+                );
             }
 
-
-            estimatedArrival =
-                date;
+            estimatedArrival = date;
         }
-
 
         const delivery =
             await Delivery.assignDriver({
                 reference,
-                driverName,
-                driverPhone,
-
+                driverId,
                 estimatedArrival
             });
-
 
         const io =
             req.app.get("io");
 
-
         if (io) {
-
             io
-                .to(
-                    `order:${reference}`
-                )
+                .to(`order:${reference}`)
                 .emit(
                     "delivery:assigned",
                     {
                         reference,
-
                         deliveryId:
                             delivery.id,
-
                         driverName:
                             delivery.driver_name,
-
                         driverPhone:
                             delivery.driver_phone,
-
                         status:
                             delivery.status,
-
+                        acceptanceStatus:
+                            delivery.acceptance_status,
                         estimatedArrival:
                             delivery.estimated_arrival
                             || null
@@ -242,58 +143,25 @@ async function (
                 );
         }
 
-
         return res.redirect(
             "/admin/commandes/"
             +
-            encodeURIComponent(
-                reference
-            )
+            encodeURIComponent(reference)
             +
             "?delivery_updated=1"
         );
-
     }
     catch (error) {
-
-        console.error(
-            "Erreur affectation livreur :",
-            error
-        );
-
-
-        const businessErrors = [
-            "ORDER_NOT_FOUND",
-            "ORDER_NOT_DELIVERY",
-            "DELIVERY_ORDER_TERMINAL",
-            "DRIVER_NAME_REQUIRED",
-            "DRIVER_PHONE_REQUIRED",
-            "ETA_INVALID"
-        ];
-
-
-        if (
-            businessErrors.includes(
-                error.code
+        return res.redirect(
+            "/admin/commandes/"
+            +
+            encodeURIComponent(reference)
+            +
+            "?delivery_error="
+            +
+            encodeURIComponent(
+                error.message
             )
-        ) {
-
-            return res.redirect(
-                "/admin/commandes/"
-                +
-                encodeURIComponent(
-                    reference
-                )
-                +
-                "?delivery_error="
-                +
-                encodeURIComponent(
-                    error.message
-                )
-            );
-        }
-
-
-        return next(error);
+        );
     }
 };

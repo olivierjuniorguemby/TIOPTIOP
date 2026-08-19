@@ -1,0 +1,43 @@
+<section class="driver-auth-card">
+  <span class="driver-auth-badge">🛵 Espace livreur</span>
+  <h1>Connexion</h1>
+  <p>Accédez uniquement aux livraisons qui vous ont été affectées.</p>
+
+  <% if (error) { %>
+    <div class="driver-auth-error">⚠️ <%= error %></div>
+  <% } %>
+
+  <form action="/livreur/connexion" method="POST" class="driver-auth-form" id="driverLoginForm">
+    <label>Email
+      <input type="email" name="email" value="<%= email || '' %>" autocomplete="username" required>
+    </label>
+
+    <label>Mot de passe
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+
+    <button type="submit" id="driverLoginButton">Se connecter</button>
+  </form>
+</section>
+
+<style>
+.driver-auth-card{width:min(480px,100%);margin:55px auto;padding:32px;border-radius:24px;background:#fff}
+.driver-auth-badge{display:inline-flex;padding:7px 11px;border-radius:999px;background:#fff0df;color:#ff7900;font-size:11px;font-weight:900}
+.driver-auth-card h1{margin:18px 0 8px;font-size:40px}.driver-auth-card>p{color:#766f69;line-height:1.6}
+.driver-auth-error{margin:15px 0;padding:11px;border-radius:11px;background:#fff0f0;color:#a73535}
+.driver-auth-form{display:grid;gap:13px;margin-top:18px}.driver-auth-form label{display:grid;gap:5px;font-size:12px;font-weight:900}
+.driver-auth-form input{min-height:45px;padding:0 12px;border:1px solid #ddd6d0;border-radius:11px}
+.driver-auth-form button{min-height:45px;border:0;border-radius:999px;background:#ff7900;color:#fff;font-weight:900;cursor:pointer}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded",function(){
+  const form=document.getElementById("driverLoginForm");
+  const button=document.getElementById("driverLoginButton");
+  if(!form||!button)return;
+  form.addEventListener("submit",function(){
+    button.disabled=true;
+    button.textContent="Connexion...";
+  });
+});
+</script>

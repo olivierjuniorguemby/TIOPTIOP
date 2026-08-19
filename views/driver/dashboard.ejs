@@ -1,0 +1,59 @@
+<section class="driver-dashboard">
+  <header class="driver-dashboard-heading">
+    <span>🛵 Mon activité</span>
+    <h1>Bonjour <%= driver.display_name || driver.first_name %></h1>
+    <p>Gérez vos affectations et vos livraisons en cours.</p>
+  </header>
+
+  <section class="driver-availability-card">
+    <div>
+      <strong>Disponibilité</strong>
+      <span><%= driver.availability_status %></span>
+    </div>
+
+    <form action="/livreur/disponibilite" method="POST">
+      <select name="availability" onchange="this.form.submit()">
+        <option value="AVAILABLE" <%= driver.availability_status === "AVAILABLE" ? "selected" : "" %>>Disponible</option>
+        <option value="OFFLINE" <%= driver.availability_status === "OFFLINE" ? "selected" : "" %>>Hors ligne</option>
+        <option value="BUSY" <%= driver.availability_status === "BUSY" ? "selected" : "" %>>Occupé</option>
+      </select>
+    </form>
+  </section>
+
+  <section class="driver-stats">
+    <article><span>Affectations</span><strong><%= Number(stats.pending_assignments || 0) %></strong></article>
+    <article><span>Actives</span><strong><%= Number(stats.active_deliveries || 0) %></strong></article>
+    <article><span>Livrées</span><strong><%= Number(stats.delivered_count || 0) %></strong></article>
+  </section>
+
+  <section class="driver-deliveries-card">
+    <h2>Mes livraisons</h2>
+
+    <% if (!deliveries || deliveries.length === 0) { %>
+      <div class="driver-empty">Aucune livraison affectée.</div>
+    <% } %>
+
+    <% (deliveries || []).forEach(delivery => { %>
+      <a href="/livreur/livraisons/<%= encodeURIComponent(delivery.order_reference) %>" class="driver-delivery-row">
+        <div>
+          <strong><%= delivery.order_reference %></strong>
+          <span><%= delivery.restaurant_name %> → <%= delivery.delivery_district || delivery.delivery_city || "Destination" %></span>
+        </div>
+        <div>
+          <span class="delivery-state"><%= delivery.status %></span>
+          <small><%= delivery.acceptance_status %></small>
+        </div>
+      </a>
+    <% }) %>
+  </section>
+</section>
+
+<style>
+.driver-dashboard-heading span{color:#ff7900;font-weight:900}.driver-dashboard-heading h1{margin:10px 0 5px;font-size:clamp(36px,7vw,58px);letter-spacing:-2px}.driver-dashboard-heading p{color:#756d67}
+.driver-availability-card{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:18px;margin:22px 0 12px;border-radius:18px;background:#fff}
+.driver-availability-card strong,.driver-availability-card span{display:block}.driver-availability-card span{margin-top:4px;color:#777}.driver-availability-card select{min-height:40px;padding:0 10px;border:1px solid #ddd7d2;border-radius:10px;background:#fff}
+.driver-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}.driver-stats article{padding:20px;border-radius:18px;background:#fff}.driver-stats span{color:#777;font-size:11px}.driver-stats strong{display:block;margin-top:9px;font-size:28px}
+.driver-deliveries-card{padding:20px;border-radius:20px;background:#fff}.driver-delivery-row{display:flex;justify-content:space-between;gap:15px;padding:14px 0;border-bottom:1px solid #eee6df;color:inherit;text-decoration:none}.driver-delivery-row:last-child{border-bottom:0}
+.driver-delivery-row strong,.driver-delivery-row span,.driver-delivery-row small{display:block}.driver-delivery-row span,.driver-delivery-row small{margin-top:4px;color:#777;font-size:10px}.delivery-state{color:#ff7900!important;font-weight:900}.driver-empty{padding:30px;text-align:center;color:#777}
+@media(max-width:600px){.driver-stats{grid-template-columns:1fr}}
+</style>

@@ -57,6 +57,12 @@ const deliveryController =
     );
 
 
+const driverController =
+    require(
+        "../../controllers/admin/driver.controller"
+    );
+
+
 /* =========================================================
    CATEGORIES
 ========================================================= */
@@ -493,6 +499,24 @@ router.get(
 router.get(
     "/livraisons",
     deliveryController.index
+);
+
+
+router.get(
+    "/livreurs",
+    driverController.index
+);
+
+
+router.post(
+    "/livreurs",
+    driverController.create
+);
+
+
+router.post(
+    "/livreurs/:id/statut",
+    driverController.updateStatus
 );
 
 
