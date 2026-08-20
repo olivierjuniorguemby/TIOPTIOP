@@ -277,56 +277,19 @@ io.on(
 
 
         /* =================================================
-           POSITION LIVREUR
+           GPS LIVREUR - 13.6
 
-           13.6 sécurisera ensuite l'émetteur côté livreur
-           et enregistrera la position dans MySQL.
+           Les positions GPS ne sont pas acceptées directement
+           depuis Socket.IO.
+
+           Elles arrivent par la route HTTP protégée :
+           POST /livreur/livraisons/:reference/position
+
+           Le contrôleur vérifie le livreur et la livraison,
+           enregistre la position dans MySQL, puis émet
+           driver:location dans la room order:<REFERENCE>.
         ================================================= */
 
-        socket.on(
-            "driver:location",
-            data => {
-
-                if (
-                    !data ||
-                    !data.orderId
-                ) {
-
-                    return;
-                }
-
-
-                const reference =
-                    String(
-                        data.orderId
-                    )
-                        .trim()
-                        .slice(
-                            0,
-                            60
-                        );
-
-
-                if (!reference) {
-                    return;
-                }
-
-
-                io
-                    .to(
-                        `order:${reference}`
-                    )
-                    .emit(
-                        "driver:location",
-                        {
-                            ...data,
-
-                            orderId:
-                                reference
-                        }
-                    );
-            }
-        );
     }
 );
 

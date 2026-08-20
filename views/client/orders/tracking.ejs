@@ -78,55 +78,47 @@
 
 
     const restaurantLat =
-        delivery &&
-        delivery.restaurant_latitude !== null
-        &&
-        delivery.restaurant_latitude !== undefined
+        delivery?.restaurant_latitude !== null &&
+        delivery?.restaurant_latitude !== undefined
+            ? Number(delivery.restaurant_latitude)
 
-            ? Number(
-                delivery.restaurant_latitude
-            )
-
-            : null;
+            : order?.restaurant_latitude !== null &&
+              order?.restaurant_latitude !== undefined
+                ? Number(order.restaurant_latitude)
+                : null;
 
 
     const restaurantLng =
-        delivery &&
-        delivery.restaurant_longitude !== null
-        &&
-        delivery.restaurant_longitude !== undefined
+        delivery?.restaurant_longitude !== null &&
+        delivery?.restaurant_longitude !== undefined
+            ? Number(delivery.restaurant_longitude)
 
-            ? Number(
-                delivery.restaurant_longitude
-            )
-
-            : null;
+            : order?.restaurant_longitude !== null &&
+              order?.restaurant_longitude !== undefined
+                ? Number(order.restaurant_longitude)
+                : null;
 
 
     const destinationLat =
-        delivery &&
-        delivery.delivery_latitude !== null
-        &&
-        delivery.delivery_latitude !== undefined
+        delivery?.delivery_latitude !== null &&
+        delivery?.delivery_latitude !== undefined
+            ? Number(delivery.delivery_latitude)
 
-            ? Number(
-                delivery.delivery_latitude
-            )
-
-            : null;
+            : order?.delivery_latitude !== null &&
+              order?.delivery_latitude !== undefined
+                ? Number(order.delivery_latitude)
+                : null;
 
 
     const destinationLng =
-        delivery &&
-        delivery.delivery_longitude !== null
-        &&
-        delivery.delivery_longitude !== undefined
+        delivery?.delivery_longitude !== null &&
+        delivery?.delivery_longitude !== undefined
+            ? Number(delivery.delivery_longitude)
 
-            ? Number(
-                delivery.delivery_longitude
-            )
-
-            : null;
+            : order?.delivery_longitude !== null &&
+              order?.delivery_longitude !== undefined
+                ? Number(order.delivery_longitude)
+                : null;
 
 
     const initialDriverLat =
@@ -1638,6 +1630,9 @@ document.addEventListener(
             }
         );
 
+        /* =================================================
+           POSITION GPS LIVREUR EN TEMPS REEL
+        ================================================= */
 
         socket.on(
             "driver:location",
@@ -1649,7 +1644,11 @@ document.addEventListener(
                     !data
                     ||
                     String(
-                        data.orderId || ""
+                        data.orderId
+                        ||
+                        data.reference
+                        ||
+                        ""
                     )
                     !==
                     String(
