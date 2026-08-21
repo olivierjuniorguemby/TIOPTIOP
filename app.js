@@ -13,6 +13,8 @@ const locals = require("./middleware/locals");
 const notFound = require("./middleware/not-found");
 const errorHandler = require("./middleware/error-handler");
 
+const paymentReconciliation = require("./services/payment-reconciliation.service");
+
 const clientRoutes = require("./routes/client/index.routes");
 const authRoutes = require("./routes/client/auth.routes");
 const accountRoutes = require("./routes/client/account.routes");
@@ -337,6 +339,9 @@ server.listen(
         console.log(
             `API santé : http://localhost:${port}/api/v1/health`
         );
+
+
+        paymentReconciliation.start();
     }
 );
 

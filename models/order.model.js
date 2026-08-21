@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const db = require("../config/database");
+const Payment = require("./payment.model");
 
 
 /* =========================================================
@@ -1049,46 +1050,95 @@ async function createFromCart({
 
 
         /* =================================================
-           PAIEMENT INITIAL
+           PAIEMENT INITIAL - 13.7.2
+
+           Le paiement est créé DANS LA MEME TRANSACTION
+           que la commande afin de conserver l'atomicité :
+
+           orders
+             -> order_items
+             -> order_item_options
+             -> order_status_history
+             -> payments
+             -> payment_events
+             -> cart CONVERTED
+
+           Aucun appel externe (MTN / carte) n'est effectué ici.
         ================================================= */
 
         const paymentPublicId =
             crypto.randomUUID();
 
 
-        const [
-            paymentResult
-        ] = await connection.execute(`
-            INSERT INTO payments
-            (
-                public_id,
-                order_id,
-                method,
-                provider,
-                status,
-                amount,
-                currency,
-                provider_reference,
-                paid_at
-            )
-            VALUES
-            (
-                ?,
-                ?,
-                ?,
-                NULL,
-                'PENDING',
-                ?,
-                'XAF',
-                NULL,
-                NULL
-            )
-        `, [
-            paymentPublicId,
-            orderId,
-            paymentMethod,
-            totalAmount
-        ]);
+        const paymentProvider =
+            Payment.getDefaultProvider(
+                paymentMethod
+            );
+
+
+        const payment =
+            await Payment.createInTransaction(
+                connection,
+                {
+                    publicId:
+                        paymentPublicId,
+
+                    orderId,
+
+                    method:
+                        paymentMethod,
+
+                    provider:
+                        paymentProvider,
+
+                    status:
+                        Payment.STATUSES.PENDING,
+
+                    amount:
+                        totalAmount,
+
+                    currency:
+                        "XAF",
+
+                    providerReference:
+                        null
+                }
+            );
+
+
+        await Payment.addEventInTransaction(
+            connection,
+            {
+                paymentId:
+                    payment.id,
+
+                eventType:
+                    "PAYMENT_CREATED",
+
+                description:
+                    "Paiement initial créé avec la commande.",
+
+                payload: {
+                    orderReference:
+                        reference,
+
+                    method:
+                        paymentMethod,
+
+                    provider:
+                        paymentProvider,
+
+                    amount:
+                        totalAmount,
+
+                    currency:
+                        "XAF",
+
+                    status:
+                        Payment.STATUSES.PENDING
+                }
+            }
+        );
 
 
         /* =================================================
@@ -1128,12 +1178,16 @@ async function createFromCart({
             reference,
 
             paymentId:
-                paymentResult.insertId,
+                payment.id,
 
-            paymentPublicId,
+            paymentPublicId:
+                payment.publicId,
+
+            paymentProvider:
+                payment.provider,
 
             paymentStatus:
-                "PENDING",
+                payment.status,
 
             subtotal,
             deliveryFee,

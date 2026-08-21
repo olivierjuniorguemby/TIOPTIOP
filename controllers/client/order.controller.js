@@ -5,6 +5,10 @@ const Delivery =
     require("../../models/delivery.model");
 
 
+const PaymentService =
+    require("../../services/payment.service");
+
+
 /* =========================================================
    HELPER USER
 ========================================================= */
@@ -319,6 +323,338 @@ async function (
 
 
         return next(error);
+    }
+};
+
+
+/* =========================================================
+   GET /commande/:reference/payment-status
+========================================================= */
+
+exports.paymentStatus =
+async function (
+    req,
+    res
+) {
+
+    try {
+
+        const userId =
+            getUserId(req);
+
+
+        if (!userId) {
+
+            return res
+                .status(401)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Utilisateur non connecté."
+                });
+        }
+
+
+        const reference =
+            getReference(req);
+
+
+        const order =
+            await Order.findByReference(
+                reference,
+                userId
+            );
+
+
+        if (!order) {
+
+            return res
+                .status(404)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Commande introuvable."
+                });
+        }
+
+
+        let payment =
+            await Order.getPaymentByOrderId(
+                order.id
+            );
+
+
+        if (!payment) {
+
+            return res
+                .status(404)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Paiement introuvable."
+                });
+        }
+
+
+        if (
+            payment.method ===
+                "MOBILE_MONEY"
+            &&
+            payment.provider ===
+                "MTN_MOMO"
+            &&
+            payment.status ===
+                "PENDING"
+            &&
+            payment.provider_reference
+        ) {
+
+            try {
+
+                const sync =
+                    await PaymentService
+                        .syncMtnMomoPayment(
+                            payment
+                        );
+
+
+                payment =
+                    sync.payment
+                    ||
+                    payment;
+            }
+            catch (syncError) {
+
+                console.error(
+                    "Synchronisation MTN MoMo :",
+                    syncError.message
+                );
+            }
+        }
+
+
+        return res.json({
+            success:
+                true,
+
+            payment: {
+                id:
+                    payment.id,
+
+                method:
+                    payment.method,
+
+                provider:
+                    payment.provider,
+
+                status:
+                    payment.status,
+
+                amount:
+                    Number(
+                        payment.amount || 0
+                    ),
+
+                currency:
+                    payment.currency,
+
+                paidAt:
+                    payment.paid_at
+                    ||
+                    null,
+
+                canRetry:
+                    payment.method ===
+                        "MOBILE_MONEY"
+                    &&
+                    [
+                        "FAILED",
+                        "CANCELLED"
+                    ].includes(
+                        payment.status
+                    )
+            }
+        });
+    }
+    catch (error) {
+
+        console.error(
+            "Erreur statut paiement :",
+            error
+        );
+
+
+        return res
+            .status(500)
+            .json({
+                success:
+                    false,
+
+                message:
+                    "Impossible de vérifier le paiement."
+            });
+    }
+};
+
+
+/* =========================================================
+   POST /commande/:reference/payment/retry
+========================================================= */
+
+exports.retryPayment =
+async function (
+    req,
+    res
+) {
+
+    try {
+
+        const userId =
+            getUserId(req);
+
+
+        if (!userId) {
+
+            return res
+                .status(401)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Utilisateur non connecté."
+                });
+        }
+
+
+        const reference =
+            getReference(req);
+
+
+        const order =
+            await Order.findByReference(
+                reference,
+                userId
+            );
+
+
+        if (!order) {
+
+            return res
+                .status(404)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Commande introuvable."
+                });
+        }
+
+
+        const momoMsisdn =
+            String(
+                req.body.momo_msisdn
+                ||
+                ""
+            )
+                .replace(
+                    /\D/g,
+                    ""
+                )
+                .slice(
+                    0,
+                    15
+                );
+
+
+        if (
+            momoMsisdn.length < 8
+            ||
+            momoMsisdn.length > 15
+        ) {
+
+            return res
+                .status(400)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Veuillez renseigner un numéro MTN MoMo valide."
+                });
+        }
+
+
+        const result =
+            await PaymentService
+                .retryMtnMomo({
+                    order,
+                    payerMsisdn:
+                        momoMsisdn
+                });
+
+
+        return res.json({
+            success:
+                true,
+
+            message:
+                "Nouvelle demande MTN MoMo envoyée.",
+
+            payment: {
+                id:
+                    result.payment.id,
+
+                status:
+                    result.payment.status
+            }
+        });
+    }
+    catch (error) {
+
+        console.error(
+            "Retry paiement MTN MoMo :",
+            error
+        );
+
+
+        const conflictCodes = [
+            "PAYMENT_ALREADY_PAID",
+            "PAYMENT_ALREADY_PENDING",
+            "PAYMENT_PENDING_UNVERIFIED",
+            "PAYMENT_RETRY_NOT_ALLOWED"
+        ];
+
+
+        return res
+            .status(
+                conflictCodes.includes(
+                    error.code
+                )
+                    ? 409
+                    : 500
+            )
+            .json({
+                success:
+                    false,
+
+                code:
+                    error.code
+                    ||
+                    "PAYMENT_RETRY_ERROR",
+
+                message:
+                    error.message
+                    ||
+                    "Impossible de relancer le paiement."
+            });
     }
 };
 

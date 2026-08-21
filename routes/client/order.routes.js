@@ -15,6 +15,11 @@ const {
         "../../middleware/auth"
     );
 
+router.get(
+    "/:reference/payment-status",
+    requireUser,
+    order.paymentStatus
+);
 
 /* =========================================================
    CONFIRMATION

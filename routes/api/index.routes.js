@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const productService = require("../../services/product.service");
+const paymentRoutes = require("./payment.routes");
 
 router.get("/health", (_req, res) => {
   res.json({
@@ -24,5 +25,7 @@ router.get("/products/:id", async (req, res, next) => {
     next(error);
   }
 });
+
+router.use("/payments", paymentRoutes);
 
 module.exports = router;

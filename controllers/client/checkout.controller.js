@@ -4,6 +4,9 @@ const Cart =
 const Order =
     require("../../models/order.model");
 
+const PaymentService =
+    require("../../services/payment.service");
+
 
 /* =========================================================
    HELPERS
@@ -192,6 +195,9 @@ async function (
 
                     payment_method:
                         "CASH",
+
+                    momo_msisdn:
+                        "",
 
                     customer_note:
                         ""
@@ -427,6 +433,12 @@ async function (
         }
 
 
+        const momoMsisdn =
+            String(req.body.momo_msisdn || "")
+                .replace(/\D/g, "")
+                .slice(0, 15);
+
+
         const customerNote =
             String(
                 req.body.customer_note || ""
@@ -453,6 +465,9 @@ async function (
 
             payment_method:
                 paymentMethod,
+
+            momo_msisdn:
+                momoMsisdn,
 
             customer_note:
                 customerNote
@@ -597,6 +612,18 @@ async function (
         }
 
 
+        if (
+            paymentMethod === "MOBILE_MONEY"
+            &&
+            (momoMsisdn.length < 8 || momoMsisdn.length > 15)
+        ) {
+            return await renderCheckoutError(
+                req, res, cart, values,
+                "Veuillez renseigner un numéro MTN MoMo valide."
+            );
+        }
+
+
         const result =
             await Order.createFromCart({
                 userId,
@@ -634,12 +661,26 @@ async function (
         }
 
 
+        let paymentQuery = "";
+
+        if (paymentMethod === "MOBILE_MONEY") {
+            try {
+                await PaymentService.initiateMtnMomo({
+                    paymentId: result.paymentId,
+                    orderReference: result.reference,
+                    payerMsisdn: momoMsisdn
+                });
+                paymentQuery = "?payment=momo-pending";
+            } catch (paymentError) {
+                console.error("Erreur initiation MTN MoMo :", paymentError);
+                paymentQuery = "?payment=momo-error";
+            }
+        }
+
         return res.redirect(
             "/commande/confirmation/"
-            +
-            encodeURIComponent(
-                result.reference
-            )
+            + encodeURIComponent(result.reference)
+            + paymentQuery
         );
 
     }
@@ -698,6 +739,9 @@ async function (
 
                         payment_method:
                             req.body.payment_method,
+
+                        momo_msisdn:
+                            req.body.momo_msisdn,
 
                         customer_note:
                             req.body.customer_note

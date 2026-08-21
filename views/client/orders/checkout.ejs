@@ -566,6 +566,30 @@ textarea.checkout-field {
 
 
 /* =========================================================
+   MTN MOMO
+========================================================= */
+
+.momo-payment-fields {
+    display: none;
+    margin-top: 12px;
+    padding: 14px;
+    border: 1px solid #f2d5b4;
+    border-radius: 14px;
+    background: #fffaf4;
+}
+
+.momo-payment-fields.visible {
+    display: block;
+}
+
+.momo-payment-help {
+    margin-top: 7px;
+    color: var(--muted);
+    font-size: 9px;
+    line-height: 1.55;
+}
+
+/* =========================================================
    SUMMARY
 ========================================================= */
 
@@ -1517,6 +1541,31 @@ textarea.checkout-field {
 
                     </div>
 
+                    <div
+                        id="momoPaymentFields"
+                        class="momo-payment-fields <%= values?.payment_method === "MOBILE_MONEY" ? "visible" : "" %>"
+                    >
+                        <div class="checkout-field-group">
+                            <label for="momoMsisdn" class="checkout-label">
+                                Numéro MTN MoMo
+                            </label>
+                            <input
+                                type="tel"
+                                inputmode="numeric"
+                                autocomplete="tel"
+                                id="momoMsisdn"
+                                name="momo_msisdn"
+                                class="checkout-field"
+                                value="<%= values?.momo_msisdn || customer?.phone || '' %>"
+                                placeholder="Exemple : 24206XXXXXXX"
+                                maxlength="20"
+                            >
+                            <div class="momo-payment-help">
+                                Sandbox MTN : aucun argent réel n'est débité.
+                            </div>
+                        </div>
+                    </div>
+
                 </section>
 
             </div>
@@ -1752,6 +1801,24 @@ textarea.checkout-field {
         currency:
             <%- JSON.stringify(currency || "XAF") %>
     };
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const fields = document.getElementById("momoPaymentFields");
+    const input = document.getElementById("momoMsisdn");
+    const radios = document.querySelectorAll('input[name="payment_method"]');
+
+    function refreshMomoFields() {
+        const selected = document.querySelector('input[name="payment_method"]:checked');
+        const isMomo = selected && selected.value === "MOBILE_MONEY";
+        if (fields) fields.classList.toggle("visible", Boolean(isMomo));
+        if (input) input.required = Boolean(isMomo);
+    }
+
+    radios.forEach(radio => radio.addEventListener("change", refreshMomoFields));
+    refreshMomoFields();
+});
 </script>
 
 <script src="/js/checkout.js"></script>

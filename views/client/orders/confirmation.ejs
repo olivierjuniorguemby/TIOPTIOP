@@ -1,5 +1,251 @@
 <section class="section tiop-confirmation-page">
 
+
+<% if (payment && payment.method === "MOBILE_MONEY") { %>
+
+<section
+    id="momoRetryPanel"
+    class="confirmation-card"
+    style="<%= ['FAILED','CANCELLED'].includes(payment.status) ? '' : 'display:none;' %>"
+>
+    <h2 class="confirmation-card-title">
+        🔁 Réessayer le paiement
+    </h2>
+
+    <p style="color:#746d66;line-height:1.6;">
+        La tentative Mobile Money n'a pas abouti.
+        Vous pouvez envoyer une nouvelle demande MTN MoMo.
+    </p>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <input
+            id="momoRetryMsisdn"
+            type="tel"
+            inputmode="numeric"
+            placeholder="Numéro MTN MoMo"
+            maxlength="20"
+            style="min-height:44px;padding:0 14px;border:1px solid #eadfd3;border-radius:12px;"
+        >
+
+        <button
+            id="momoRetryButton"
+            type="button"
+            style="min-height:44px;padding:0 18px;border:0;border-radius:999px;background:#ff7900;color:#fff;font-weight:900;cursor:pointer;"
+        >
+            Réessayer le paiement
+        </button>
+    </div>
+
+    <p
+        id="momoRetryMessage"
+        style="margin-top:10px;color:#746d66;"
+    ></p>
+</section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const reference =
+        <%- JSON.stringify(order.reference) %>;
+
+    const badge =
+        document.getElementById("paymentStatusBadge");
+
+    const retryPanel =
+        document.getElementById("momoRetryPanel");
+
+    const retryButton =
+        document.getElementById("momoRetryButton");
+
+    const retryInput =
+        document.getElementById("momoRetryMsisdn");
+
+    const retryMessage =
+        document.getElementById("momoRetryMessage");
+
+    const labels = {
+        PENDING: "En attente",
+        AUTHORIZED: "Autorisé",
+        PAID: "Payé",
+        FAILED: "Échoué",
+        CANCELLED: "Annulé",
+        PARTIAL: "Partiel",
+        REFUNDED: "Remboursé"
+    };
+
+    let attempts = 0;
+    const maxAttempts = 30;
+    let timer = null;
+
+    function renderStatus(status, canRetry) {
+
+        const normalized =
+            String(status || "PENDING").toUpperCase();
+
+        if (badge) {
+            badge.dataset.paymentStatus = normalized;
+            badge.textContent = labels[normalized] || normalized;
+        }
+
+        if (retryPanel) {
+            retryPanel.style.display =
+                canRetry ? "" : "none";
+        }
+
+        if (
+            ["PAID","FAILED","CANCELLED","REFUNDED"]
+                .includes(normalized)
+        ) {
+            if (timer) clearInterval(timer);
+        }
+    }
+
+    async function refreshPaymentStatus() {
+
+        attempts++;
+
+        try {
+            const response =
+                await fetch(
+                    "/commande/"
+                    + encodeURIComponent(reference)
+                    + "/payment-status",
+                    {
+                        headers: {
+                            Accept: "application/json"
+                        },
+                        cache: "no-store"
+                    }
+                );
+
+            const result =
+                await response.json();
+
+            if (
+                response.ok
+                &&
+                result.success
+                &&
+                result.payment
+            ) {
+                renderStatus(
+                    result.payment.status,
+                    Boolean(result.payment.canRetry)
+                );
+            }
+        }
+        catch (error) {
+            console.error(
+                "Vérification paiement :",
+                error
+            );
+        }
+
+        if (
+            attempts >= maxAttempts
+            &&
+            timer
+        ) {
+            clearInterval(timer);
+        }
+    }
+
+    retryButton?.addEventListener(
+        "click",
+        async function () {
+
+            const momoMsisdn =
+                String(retryInput?.value || "")
+                    .replace(/\D/g, "");
+
+            if (
+                momoMsisdn.length < 8
+                ||
+                momoMsisdn.length > 15
+            ) {
+                retryMessage.textContent =
+                    "Veuillez saisir un numéro MTN MoMo valide.";
+                return;
+            }
+
+            retryButton.disabled = true;
+            retryMessage.textContent =
+                "Nouvelle demande en cours...";
+
+            try {
+                const response =
+                    await fetch(
+                        "/commande/"
+                        + encodeURIComponent(reference)
+                        + "/payment/retry",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json"
+                            },
+                            body: JSON.stringify({
+                                momo_msisdn: momoMsisdn
+                            })
+                        }
+                    );
+
+                const result =
+                    await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(
+                        result.message
+                        || "Impossible de relancer le paiement."
+                    );
+                }
+
+                retryMessage.textContent =
+                    "Nouvelle demande envoyée. Vérification du statut...";
+
+                if (badge) {
+                    badge.textContent = "En attente";
+                    badge.dataset.paymentStatus = "PENDING";
+                }
+
+                retryPanel.style.display = "none";
+
+                attempts = 0;
+
+                if (timer) {
+                    clearInterval(timer);
+                }
+
+                await refreshPaymentStatus();
+
+                timer =
+                    setInterval(
+                        refreshPaymentStatus,
+                        2000
+                    );
+            }
+            catch (error) {
+                retryMessage.textContent =
+                    error.message;
+            }
+            finally {
+                retryButton.disabled = false;
+            }
+        }
+    );
+
+    refreshPaymentStatus();
+
+    timer =
+        setInterval(
+            refreshPaymentStatus,
+            2000
+        );
+});
+</script>
+
+<% } %>
+
 <style>
 
 .tiop-confirmation-page {
@@ -931,7 +1177,11 @@
 
                             <strong>
 
-                                <span class="payment-badge">
+                                <span
+                                id="paymentStatusBadge"
+                                class="payment-badge"
+                                data-payment-status="<%= payment?.status || 'PENDING' %>"
+                            >
 
                                     <%= paymentStatusLabels[payment.status]
                                         || payment.status
