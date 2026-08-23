@@ -190,13 +190,59 @@ document.addEventListener("DOMContentLoaded", function () {
                         }
                     );
 
-                const result =
-                    await response.json();
+                const contentType =
+                    response.headers.get(
+                        "content-type"
+                    )
+                    || "";
 
-                if (!response.ok || !result.success) {
+
+                let result =
+                    null;
+
+
+                if (
+                    contentType.includes(
+                        "application/json"
+                    )
+                ) {
+
+                    result =
+                        await response.json();
+                }
+                else {
+
+                    const rawResponse =
+                        await response.text();
+
+
+                    console.error(
+                        "Réponse non JSON du serveur :",
+                        response.status,
+                        rawResponse.slice(0, 500)
+                    );
+
+
                     throw new Error(
-                        result.message
-                        || "Impossible de relancer le paiement."
+                        response.status === 404
+                            ? "La route de relance du paiement est introuvable."
+                            : "Le serveur a retourné une réponse inattendue. Veuillez réessayer."
+                    );
+                }
+
+
+                if (
+                    !response.ok
+                    ||
+                    !result
+                    ||
+                    !result.success
+                ) {
+
+                    throw new Error(
+                        result?.message
+                        ||
+                        "Impossible de relancer le paiement."
                     );
                 }
 

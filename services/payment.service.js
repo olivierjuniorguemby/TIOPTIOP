@@ -9,6 +9,8 @@ const Payment =
 const MtnMomo =
     require("./mtn-momo.service");
 
+const StripeService =
+    require("./stripe.service");
 
 /* =========================================================
    PAYMENT SERVICE
@@ -1120,6 +1122,237 @@ async function reconcilePendingMtnMomo({
     return summary;
 }
 
+/* =========================================================
+   STRIPE CARD — 13.8.3
+   CREATION DU PAYMENT INTENT
+========================================================= */
+
+async function initiateStripeCard({
+    paymentId,
+    orderReference
+}) {
+
+    const payment =
+        await Payment.findById(
+            paymentId
+        );
+
+
+    if (!payment) {
+
+        throw new Error(
+            "Paiement introuvable."
+        );
+    }
+
+
+    if (
+        payment.method !==
+        Payment.METHODS.CARD
+    ) {
+
+        const error =
+            new Error(
+                "Ce paiement n'est pas un paiement par carte."
+            );
+
+        error.code =
+            "PAYMENT_NOT_CARD";
+
+        throw error;
+    }
+
+
+    if (
+        payment.status !==
+        Payment.STATUSES.PENDING
+    ) {
+
+        return {
+            payment,
+            initiated: false,
+            reason: "PAYMENT_NOT_PENDING"
+        };
+    }
+
+
+    /*
+     * Si un PaymentIntent existe déjà,
+     * surtout ne pas en créer un deuxième.
+     */
+
+    if (
+        payment.provider_reference
+    ) {
+
+        return {
+            payment,
+            initiated: false,
+            reason: "ALREADY_INITIATED",
+
+            providerReference:
+                payment.provider_reference
+        };
+    }
+
+
+    await Payment.addEvent({
+
+        paymentId:
+            payment.id,
+
+        eventType:
+            "STRIPE_PAYMENT_INTENT_REQUESTED",
+
+        description:
+            "Préparation d'un PaymentIntent Stripe TEST.",
+
+        payload: {
+            orderReference,
+            amount:
+                payment.amount,
+
+            currency:
+                payment.currency
+        }
+    });
+
+
+    try {
+
+        const result =
+            await StripeService
+                .createPaymentIntent({
+
+                    amount:
+                        payment.amount,
+
+                    currency:
+                        payment.currency || "XAF",
+
+                    orderReference,
+
+                    paymentPublicId:
+                        payment.public_id
+                });
+
+
+        /*
+         * Sécurité absolue :
+         * un PaymentIntent LIVE ne doit jamais
+         * entrer dans notre environnement 13.8.
+         */
+
+        if (
+            result.livemode === true
+        ) {
+
+            const error =
+                new Error(
+                    "SECURITE : PaymentIntent Stripe LIVE détecté."
+                );
+
+            error.code =
+                "STRIPE_LIVE_PAYMENT_BLOCKED";
+
+            throw error;
+        }
+
+
+        await Payment.setProvider({
+
+            paymentId:
+                payment.id,
+
+            provider:
+                Payment.PROVIDERS.CARD,
+
+            providerReference:
+                result.id
+        });
+
+
+        await Payment.addEvent({
+
+            paymentId:
+                payment.id,
+
+            eventType:
+                "STRIPE_PAYMENT_INTENT_CREATED",
+
+            description:
+                "PaymentIntent Stripe TEST créé.",
+
+            payload: {
+
+                providerReference:
+                    result.id,
+
+                stripeStatus:
+                    result.status,
+
+                amount:
+                    result.amount,
+
+                currency:
+                    result.currency,
+
+                livemode:
+                    result.livemode
+            }
+        });
+
+
+        return {
+
+            payment:
+                await Payment.findById(
+                    payment.id
+                ),
+
+            initiated:
+                true,
+
+            providerReference:
+                result.id,
+
+            providerStatus:
+                result.status,
+
+            clientSecret:
+                result.clientSecret
+        };
+    }
+    catch (error) {
+
+        await Payment.addEvent({
+
+            paymentId:
+                payment.id,
+
+            eventType:
+                "STRIPE_PAYMENT_INTENT_ERROR",
+
+            description:
+                "Erreur création PaymentIntent Stripe.",
+
+            payload: {
+
+                code:
+                    error.code || null,
+
+                type:
+                    error.type || null,
+
+                message:
+                    error.message
+            }
+        });
+
+
+        throw error;
+    }
+}
 
 /* =========================================================
    EXPORTS
@@ -1139,5 +1372,7 @@ module.exports = {
     handleMtnMomoCallback,
 
     retryMtnMomo,
-    reconcilePendingMtnMomo
+    reconcilePendingMtnMomo,
+
+    initiateStripeCard
 };

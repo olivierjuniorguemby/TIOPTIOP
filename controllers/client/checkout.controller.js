@@ -9,6 +9,15 @@ const PaymentService =
 
 
 /* =========================================================
+   CHECKOUT CONTROLLER
+   TIOPTIOP
+
+   13.7   : MTN MoMo
+   13.8.3 : Stripe CARD
+========================================================= */
+
+
+/* =========================================================
    HELPERS
 ========================================================= */
 
@@ -177,6 +186,7 @@ async function (
                     null,
 
                 values: {
+
                     order_type:
                         "DELIVERY",
 
@@ -279,10 +289,12 @@ async function (
 
 
         return res.json({
+
             success:
                 true,
 
             restaurant: {
+
                 id:
                     restaurant.id,
 
@@ -308,6 +320,7 @@ async function (
             zones:
                 zones.map(
                     zone => ({
+
                         id:
                             zone.id,
 
@@ -350,6 +363,7 @@ async function (
 
 
         return res.status(500).json({
+
             success:
                 false,
 
@@ -362,6 +376,10 @@ async function (
 
 /* =========================================================
    POST /checkout
+
+   CASH
+   MOBILE_MONEY / MTN MOMO
+   CARD / STRIPE
 ========================================================= */
 
 exports.create =
@@ -384,6 +402,10 @@ async function (
             );
         }
 
+
+        /* =================================================
+           TYPE DE COMMANDE
+        ================================================= */
 
         const orderType =
             String(
@@ -415,6 +437,10 @@ async function (
                 : null;
 
 
+        /* =================================================
+           MOYEN DE PAIEMENT
+        ================================================= */
+
         let paymentMethod =
             String(
                 req.body.payment_method || ""
@@ -434,9 +460,17 @@ async function (
 
 
         const momoMsisdn =
-            String(req.body.momo_msisdn || "")
-                .replace(/\D/g, "")
-                .slice(0, 15);
+            String(
+                req.body.momo_msisdn || ""
+            )
+                .replace(
+                    /\D/g,
+                    ""
+                )
+                .slice(
+                    0,
+                    15
+                );
 
 
         const customerNote =
@@ -451,6 +485,7 @@ async function (
 
 
         const values = {
+
             order_type:
                 orderType,
 
@@ -474,6 +509,10 @@ async function (
         };
 
 
+        /* =================================================
+           PANIER
+        ================================================= */
+
         const activeCart =
             await Cart.findActiveByUserId(
                 userId
@@ -496,7 +535,9 @@ async function (
 
         if (
             !cart ||
-            !Array.isArray(cart.items) ||
+            !Array.isArray(
+                cart.items
+            ) ||
             cart.items.length === 0
         ) {
 
@@ -506,7 +547,12 @@ async function (
         }
 
 
+        /* =================================================
+           VALIDATION TYPE COMMANDE
+        ================================================= */
+
         const allowedOrderTypes = [
+
             "DELIVERY",
             "PICKUP",
             "DINE_IN"
@@ -529,6 +575,10 @@ async function (
         }
 
 
+        /* =================================================
+           VALIDATION RESTAURANT
+        ================================================= */
+
         if (
             !Number.isInteger(
                 restaurantId
@@ -547,8 +597,14 @@ async function (
         }
 
 
+        /* =================================================
+           VALIDATION LIVRAISON
+        ================================================= */
+
         if (
-            orderType === "DELIVERY" &&
+            orderType ===
+            "DELIVERY"
+            &&
             (
                 !Number.isInteger(
                     deliveryAddressId
@@ -569,7 +625,9 @@ async function (
 
 
         if (
-            orderType === "DELIVERY" &&
+            orderType ===
+            "DELIVERY"
+            &&
             (
                 !Number.isInteger(
                     deliveryZoneId
@@ -589,7 +647,12 @@ async function (
         }
 
 
+        /* =================================================
+           VALIDATION PAIEMENT
+        ================================================= */
+
         const allowedPaymentMethods = [
+
             "CARD",
             "MOBILE_MONEY",
             "CASH"
@@ -612,46 +675,78 @@ async function (
         }
 
 
+        /* =================================================
+           VALIDATION MTN MOMO
+        ================================================= */
+
         if (
-            paymentMethod === "MOBILE_MONEY"
+            paymentMethod ===
+            "MOBILE_MONEY"
             &&
-            (momoMsisdn.length < 8 || momoMsisdn.length > 15)
+            (
+                momoMsisdn.length < 8
+                ||
+                momoMsisdn.length > 15
+            )
         ) {
+
             return await renderCheckoutError(
-                req, res, cart, values,
+                req,
+                res,
+                cart,
+                values,
                 "Veuillez renseigner un numéro MTN MoMo valide."
             );
         }
 
 
+        /* =================================================
+           CREATION COMMANDE
+        ================================================= */
+
         const result =
             await Order.createFromCart({
+
                 userId,
+
                 restaurantId,
 
                 deliveryAddressId:
-                    orderType === "DELIVERY"
+                    orderType ===
+                    "DELIVERY"
                         ? deliveryAddressId
                         : null,
 
                 deliveryZoneId:
-                    orderType === "DELIVERY"
+                    orderType ===
+                    "DELIVERY"
                         ? deliveryZoneId
                         : null,
 
                 orderType,
+
                 paymentMethod,
+
                 customerNote,
+
                 cart
             });
 
 
-        if (req.session) {
+        /* =================================================
+           SESSION
+        ================================================= */
 
-            delete req.session.cartGuestToken;
+        if (
+            req.session
+        ) {
+
+            delete req.session
+                .cartGuestToken;
 
 
             req.session.lastOrder = {
+
                 reference:
                     result.reference,
 
@@ -661,26 +756,191 @@ async function (
         }
 
 
-        let paymentQuery = "";
+        let paymentQuery =
+            "";
 
-        if (paymentMethod === "MOBILE_MONEY") {
+
+        /* =================================================
+           MTN MOMO
+           13.7.x
+
+           ON NE MODIFIE PAS LE FONCTIONNEMENT EXISTANT
+        ================================================= */
+
+        if (
+            paymentMethod ===
+            "MOBILE_MONEY"
+        ) {
+
             try {
-                await PaymentService.initiateMtnMomo({
-                    paymentId: result.paymentId,
-                    orderReference: result.reference,
-                    payerMsisdn: momoMsisdn
-                });
-                paymentQuery = "?payment=momo-pending";
-            } catch (paymentError) {
-                console.error("Erreur initiation MTN MoMo :", paymentError);
-                paymentQuery = "?payment=momo-error";
+
+                await PaymentService
+                    .initiateMtnMomo({
+
+                        paymentId:
+                            result.paymentId,
+
+                        orderReference:
+                            result.reference,
+
+                        payerMsisdn:
+                            momoMsisdn
+                    });
+
+
+                paymentQuery =
+                    "?payment=momo-pending";
+            }
+            catch (
+                paymentError
+            ) {
+
+                console.error(
+                    "Erreur initiation MTN MoMo :",
+                    paymentError
+                );
+
+
+                paymentQuery =
+                    "?payment=momo-error";
             }
         }
 
+
+        /* =================================================
+           STRIPE CARD
+           13.8.3
+
+           Création du vrai PaymentIntent Stripe TEST.
+
+           IMPORTANT :
+           Aucune carte n'est encore saisie ici.
+           Aucun argent réel n'est débité.
+        ================================================= */
+
+        else if (
+            paymentMethod ===
+            "CARD"
+        ) {
+
+            try {
+
+                const stripeResult =
+                    await PaymentService
+                        .initiateStripeCard({
+
+                            paymentId:
+                                result.paymentId,
+
+                            orderReference:
+                                result.reference
+                        });
+
+
+                /*
+                 * On conserve temporairement le
+                 * client_secret dans la session.
+                 *
+                 * Il sera utilisé en 13.8.4 pour
+                 * afficher Stripe Elements.
+                 *
+                 * Il ne doit PAS être stocké
+                 * dans MySQL.
+                 */
+
+                if (
+                    req.session
+                    &&
+                    stripeResult.clientSecret
+                ) {
+
+                    req.session
+                        .stripePayment = {
+
+                            orderReference:
+                                result.reference,
+
+                            paymentId:
+                                result.paymentId,
+
+                            providerReference:
+                                stripeResult
+                                    .providerReference,
+
+                            clientSecret:
+                                stripeResult
+                                    .clientSecret
+                        };
+                }
+
+
+                console.log(
+                    "[Stripe] PaymentIntent créé :",
+                    stripeResult
+                        .providerReference
+                );
+
+
+                console.log(
+                    "[Stripe] Statut :",
+                    stripeResult
+                        .providerStatus
+                );
+
+
+                paymentQuery =
+                    "?payment=card-pending";
+            }
+            catch (
+                paymentError
+            ) {
+
+                console.error(
+                    "Erreur initiation Stripe :",
+                    paymentError
+                );
+
+
+                /*
+                 * La commande existe déjà.
+                 *
+                 * On ne détruit donc pas la commande.
+                 * La confirmation indiquera simplement
+                 * que l'initialisation CB a échoué.
+                 */
+
+                paymentQuery =
+                    "?payment=card-error";
+            }
+        }
+
+
+        /* =================================================
+           CASH
+
+           Aucun appel provider.
+        ================================================= */
+
+        else {
+
+            paymentQuery =
+                "?payment=cash";
+        }
+
+
+        /* =================================================
+           REDIRECTION CONFIRMATION
+        ================================================= */
+
         return res.redirect(
+
             "/commande/confirmation/"
-            + encodeURIComponent(result.reference)
-            + paymentQuery
+            +
+            encodeURIComponent(
+                result.reference
+            )
+            +
+            paymentQuery
         );
 
     }
@@ -700,23 +960,29 @@ async function (
 
             const activeCart =
                 userId
-                    ? await Cart.findActiveByUserId(
-                        userId
-                    )
+                    ? await Cart
+                        .findActiveByUserId(
+                            userId
+                        )
                     : null;
 
 
             const cart =
                 activeCart
-                    ? await Cart.getDetailedCart(
-                        activeCart.id
-                    )
+                    ? await Cart
+                        .getDetailedCart(
+                            activeCart.id
+                        )
                     : null;
 
 
             if (
-                cart &&
-                Array.isArray(cart.items) &&
+                cart
+                &&
+                Array.isArray(
+                    cart.items
+                )
+                &&
                 cart.items.length > 0
             ) {
 
@@ -725,6 +991,7 @@ async function (
                     res,
                     cart,
                     {
+
                         order_type:
                             req.body.order_type,
 
@@ -746,6 +1013,7 @@ async function (
                         customer_note:
                             req.body.customer_note
                     },
+
                     error.message
                     ||
                     "Impossible de créer la commande."
@@ -753,7 +1021,9 @@ async function (
             }
 
         }
-        catch (renderError) {
+        catch (
+            renderError
+        ) {
 
             console.error(
                 "Erreur affichage erreur checkout :",
@@ -762,7 +1032,9 @@ async function (
         }
 
 
-        return next(error);
+        return next(
+            error
+        );
     }
 };
 
@@ -780,7 +1052,9 @@ async function renderCheckoutError(
 ) {
 
     const userId =
-        getUserId(req);
+        getUserId(
+            req
+        );
 
 
     const [
@@ -811,16 +1085,18 @@ async function renderCheckoutError(
     ) {
 
         selectedRestaurant =
-            await Order.getRestaurantById(
-                Number(
-                    values.restaurant_id
-                )
-            );
+            await Order
+                .getRestaurantById(
+                    Number(
+                        values.restaurant_id
+                    )
+                );
     }
 
 
     if (
-        !selectedRestaurant &&
+        !selectedRestaurant
+        &&
         restaurants.length
     ) {
 
@@ -833,12 +1109,15 @@ async function renderCheckoutError(
         [];
 
 
-    if (selectedRestaurant) {
+    if (
+        selectedRestaurant
+    ) {
 
         deliveryZones =
-            await Order.getDeliveryZones(
-                selectedRestaurant.id
-            );
+            await Order
+                .getDeliveryZones(
+                    selectedRestaurant.id
+                );
     }
 
 
@@ -864,6 +1143,7 @@ async function renderCheckoutError(
     return res.status(400).render(
         "client/orders/checkout",
         {
+
             title:
                 "Finaliser la commande",
 
