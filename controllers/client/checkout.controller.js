@@ -7,13 +7,16 @@ const Order =
 const PaymentService =
     require("../../services/payment.service");
 
+const StripeService =
+    require("../../services/stripe.service");
+
 
 /* =========================================================
    CHECKOUT CONTROLLER
    TIOPTIOP
 
    13.7   : MTN MoMo
-   13.8.3 : Stripe CARD
+   13.8.4 : Stripe Elements
 ========================================================= */
 
 
@@ -888,8 +891,19 @@ async function (
                 );
 
 
-                paymentQuery =
-                    "?payment=card-pending";
+                /*
+                 * Pour une carte, on ne va plus directement
+                 * à la confirmation de commande.
+                 *
+                 * On affiche d'abord Stripe Payment Element.
+                 */
+                return res.redirect(
+                    "/checkout/carte/"
+                    +
+                    encodeURIComponent(
+                        result.reference
+                    )
+                );
             }
             catch (
                 paymentError
@@ -1037,6 +1051,507 @@ async function (
         );
     }
 };
+
+
+
+
+/* =========================================================
+   GET /checkout/carte/:reference
+   PAGE STRIPE PAYMENT ELEMENT
+========================================================= */
+
+exports.cardPayment =
+async function (
+    req,
+    res,
+    next
+) {
+
+    try {
+
+        const userId =
+            getUserId(
+                req
+            );
+
+
+        if (!userId) {
+
+            return res.redirect(
+                "/connexion"
+            );
+        }
+
+
+        const reference =
+            String(
+                req.params.reference || ""
+            )
+                .trim()
+                .slice(
+                    0,
+                    60
+                );
+
+
+        const order =
+            await Order.findByReference(
+                reference,
+                userId
+            );
+
+
+        if (!order) {
+
+            return res
+                .status(404)
+                .send(
+                    "Commande introuvable."
+                );
+        }
+
+
+        const payment =
+            await Order.getPaymentByOrderId(
+                order.id
+            );
+
+
+        if (
+            !payment
+            ||
+            payment.method !==
+                "CARD"
+        ) {
+
+            return res
+                .status(400)
+                .send(
+                    "Cette commande n'utilise pas le paiement par carte."
+                );
+        }
+
+
+        /*
+         * Si le paiement est déjà payé,
+         * inutile de réafficher le formulaire CB.
+         */
+        if (
+            payment.status ===
+            "PAID"
+        ) {
+
+            return res.redirect(
+                "/commande/confirmation/"
+                +
+                encodeURIComponent(
+                    reference
+                )
+                +
+                "?payment=card-paid"
+            );
+        }
+
+
+        if (
+            !payment.provider_reference
+        ) {
+
+            return res
+                .status(409)
+                .send(
+                    "Le PaymentIntent Stripe n'a pas été initialisé."
+                );
+        }
+
+
+        const intent =
+            await StripeService
+                .retrievePaymentIntent(
+                    payment.provider_reference
+                );
+
+
+        const config =
+            StripeService.getConfig();
+
+
+        return res.render(
+            "client/orders/card-payment",
+            {
+                title:
+                    `Paiement ${reference}`,
+
+                layout:
+                    "layouts/client",
+
+                order,
+
+                payment,
+
+                stripePublishableKey:
+                    config.publishableKey,
+
+                clientSecret:
+                    intent.client_secret,
+
+                stripeStatus:
+                    intent.status
+            }
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            "Erreur page paiement Stripe :",
+            error
+        );
+
+
+        return next(
+            error
+        );
+    }
+};
+
+
+/* =========================================================
+   POST /checkout/carte/:reference/sync
+
+   Le navigateur ne décide JAMAIS du statut final.
+   Le serveur relit le PaymentIntent directement chez Stripe.
+========================================================= */
+
+exports.syncCardPayment =
+async function (
+    req,
+    res
+) {
+
+    try {
+
+        const userId =
+            getUserId(
+                req
+            );
+
+
+        if (!userId) {
+
+            return res
+                .status(401)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Utilisateur non connecté."
+                });
+        }
+
+
+        const reference =
+            String(
+                req.params.reference || ""
+            )
+                .trim()
+                .slice(
+                    0,
+                    60
+                );
+
+
+        const order =
+            await Order.findByReference(
+                reference,
+                userId
+            );
+
+
+        if (!order) {
+
+            return res
+                .status(404)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Commande introuvable."
+                });
+        }
+
+
+        const payment =
+            await Order.getPaymentByOrderId(
+                order.id
+            );
+
+
+        if (
+            !payment
+            ||
+            payment.method !==
+                "CARD"
+        ) {
+
+            return res
+                .status(400)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Paiement carte introuvable."
+                });
+        }
+
+
+        const result =
+            await PaymentService
+                .syncStripeCardPayment(
+                    payment
+                );
+
+
+        return res.json({
+
+            success:
+                true,
+
+            stripeStatus:
+                result.stripeStatus,
+
+            payment: {
+                id:
+                    result.payment.id,
+
+                status:
+                    result.payment.status,
+
+                providerReference:
+                    result.payment.provider_reference
+            }
+        });
+
+    }
+    catch (error) {
+
+        console.error(
+            "Synchronisation Stripe :",
+            error
+        );
+
+
+        return res
+            .status(500)
+            .json({
+                success:
+                    false,
+
+                message:
+                    "Impossible de vérifier le paiement Stripe."
+            });
+    }
+};
+
+
+/* =========================================================
+   GET /checkout/carte/:reference/retour
+
+   Utilisé notamment si Stripe doit rediriger le client
+   après une authentification.
+========================================================= */
+
+exports.cardReturn =
+async function (
+    req,
+    res,
+    next
+) {
+
+    try {
+
+        const userId =
+            getUserId(
+                req
+            );
+
+
+        if (!userId) {
+
+            return res.redirect(
+                "/connexion"
+            );
+        }
+
+
+        const reference =
+            String(
+                req.params.reference || ""
+            )
+                .trim()
+                .slice(
+                    0,
+                    60
+                );
+
+
+        const order =
+            await Order.findByReference(
+                reference,
+                userId
+            );
+
+
+        if (!order) {
+
+            return res
+                .status(404)
+                .send(
+                    "Commande introuvable."
+                );
+        }
+
+
+        const payment =
+            await Order.getPaymentByOrderId(
+                order.id
+            );
+
+
+        if (
+            !payment
+            ||
+            payment.method !==
+                "CARD"
+        ) {
+
+            return res
+                .status(400)
+                .send(
+                    "Paiement carte introuvable."
+                );
+        }
+
+
+        const returnedPaymentIntent =
+            String(
+                req.query.payment_intent || ""
+            ).trim();
+
+
+        /*
+         * Empêche une URL de retour utilisant un PaymentIntent
+         * appartenant à une autre commande.
+         */
+        if (
+            returnedPaymentIntent
+            &&
+            returnedPaymentIntent !==
+                payment.provider_reference
+        ) {
+
+            return res
+                .status(400)
+                .send(
+                    "Référence Stripe incohérente."
+                );
+        }
+
+
+        let result =
+            null;
+
+
+        try {
+
+            result =
+                await PaymentService
+                    .syncStripeCardPayment(
+                        payment
+                    );
+        }
+        catch (syncError) {
+
+            console.error(
+                "Retour Stripe - synchronisation :",
+                syncError
+            );
+        }
+
+
+        const localStatus =
+            result?.payment?.status
+            ||
+            payment.status;
+
+
+        if (
+            localStatus ===
+            "PAID"
+        ) {
+
+            return res.redirect(
+                "/commande/confirmation/"
+                +
+                encodeURIComponent(
+                    reference
+                )
+                +
+                "?payment=card-paid"
+            );
+        }
+
+
+        /*
+         * Si une action est encore nécessaire ou que le
+         * paiement est toujours en attente, on réaffiche
+         * le formulaire Stripe.
+         */
+        if (
+            localStatus ===
+            "PENDING"
+        ) {
+
+            return res.redirect(
+                "/checkout/carte/"
+                +
+                encodeURIComponent(
+                    reference
+                )
+                +
+                "?payment=card-pending"
+            );
+        }
+
+
+        return res.redirect(
+            "/checkout/carte/"
+            +
+            encodeURIComponent(
+                reference
+            )
+            +
+            "?payment=card-error"
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            "Retour Stripe :",
+            error
+        );
+
+
+        return next(
+            error
+        );
+    }
+};
+
 
 
 /* =========================================================

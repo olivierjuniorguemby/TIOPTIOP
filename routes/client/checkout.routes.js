@@ -39,6 +39,31 @@ router.get(
 
 
 /* =========================================================
+   STRIPE CARD — 13.8.4
+========================================================= */
+
+router.get(
+    "/carte/:reference",
+    requireUser,
+    checkout.cardPayment
+);
+
+
+router.post(
+    "/carte/:reference/sync",
+    requireUser,
+    checkout.syncCardPayment
+);
+
+
+router.get(
+    "/carte/:reference/retour",
+    requireUser,
+    checkout.cardReturn
+);
+
+
+/* =========================================================
    POST /checkout
 ========================================================= */
 

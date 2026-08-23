@@ -4,7 +4,7 @@ const db =
 
 /* =========================================================
    PAYMENT MODEL
-   TIOPTIOP — 13.7.4
+   TIOPTIOP — 13.8.5
 
    IMPORTANT :
    - db.query() de votre projet retourne directement rows/result.
@@ -1005,6 +1005,114 @@ async function createRetryAttempt({
 }
 
 
+/* =========================================================
+   STRIPE WEBHOOK — IDEMPOTENCE 13.8.5
+
+   On ne modifie pas le schéma SQL.
+   L'identifiant evt_... de Stripe est conservé dans payload.
+
+   Si Stripe renvoie le même événement plusieurs fois,
+   le backend peut l'ignorer sans refaire l'opération.
+========================================================= */
+
+async function hasProcessedStripeWebhookEvent(
+    paymentId,
+    stripeEventId
+) {
+
+    const id =
+        Number(
+            paymentId
+        );
+
+
+    const eventId =
+        String(
+            stripeEventId || ""
+        ).trim();
+
+
+    if (
+        !Number.isInteger(id)
+        ||
+        id <= 0
+        ||
+        !eventId
+    ) {
+
+        return false;
+    }
+
+
+    const rows =
+        await db.query(
+            `
+            SELECT
+                id,
+                payload
+            FROM payment_events
+            WHERE payment_id = ?
+              AND event_type = 'STRIPE_WEBHOOK_RECEIVED'
+            ORDER BY id DESC
+            LIMIT 100
+            `,
+            [
+                id
+            ]
+        );
+
+
+    for (
+        const row
+        of (
+            Array.isArray(rows)
+                ? rows
+                : []
+        )
+    ) {
+
+        if (!row.payload) {
+            continue;
+        }
+
+
+        try {
+
+            const payload =
+                typeof row.payload ===
+                "string"
+
+                    ? JSON.parse(
+                        row.payload
+                    )
+
+                    : row.payload;
+
+
+            if (
+                String(
+                    payload?.stripeEventId || ""
+                ) ===
+                eventId
+            ) {
+
+                return true;
+            }
+        }
+        catch (_error) {
+
+            /*
+             * Un ancien payload non JSON ne doit pas
+             * bloquer le traitement des nouveaux webhooks.
+             */
+        }
+    }
+
+
+    return false;
+}
+
+
 module.exports = {
 
     METHODS,
@@ -1033,5 +1141,7 @@ module.exports = {
     getEvents,
 
     setProvider,
-    updateStatus
+    updateStatus,
+
+    hasProcessedStripeWebhookEvent
 };

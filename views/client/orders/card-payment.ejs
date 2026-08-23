@@ -1,0 +1,741 @@
+<section class="section stripe-card-page">
+
+<style>
+
+.stripe-card-page {
+
+    --orange: #ff7900;
+    --orange-dark: #e56d00;
+    --dark: #17130f;
+    --text: #231f1b;
+    --muted: #746d66;
+    --line: #eadfd3;
+    --soft: #fff8ef;
+    --green: #237247;
+    --red: #a73535;
+
+    color: var(--text);
+}
+
+
+.stripe-card-page * {
+    box-sizing: border-box;
+}
+
+
+.stripe-payment-container {
+
+    width: min(
+        760px,
+        calc(100% - 32px)
+    );
+
+    margin: 0 auto;
+}
+
+
+.stripe-payment-header {
+
+    margin-bottom: 22px;
+
+    text-align: center;
+}
+
+
+.stripe-payment-eyebrow {
+
+    display: inline-flex;
+
+    padding: 7px 11px;
+
+    margin-bottom: 12px;
+
+    border-radius: 999px;
+
+    background: #fff0df;
+
+    color: var(--orange);
+
+    font-size: 11px;
+    font-weight: 900;
+}
+
+
+.stripe-payment-title {
+
+    margin: 0 0 10px;
+
+    font-size:
+        clamp(34px, 6vw, 54px);
+
+    line-height: 1;
+
+    letter-spacing: -2px;
+
+    font-weight: 1000;
+}
+
+
+.stripe-payment-subtitle {
+
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+
+.stripe-payment-card {
+
+    padding: 26px;
+
+    border: 1px solid var(--line);
+    border-radius: 24px;
+
+    background: #fff;
+}
+
+
+.stripe-order-summary {
+
+    display: grid;
+
+    grid-template-columns:
+        1fr auto;
+
+    gap: 9px 20px;
+
+    margin-bottom: 22px;
+    padding-bottom: 18px;
+
+    border-bottom: 1px dashed var(--line);
+
+    font-size: 12px;
+}
+
+
+.stripe-order-summary span {
+    color: var(--muted);
+}
+
+
+.stripe-order-summary strong {
+    text-align: right;
+}
+
+
+.stripe-total {
+
+    color: var(--orange);
+
+    font-size: 18px;
+}
+
+
+#payment-element {
+
+    min-height: 120px;
+}
+
+
+.stripe-payment-message {
+
+    display: none;
+
+    margin-top: 15px;
+    padding: 12px 14px;
+
+    border-radius: 12px;
+
+    background: #fff0f0;
+
+    color: var(--red);
+
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+
+.stripe-payment-message.visible {
+    display: block;
+}
+
+
+.stripe-submit {
+
+    width: 100%;
+    min-height: 50px;
+
+    margin-top: 20px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: var(--orange);
+
+    color: #fff;
+
+    font: inherit;
+    font-size: 12px;
+    font-weight: 1000;
+
+    cursor: pointer;
+}
+
+
+.stripe-submit:hover {
+    background: var(--orange-dark);
+}
+
+
+.stripe-submit:disabled {
+
+    opacity: .55;
+    cursor: wait;
+}
+
+
+.stripe-back {
+
+    width: 100%;
+
+    min-height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-top: 10px;
+
+    border: 1px solid var(--line);
+    border-radius: 999px;
+
+    color: var(--dark);
+
+    text-decoration: none;
+
+    font-size: 10px;
+    font-weight: 900;
+}
+
+
+.stripe-security {
+
+    margin-top: 18px;
+
+    color: var(--muted);
+
+    text-align: center;
+
+    font-size: 10px;
+    line-height: 1.6;
+}
+
+
+.stripe-test-box {
+
+    margin-top: 18px;
+    padding: 14px;
+
+    border-radius: 14px;
+
+    background: var(--soft);
+
+    font-size: 10px;
+    line-height: 1.7;
+}
+
+
+.stripe-test-box strong {
+
+    display: block;
+    margin-bottom: 4px;
+}
+
+
+@media(max-width:560px) {
+
+    .stripe-payment-card {
+        padding: 18px;
+    }
+
+
+    .stripe-order-summary {
+        grid-template-columns: 1fr;
+    }
+
+
+    .stripe-order-summary strong {
+        text-align: left;
+    }
+}
+
+</style>
+
+
+<div class="stripe-payment-container">
+
+    <header class="stripe-payment-header">
+
+        <span class="stripe-payment-eyebrow">
+            🔒 Stripe TEST
+        </span>
+
+        <h1 class="stripe-payment-title">
+            Paiement par carte
+        </h1>
+
+        <p class="stripe-payment-subtitle">
+            Commande <strong><%= order.reference %></strong>.
+            Vous êtes dans l'environnement de test :
+            aucun argent réel ne sera débité.
+        </p>
+
+    </header>
+
+
+    <section class="stripe-payment-card">
+
+        <div class="stripe-order-summary">
+
+            <span>
+                Référence
+            </span>
+
+            <strong>
+                <%= order.reference %>
+            </strong>
+
+
+            <span>
+                Montant
+            </span>
+
+            <strong class="stripe-total">
+                <%= Number(payment.amount || 0).toLocaleString("fr-FR") %>
+                <%= payment.currency || "XAF" %>
+            </strong>
+
+
+            <span>
+                Statut
+            </span>
+
+            <strong id="stripeLocalStatus">
+                <%= payment.status %>
+            </strong>
+
+        </div>
+
+
+        <form id="payment-form">
+
+            <div id="payment-element"></div>
+
+
+            <div
+                id="payment-message"
+                class="stripe-payment-message"
+                role="alert"
+            ></div>
+
+
+            <button
+                id="submit"
+                class="stripe-submit"
+                type="submit"
+            >
+                <span id="button-text">
+                    Payer en mode TEST
+                </span>
+            </button>
+
+        </form>
+
+
+        <a
+            href="/commande/confirmation/<%= encodeURIComponent(order.reference) %>"
+            class="stripe-back"
+        >
+            ← Retour à la commande
+        </a>
+
+
+        <div class="stripe-security">
+            🔐 Les données de carte sont saisies dans Stripe Payment Element.
+            TiopTiop ne reçoit ni le numéro complet de carte ni le CVC.
+        </div>
+
+
+        <div class="stripe-test-box">
+
+            <strong>
+                Cartes Stripe de test
+            </strong>
+
+            Succès :
+            4242 4242 4242 4242
+            <br>
+
+            Refus :
+            4000 0000 0000 0002
+            <br>
+
+            3D Secure :
+            4000 0025 0000 3155
+            <br>
+
+            Date :
+            12/34
+            · CVC :
+            123
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<script src="https://js.stripe.com/v3/"></script>
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const publishableKey =
+            <%- JSON.stringify(stripePublishableKey) %>;
+
+
+        const clientSecret =
+            <%- JSON.stringify(clientSecret) %>;
+
+
+        const orderReference =
+            <%- JSON.stringify(order.reference) %>;
+
+
+        const stripe =
+            Stripe(
+                publishableKey
+            );
+
+
+        const elements =
+            stripe.elements({
+                clientSecret,
+
+                appearance: {
+                    theme:
+                        "stripe",
+
+                    variables: {
+                        colorPrimary:
+                            "#ff7900",
+
+                        borderRadius:
+                            "12px"
+                    }
+                }
+            });
+
+
+        const paymentElement =
+            elements.create(
+                "payment",
+                {
+                    layout:
+                        "tabs"
+                }
+            );
+
+
+        paymentElement.mount(
+            "#payment-element"
+        );
+
+
+        const form =
+            document.getElementById(
+                "payment-form"
+            );
+
+
+        const submitButton =
+            document.getElementById(
+                "submit"
+            );
+
+
+        const buttonText =
+            document.getElementById(
+                "button-text"
+            );
+
+
+        const message =
+            document.getElementById(
+                "payment-message"
+            );
+
+
+        function showMessage(
+            text
+        ) {
+
+            message.textContent =
+                text || "";
+
+
+            message.classList.toggle(
+                "visible",
+                Boolean(text)
+            );
+        }
+
+
+        function setLoading(
+            loading
+        ) {
+
+            submitButton.disabled =
+                Boolean(loading);
+
+
+            buttonText.textContent =
+                loading
+                    ? "Paiement en cours..."
+                    : "Payer en mode TEST";
+        }
+
+
+        async function syncServerStatus() {
+
+            const response =
+                await fetch(
+                    "/checkout/carte/"
+                    +
+                    encodeURIComponent(
+                        orderReference
+                    )
+                    +
+                    "/sync",
+                    {
+                        method:
+                            "POST",
+
+                        headers: {
+                            "Accept":
+                                "application/json"
+                        }
+                    }
+                );
+
+
+            const contentType =
+                response.headers.get(
+                    "content-type"
+                )
+                ||
+                "";
+
+
+            if (
+                !contentType.includes(
+                    "application/json"
+                )
+            ) {
+
+                throw new Error(
+                    "Réponse serveur inattendue."
+                );
+            }
+
+
+            const result =
+                await response.json();
+
+
+            if (
+                !response.ok
+                ||
+                !result.success
+            ) {
+
+                throw new Error(
+                    result.message
+                    ||
+                    "Impossible de vérifier le paiement."
+                );
+            }
+
+
+            return result;
+        }
+
+
+        form.addEventListener(
+            "submit",
+            async function (
+                event
+            ) {
+
+                event.preventDefault();
+
+
+                showMessage(
+                    ""
+                );
+
+
+                setLoading(
+                    true
+                );
+
+
+                try {
+
+                    const returnUrl =
+                        window.location.origin
+                        +
+                        "/checkout/carte/"
+                        +
+                        encodeURIComponent(
+                            orderReference
+                        )
+                        +
+                        "/retour";
+
+
+                    const result =
+                        await stripe.confirmPayment({
+                            elements,
+
+                            confirmParams: {
+                                return_url:
+                                    returnUrl
+                            },
+
+                            /*
+                             * Une carte classique réussie
+                             * reste sur cette page.
+                             * Stripe redirige uniquement si
+                             * le moyen de paiement l'exige.
+                             */
+                            redirect:
+                                "if_required"
+                        });
+
+
+                    if (
+                        result.error
+                    ) {
+
+                        /*
+                         * On synchronise aussi après un refus,
+                         * afin que MySQL passe proprement
+                         * de PENDING à FAILED.
+                         */
+                        try {
+                            await syncServerStatus();
+                        }
+                        catch (_syncError) {
+                            // Le message Stripe reste prioritaire.
+                        }
+
+
+                        showMessage(
+                            result.error.message
+                            ||
+                            "Le paiement a été refusé."
+                        );
+
+
+                        return;
+                    }
+
+
+                    const syncResult =
+                        await syncServerStatus();
+
+
+                    const status =
+                        String(
+                            syncResult.payment?.status
+                            ||
+                            ""
+                        )
+                            .trim()
+                            .toUpperCase();
+
+
+                    if (
+                        status ===
+                        "PAID"
+                    ) {
+
+                        window.location.href =
+                            "/commande/confirmation/"
+                            +
+                            encodeURIComponent(
+                                orderReference
+                            )
+                            +
+                            "?payment=card-paid";
+
+
+                        return;
+                    }
+
+
+                    if (
+                        status ===
+                        "FAILED"
+                    ) {
+
+                        showMessage(
+                            "Le paiement a été refusé. Vérifiez la carte puis réessayez."
+                        );
+
+
+                        return;
+                    }
+
+
+                    showMessage(
+                        "Le paiement est encore en cours de traitement. Vous pouvez patienter puis réessayer."
+                    );
+
+                }
+                catch (error) {
+
+                    console.error(
+                        "Stripe Payment Element :",
+                        error
+                    );
+
+
+                    showMessage(
+                        error.message
+                        ||
+                        "Impossible de finaliser le paiement."
+                    );
+                }
+                finally {
+
+                    setLoading(
+                        false
+                    );
+                }
+            }
+        );
+    }
+);
+
+</script>
+
+</section>

@@ -15,6 +15,8 @@ const errorHandler = require("./middleware/error-handler");
 
 const paymentReconciliation = require("./services/payment-reconciliation.service");
 
+const stripeWebhookController = require("./controllers/api/stripe-webhook.controller");
+
 const clientRoutes = require("./routes/client/index.routes");
 const authRoutes = require("./routes/client/auth.routes");
 const accountRoutes = require("./routes/client/account.routes");
@@ -67,6 +69,28 @@ app.use(
 
 app.use(
     morgan("dev")
+);
+
+
+/* =========================================================
+   STRIPE WEBHOOK — 13.8.5
+
+   DOIT IMPERATIVEMENT ETRE PLACE AVANT :
+   - express.urlencoded()
+   - express.json()
+
+   Stripe vérifie la signature sur le corps HTTP BRUT.
+========================================================= */
+
+app.post(
+    "/api/v1/payments/stripe/webhook",
+
+    express.raw({
+        type:
+            "application/json"
+    }),
+
+    stripeWebhookController.handle
 );
 
 app.use(

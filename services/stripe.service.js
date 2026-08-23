@@ -4,7 +4,9 @@ const Stripe =
 
 /* =========================================================
    STRIPE SERVICE
-   TIOPTIOP — 13.8.3
+   TIOPTIOP — 13.8.5
+
+   MODE TEST UNIQUEMENT
 ========================================================= */
 
 
@@ -188,7 +190,10 @@ async function testConnection() {
 
 
 /* =========================================================
-   CRÉATION PAYMENT INTENT
+   CREATION PAYMENT INTENT
+
+   13.8.4 :
+   uniquement paiement par CARTE.
 ========================================================= */
 
 async function createPaymentIntent({
@@ -246,12 +251,29 @@ async function createPaymentIntent({
     }
 
 
+    const publicId =
+        String(
+            paymentPublicId || ""
+        ).trim();
+
+
+    if (!publicId) {
+
+        const error =
+            new Error(
+                "Identifiant public du paiement obligatoire."
+            );
+
+        error.code =
+            "STRIPE_PAYMENT_PUBLIC_ID_REQUIRED";
+
+        throw error;
+    }
+
+
     /*
-     * XAF est une devise sans décimales dans notre
-     * application : 6000 XAF => amount: 6000.
-     *
-     * Math.round protège également contre l'envoi
-     * accidentel d'une valeur décimale.
+     * XAF est une devise Stripe à zéro décimale :
+     * 6500 XAF => amount = 6500.
      */
 
     const stripeAmount =
@@ -271,9 +293,14 @@ async function createPaymentIntent({
                         .trim()
                         .toLowerCase(),
 
-                automatic_payment_methods: {
-                    enabled: true
-                },
+                /*
+                 * TiopTiop 13.8 = carte bancaire.
+                 * On évite d'afficher d'autres moyens Stripe
+                 * dans le Payment Element.
+                 */
+                payment_method_types: [
+                    "card"
+                ],
 
                 description:
                     `Commande TiopTiop ${reference}`,
@@ -283,20 +310,33 @@ async function createPaymentIntent({
                         reference,
 
                     paymentPublicId:
-                        String(
-                            paymentPublicId || ""
-                        )
+                        publicId
                 }
             },
             {
                 /*
-                 * Protection contre une création
-                 * accidentelle en double.
+                 * Même paiement local = même PaymentIntent.
                  */
                 idempotencyKey:
-                    `tioptiop-payment-${paymentPublicId}`
+                    `tioptiop-payment-${publicId}`
             }
         );
+
+
+    if (
+        intent.livemode === true
+    ) {
+
+        const error =
+            new Error(
+                "SECURITE : PaymentIntent Stripe LIVE détecté."
+            );
+
+        error.code =
+            "STRIPE_LIVE_PAYMENT_BLOCKED";
+
+        throw error;
+    }
 
 
     return {
@@ -349,10 +389,133 @@ async function retrievePaymentIntent(
     }
 
 
+    const intent =
+        await getClient()
+            .paymentIntents
+            .retrieve(
+                value
+            );
+
+
+    if (
+        intent.livemode === true
+    ) {
+
+        const error =
+            new Error(
+                "SECURITE : PaymentIntent Stripe LIVE détecté."
+            );
+
+        error.code =
+            "STRIPE_LIVE_PAYMENT_BLOCKED";
+
+        throw error;
+    }
+
+
+    return intent;
+}
+
+
+
+
+/* =========================================================
+   WEBHOOK STRIPE — 13.8.5
+========================================================= */
+
+function getWebhookSecret() {
+
+    const value =
+        String(
+            process.env.STRIPE_WEBHOOK_SECRET || ""
+        ).trim();
+
+
+    if (!value) {
+
+        const error =
+            new Error(
+                "STRIPE_WEBHOOK_SECRET est absent du .env."
+            );
+
+        error.code =
+            "STRIPE_WEBHOOK_SECRET_MISSING";
+
+        throw error;
+    }
+
+
+    if (
+        !value.startsWith(
+            "whsec_"
+        )
+    ) {
+
+        const error =
+            new Error(
+                "STRIPE_WEBHOOK_SECRET doit commencer par whsec_."
+            );
+
+        error.code =
+            "STRIPE_WEBHOOK_SECRET_INVALID";
+
+        throw error;
+    }
+
+
+    return value;
+}
+
+
+function constructWebhookEvent(
+    rawBody,
+    signature
+) {
+
+    if (
+        !Buffer.isBuffer(
+            rawBody
+        )
+    ) {
+
+        const error =
+            new Error(
+                "Le body brut Stripe est invalide."
+            );
+
+        error.code =
+            "STRIPE_WEBHOOK_RAW_BODY_REQUIRED";
+
+        throw error;
+    }
+
+
+    const stripeSignature =
+        String(
+            signature || ""
+        ).trim();
+
+
+    if (!stripeSignature) {
+
+        const error =
+            new Error(
+                "Header stripe-signature manquant."
+            );
+
+        error.code =
+            "STRIPE_WEBHOOK_SIGNATURE_MISSING";
+
+        throw error;
+    }
+
+
     return getClient()
-        .paymentIntents
-        .retrieve(
-            value
+        .webhooks
+        .constructEvent(
+            rawBody,
+            stripeSignature,
+            getWebhookSecret()
         );
 }
 
@@ -369,5 +532,8 @@ module.exports = {
     testConnection,
 
     createPaymentIntent,
-    retrievePaymentIntent
+    retrievePaymentIntent,
+
+    getWebhookSecret,
+    constructWebhookEvent
 };
