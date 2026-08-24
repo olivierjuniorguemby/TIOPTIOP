@@ -4,7 +4,7 @@ const db =
 
 /* =========================================================
    PAYMENT MODEL
-   TIOPTIOP — 13.8.5
+   TIOPTIOP — 13.8.6
 
    IMPORTANT :
    - db.query() de votre projet retourne directement rows/result.
@@ -252,6 +252,49 @@ async function findLatestByOrderId(orderId) {
     return rows[0] || null;
 }
 
+/* =========================================================
+   RECHERCHE DU DERNIER PAIEMENT PAR REFERENCE COMMANDE
+
+   Utilisé notamment par le callback MTN MoMo lorsque
+   MTN fournit externalId (= référence de commande TiopTiop)
+   mais pas directement provider_reference.
+========================================================= */
+
+async function findLatestByOrderReference(
+    orderReference
+) {
+
+    const reference =
+        String(
+            orderReference || ""
+        ).trim();
+
+
+    if (!reference) {
+        return null;
+    }
+
+
+    const rows =
+        await db.query(
+            `
+            SELECT
+                p.*
+            FROM payments p
+            INNER JOIN orders o
+                ON o.id = p.order_id
+            WHERE o.reference = ?
+            ORDER BY p.id DESC
+            LIMIT 1
+            `,
+            [
+                reference
+            ]
+        );
+
+
+    return rows[0] || null;
+}
 
 async function findAllByOrderId(orderId) {
 
@@ -1113,6 +1156,128 @@ async function hasProcessedStripeWebhookEvent(
 }
 
 
+/* =========================================================
+   STRIPE WEBHOOK — IDEMPOTENCE ATOMIQUE 13.8.6
+========================================================= */
+
+async function registerStripeWebhookEventOnce({
+    paymentId,
+    stripeEventId,
+    stripeEventType,
+    providerReference = null,
+    stripeStatus = null,
+    livemode = false
+}) {
+
+    const id = Number(paymentId);
+    const eventId = String(stripeEventId || "").trim();
+    const eventType = String(stripeEventType || "").trim();
+
+    if (!Number.isInteger(id) || id <= 0 || !eventId || !eventType) {
+        throw new Error("Données webhook Stripe invalides.");
+    }
+
+    const connection = await db.pool.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const [paymentRows] = await connection.execute(
+            `SELECT id FROM payments WHERE id = ? LIMIT 1 FOR UPDATE`,
+            [id]
+        );
+
+        if (!paymentRows.length) {
+            throw new Error("Paiement introuvable.");
+        }
+
+        const [rows] = await connection.execute(
+            `SELECT id, payload
+             FROM payment_events
+             WHERE payment_id = ?
+               AND event_type = 'STRIPE_WEBHOOK_RECEIVED'
+             ORDER BY id DESC
+             LIMIT 200`,
+            [id]
+        );
+
+        for (const row of rows) {
+            if (!row.payload) continue;
+            try {
+                const payload = typeof row.payload === "string" ? JSON.parse(row.payload) : row.payload;
+                if (String(payload?.stripeEventId || "") === eventId) {
+                    await connection.commit();
+                    return { registered:false, duplicate:true, eventRecordId:row.id };
+                }
+            } catch (_error) {}
+        }
+
+        const eventRecordId = await addEventInTransaction(connection, {
+            paymentId:id,
+            eventType:"STRIPE_WEBHOOK_RECEIVED",
+            description:`Webhook Stripe ${eventType} reçu.`,
+            payload:{
+                stripeEventId:eventId,
+                stripeEventType:eventType,
+                providerReference:providerReference || null,
+                stripeStatus:stripeStatus || null,
+                livemode:Boolean(livemode)
+            }
+        });
+
+        await connection.commit();
+        return { registered:true, duplicate:false, eventRecordId };
+    } catch (error) {
+        try { await connection.rollback(); } catch (rollbackError) {
+            console.error("Erreur rollback webhook Stripe :", rollbackError);
+        }
+        throw error;
+    } finally {
+        connection.release();
+    }
+}
+
+async function findStripeContextByProviderReference(providerReference) {
+    const reference = String(providerReference || "").trim();
+    if (!reference) return null;
+
+    const rows = await db.query(
+        `SELECT p.*,
+                o.reference AS order_reference,
+                o.total_amount AS order_total_amount,
+                o.currency AS order_currency,
+                o.status AS order_status
+         FROM payments p
+         INNER JOIN orders o ON o.id = p.order_id
+         WHERE p.provider_reference = ?
+         ORDER BY p.id DESC
+         LIMIT 1`,
+        [reference]
+    );
+
+    return rows[0] || null;
+}
+
+async function findRecentStripeCardPayments(limit = 50) {
+    const safeLimit = Math.min(200, Math.max(1, Number(limit) || 50));
+    const rows = await db.query(
+        `SELECT p.*,
+                o.reference AS order_reference,
+                o.total_amount AS order_total_amount,
+                o.currency AS order_currency,
+                o.status AS order_status
+         FROM payments p
+         INNER JOIN orders o ON o.id = p.order_id
+         WHERE p.method = 'CARD'
+           AND p.provider = 'CARD_SANDBOX'
+           AND p.provider_reference IS NOT NULL
+         ORDER BY p.id DESC
+         LIMIT ${safeLimit}`
+    );
+    return Array.isArray(rows) ? rows : [];
+}
+
+
 module.exports = {
 
     METHODS,
@@ -1127,6 +1292,7 @@ module.exports = {
     findByPublicId,
 
     findLatestByOrderId,
+    findLatestByOrderReference,
     findAllByOrderId,
 
     findByProviderReference,
@@ -1143,5 +1309,8 @@ module.exports = {
     setProvider,
     updateStatus,
 
-    hasProcessedStripeWebhookEvent
+    hasProcessedStripeWebhookEvent,
+    registerStripeWebhookEventOnce,
+    findStripeContextByProviderReference,
+    findRecentStripeCardPayments
 };

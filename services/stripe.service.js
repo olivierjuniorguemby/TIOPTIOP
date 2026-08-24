@@ -1,539 +1,120 @@
-const Stripe =
-    require("stripe");
-
-
-/* =========================================================
-   STRIPE SERVICE
-   TIOPTIOP — 13.8.5
-
-   MODE TEST UNIQUEMENT
-========================================================= */
-
+const Stripe = require("stripe");
 
 function getConfig() {
-
-    const environment =
-        String(
-            process.env.STRIPE_ENVIRONMENT || "test"
-        )
-            .trim()
-            .toLowerCase();
-
-
-    const secretKey =
-        String(
-            process.env.STRIPE_SECRET_KEY || ""
-        ).trim();
-
-
-    const publishableKey =
-        String(
-            process.env.STRIPE_PUBLISHABLE_KEY || ""
-        ).trim();
-
-
-    const missing = [];
-
-
-    if (!secretKey) {
-        missing.push("STRIPE_SECRET_KEY");
+    const environment = String(process.env.STRIPE_ENVIRONMENT || "test").trim().toLowerCase();
+    if (!["test","live"].includes(environment)) {
+        const error = new Error("STRIPE_ENVIRONMENT doit valoir test ou live.");
+        error.code = "STRIPE_ENVIRONMENT_INVALID";
+        throw error;
     }
 
+    const secretKey = String(process.env.STRIPE_SECRET_KEY || "").trim();
+    const publishableKey = String(process.env.STRIPE_PUBLISHABLE_KEY || "").trim();
+    const liveEnabled = String(process.env.STRIPE_LIVE_ENABLED || "false").trim().toLowerCase() === "true";
 
-    if (!publishableKey) {
-        missing.push("STRIPE_PUBLISHABLE_KEY");
-    }
-
-
+    const missing=[];
+    if (!secretKey) missing.push("STRIPE_SECRET_KEY");
+    if (!publishableKey) missing.push("STRIPE_PUBLISHABLE_KEY");
     if (missing.length) {
-
-        const error =
-            new Error(
-                `Configuration Stripe incomplète : ${missing.join(", ")}`
-            );
-
-        error.code =
-            "STRIPE_CONFIG_MISSING";
-
+        const error = new Error(`Configuration Stripe incomplète : ${missing.join(", ")}`);
+        error.code = "STRIPE_CONFIG_MISSING";
         throw error;
     }
 
-
-    if (environment !== "test") {
-
-        const error =
-            new Error(
-                "13.8 fonctionne uniquement avec STRIPE_ENVIRONMENT=test."
-            );
-
-        error.code =
-            "STRIPE_LIVE_NOT_ALLOWED";
-
-        throw error;
+    if (environment === "test") {
+        if (!secretKey.startsWith("sk_test_")) { const e=new Error("En mode TEST, STRIPE_SECRET_KEY doit commencer par sk_test_."); e.code="STRIPE_TEST_SECRET_REQUIRED"; throw e; }
+        if (!publishableKey.startsWith("pk_test_")) { const e=new Error("En mode TEST, STRIPE_PUBLISHABLE_KEY doit commencer par pk_test_."); e.code="STRIPE_TEST_PUBLISHABLE_REQUIRED"; throw e; }
     }
 
-
-    if (!secretKey.startsWith("sk_test_")) {
-
-        const error =
-            new Error(
-                "STRIPE_SECRET_KEY doit commencer par sk_test_."
-            );
-
-        error.code =
-            "STRIPE_TEST_SECRET_REQUIRED";
-
-        throw error;
+    if (environment === "live") {
+        if (!liveEnabled) { const e=new Error("Stripe LIVE est désactivé. STRIPE_LIVE_ENABLED doit être explicitement true."); e.code="STRIPE_LIVE_DISABLED"; throw e; }
+        if (!secretKey.startsWith("sk_live_")) { const e=new Error("En mode LIVE, STRIPE_SECRET_KEY doit commencer par sk_live_."); e.code="STRIPE_LIVE_SECRET_REQUIRED"; throw e; }
+        if (!publishableKey.startsWith("pk_live_")) { const e=new Error("En mode LIVE, STRIPE_PUBLISHABLE_KEY doit commencer par pk_live_."); e.code="STRIPE_LIVE_PUBLISHABLE_REQUIRED"; throw e; }
     }
 
-
-    if (!publishableKey.startsWith("pk_test_")) {
-
-        const error =
-            new Error(
-                "STRIPE_PUBLISHABLE_KEY doit commencer par pk_test_."
-            );
-
-        error.code =
-            "STRIPE_TEST_PUBLISHABLE_REQUIRED";
-
-        throw error;
-    }
-
-
-    return {
-        environment,
-        secretKey,
-        publishableKey
-    };
+    return {environment,secretKey,publishableKey,liveEnabled};
 }
 
-
-let stripeInstance =
-    null;
-
+let stripeInstance=null;
+let stripeInstanceKey=null;
 
 function getClient() {
-
-    if (stripeInstance) {
-        return stripeInstance;
-    }
-
-
-    const config =
-        getConfig();
-
-
-    stripeInstance =
-        new Stripe(
-            config.secretKey
-        );
-
-
+    const config=getConfig();
+    if (stripeInstance && stripeInstanceKey===config.secretKey) return stripeInstance;
+    stripeInstance=new Stripe(config.secretKey);
+    stripeInstanceKey=config.secretKey;
     return stripeInstance;
 }
 
-
 function maskKey(key) {
-
-    const value =
-        String(key || "");
-
-
-    if (value.length <= 12) {
-        return "********";
-    }
-
-
-    return (
-        value.slice(0, 8)
-        +
-        "..."
-        +
-        value.slice(-4)
-    );
+    const value=String(key || "");
+    if (value.length<=12) return "********";
+    return value.slice(0,8)+"..."+value.slice(-4);
 }
 
-
-/* =========================================================
-   TEST CONNEXION
-========================================================= */
+function assertStripeObjectMode(livemode) {
+    const config=getConfig();
+    const isLive=Boolean(livemode);
+    if (config.environment==="test" && isLive) { const e=new Error("SECURITE : un objet Stripe LIVE a été reçu alors que TiopTiop est en TEST."); e.code="STRIPE_LIVE_OBJECT_BLOCKED"; throw e; }
+    if (config.environment==="live" && !isLive) { const e=new Error("SECURITE : un objet Stripe TEST a été reçu alors que TiopTiop est en LIVE."); e.code="STRIPE_TEST_OBJECT_BLOCKED"; throw e; }
+    return true;
+}
 
 async function testConnection() {
-
-    const config =
-        getConfig();
-
-    const stripe =
-        getClient();
-
-    const balance =
-        await stripe.balance.retrieve();
-
-
-    return {
-        ok: true,
-
-        environment:
-            config.environment,
-
-        secretKey:
-            maskKey(config.secretKey),
-
-        publishableKey:
-            maskKey(config.publishableKey),
-
-        livemode:
-            Boolean(balance.livemode)
-    };
+    const config=getConfig();
+    const balance=await getClient().balance.retrieve();
+    assertStripeObjectMode(balance.livemode);
+    return {ok:true,environment:config.environment,liveEnabled:config.liveEnabled,secretKey:maskKey(config.secretKey),publishableKey:maskKey(config.publishableKey),livemode:Boolean(balance.livemode)};
 }
 
-
-/* =========================================================
-   CREATION PAYMENT INTENT
-
-   13.8.4 :
-   uniquement paiement par CARTE.
-========================================================= */
-
-async function createPaymentIntent({
-
-    amount,
-    currency = "xaf",
-    orderReference,
-    paymentPublicId
-
-}) {
-
-    const stripe =
-        getClient();
-
-
-    const numericAmount =
-        Number(amount);
-
-
-    if (
-        !Number.isFinite(numericAmount)
-        ||
-        numericAmount <= 0
-    ) {
-
-        const error =
-            new Error(
-                "Montant Stripe invalide."
-            );
-
-        error.code =
-            "STRIPE_AMOUNT_INVALID";
-
-        throw error;
-    }
-
-
-    const reference =
-        String(
-            orderReference || ""
-        ).trim();
-
-
-    if (!reference) {
-
-        const error =
-            new Error(
-                "Référence commande obligatoire."
-            );
-
-        error.code =
-            "STRIPE_ORDER_REFERENCE_REQUIRED";
-
-        throw error;
-    }
-
-
-    const publicId =
-        String(
-            paymentPublicId || ""
-        ).trim();
-
-
-    if (!publicId) {
-
-        const error =
-            new Error(
-                "Identifiant public du paiement obligatoire."
-            );
-
-        error.code =
-            "STRIPE_PAYMENT_PUBLIC_ID_REQUIRED";
-
-        throw error;
-    }
-
-
-    /*
-     * XAF est une devise Stripe à zéro décimale :
-     * 6500 XAF => amount = 6500.
-     */
-
-    const stripeAmount =
-        Math.round(
-            numericAmount
-        );
-
-
-    const intent =
-        await stripe.paymentIntents.create(
-            {
-                amount:
-                    stripeAmount,
-
-                currency:
-                    String(currency || "xaf")
-                        .trim()
-                        .toLowerCase(),
-
-                /*
-                 * TiopTiop 13.8 = carte bancaire.
-                 * On évite d'afficher d'autres moyens Stripe
-                 * dans le Payment Element.
-                 */
-                payment_method_types: [
-                    "card"
-                ],
-
-                description:
-                    `Commande TiopTiop ${reference}`,
-
-                metadata: {
-                    orderReference:
-                        reference,
-
-                    paymentPublicId:
-                        publicId
-                }
-            },
-            {
-                /*
-                 * Même paiement local = même PaymentIntent.
-                 */
-                idempotencyKey:
-                    `tioptiop-payment-${publicId}`
-            }
-        );
-
-
-    if (
-        intent.livemode === true
-    ) {
-
-        const error =
-            new Error(
-                "SECURITE : PaymentIntent Stripe LIVE détecté."
-            );
-
-        error.code =
-            "STRIPE_LIVE_PAYMENT_BLOCKED";
-
-        throw error;
-    }
-
-
-    return {
-        id:
-            intent.id,
-
-        status:
-            intent.status,
-
-        amount:
-            intent.amount,
-
-        currency:
-            intent.currency,
-
-        clientSecret:
-            intent.client_secret,
-
-        livemode:
-            intent.livemode
-    };
+async function createPaymentIntent({amount,currency="xaf",orderReference,paymentPublicId}) {
+    const numericAmount=Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount<=0) { const e=new Error("Montant Stripe invalide."); e.code="STRIPE_AMOUNT_INVALID"; throw e; }
+    const reference=String(orderReference || "").trim();
+    if (!reference) { const e=new Error("Référence commande obligatoire."); e.code="STRIPE_ORDER_REFERENCE_REQUIRED"; throw e; }
+    const publicId=String(paymentPublicId || "").trim();
+    if (!publicId) { const e=new Error("Identifiant public du paiement obligatoire."); e.code="STRIPE_PAYMENT_PUBLIC_ID_REQUIRED"; throw e; }
+    const intent=await getClient().paymentIntents.create({
+        amount:Math.round(numericAmount),
+        currency:String(currency || "xaf").trim().toLowerCase(),
+        payment_method_types:["card"],
+        description:`Commande TiopTiop ${reference}`,
+        metadata:{orderReference:reference,paymentPublicId:publicId}
+    },{idempotencyKey:`tioptiop-payment-${publicId}`});
+    assertStripeObjectMode(intent.livemode);
+    return {id:intent.id,status:intent.status,amount:intent.amount,currency:intent.currency,clientSecret:intent.client_secret,livemode:intent.livemode};
 }
 
-
-/* =========================================================
-   LECTURE PAYMENT INTENT
-========================================================= */
-
-async function retrievePaymentIntent(
-    paymentIntentId
-) {
-
-    const value =
-        String(
-            paymentIntentId || ""
-        ).trim();
-
-
-    if (!value.startsWith("pi_")) {
-
-        const error =
-            new Error(
-                "Référence PaymentIntent Stripe invalide."
-            );
-
-        error.code =
-            "STRIPE_PAYMENT_INTENT_INVALID";
-
-        throw error;
-    }
-
-
-    const intent =
-        await getClient()
-            .paymentIntents
-            .retrieve(
-                value
-            );
-
-
-    if (
-        intent.livemode === true
-    ) {
-
-        const error =
-            new Error(
-                "SECURITE : PaymentIntent Stripe LIVE détecté."
-            );
-
-        error.code =
-            "STRIPE_LIVE_PAYMENT_BLOCKED";
-
-        throw error;
-    }
-
-
+async function retrievePaymentIntent(paymentIntentId) {
+    const value=String(paymentIntentId || "").trim();
+    if (!value.startsWith("pi_")) { const e=new Error("Référence PaymentIntent Stripe invalide."); e.code="STRIPE_PAYMENT_INTENT_INVALID"; throw e; }
+    const intent=await getClient().paymentIntents.retrieve(value);
+    assertStripeObjectMode(intent.livemode);
     return intent;
 }
 
-
-
-
-/* =========================================================
-   WEBHOOK STRIPE — 13.8.5
-========================================================= */
+async function retrieveEvent(stripeEventId) {
+    const value=String(stripeEventId || "").trim();
+    if (!value.startsWith("evt_")) { const e=new Error("Identifiant événement Stripe invalide."); e.code="STRIPE_EVENT_INVALID"; throw e; }
+    const event=await getClient().events.retrieve(value);
+    assertStripeObjectMode(event.livemode);
+    return event;
+}
 
 function getWebhookSecret() {
-
-    const value =
-        String(
-            process.env.STRIPE_WEBHOOK_SECRET || ""
-        ).trim();
-
-
-    if (!value) {
-
-        const error =
-            new Error(
-                "STRIPE_WEBHOOK_SECRET est absent du .env."
-            );
-
-        error.code =
-            "STRIPE_WEBHOOK_SECRET_MISSING";
-
-        throw error;
-    }
-
-
-    if (
-        !value.startsWith(
-            "whsec_"
-        )
-    ) {
-
-        const error =
-            new Error(
-                "STRIPE_WEBHOOK_SECRET doit commencer par whsec_."
-            );
-
-        error.code =
-            "STRIPE_WEBHOOK_SECRET_INVALID";
-
-        throw error;
-    }
-
-
+    const value=String(process.env.STRIPE_WEBHOOK_SECRET || "").trim();
+    if (!value) { const e=new Error("STRIPE_WEBHOOK_SECRET est absent du .env."); e.code="STRIPE_WEBHOOK_SECRET_MISSING"; throw e; }
+    if (!value.startsWith("whsec_")) { const e=new Error("STRIPE_WEBHOOK_SECRET doit commencer par whsec_."); e.code="STRIPE_WEBHOOK_SECRET_INVALID"; throw e; }
     return value;
 }
 
-
-function constructWebhookEvent(
-    rawBody,
-    signature
-) {
-
-    if (
-        !Buffer.isBuffer(
-            rawBody
-        )
-    ) {
-
-        const error =
-            new Error(
-                "Le body brut Stripe est invalide."
-            );
-
-        error.code =
-            "STRIPE_WEBHOOK_RAW_BODY_REQUIRED";
-
-        throw error;
-    }
-
-
-    const stripeSignature =
-        String(
-            signature || ""
-        ).trim();
-
-
-    if (!stripeSignature) {
-
-        const error =
-            new Error(
-                "Header stripe-signature manquant."
-            );
-
-        error.code =
-            "STRIPE_WEBHOOK_SIGNATURE_MISSING";
-
-        throw error;
-    }
-
-
-    return getClient()
-        .webhooks
-        .constructEvent(
-            rawBody,
-            stripeSignature,
-            getWebhookSecret()
-        );
+function constructWebhookEvent(rawBody,signature) {
+    if (!Buffer.isBuffer(rawBody)) { const e=new Error("Le body brut Stripe est invalide."); e.code="STRIPE_WEBHOOK_RAW_BODY_REQUIRED"; throw e; }
+    const stripeSignature=String(signature || "").trim();
+    if (!stripeSignature) { const e=new Error("Header stripe-signature manquant."); e.code="STRIPE_WEBHOOK_SIGNATURE_MISSING"; throw e; }
+    const event=getClient().webhooks.constructEvent(rawBody,stripeSignature,getWebhookSecret());
+    assertStripeObjectMode(event.livemode);
+    return event;
 }
 
-
-/* =========================================================
-   EXPORTS
-========================================================= */
-
-module.exports = {
-
-    getConfig,
-    getClient,
-
-    testConnection,
-
-    createPaymentIntent,
-    retrievePaymentIntent,
-
-    getWebhookSecret,
-    constructWebhookEvent
-};
+module.exports={getConfig,getClient,maskKey,assertStripeObjectMode,testConnection,createPaymentIntent,retrievePaymentIntent,retrieveEvent,getWebhookSecret,constructWebhookEvent};

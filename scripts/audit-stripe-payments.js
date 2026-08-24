@@ -1,0 +1,3 @@
+require("dotenv").config();
+const PaymentService=require("../services/payment.service");
+(async()=>{try{const limit=Math.min(100,Math.max(1,Number(process.argv[2]||20)));const rows=await PaymentService.auditStripeCardPayments({limit});console.table(rows.map(r=>({paymentId:r.paymentId,order:r.orderReference,local:r.localStatus,stripe:r.stripeStatus,expected:r.expectedLocalStatus,consistent:r.consistent,error:r.error})));const bad=rows.filter(r=>r.error||!r.consistent);if(bad.length){console.error(`❌ ${bad.length} incohérence(s) détectée(s).`);process.exit(1);}console.log("✅ Tous les paiements contrôlés sont cohérents.");process.exit(0);}catch(e){console.error("Erreur audit Stripe :",e);process.exit(1);}})();

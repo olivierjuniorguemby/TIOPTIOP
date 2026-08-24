@@ -14,7 +14,7 @@ const StripeService =
 
 /* =========================================================
    PAYMENT SERVICE
-   TIOPTIOP — 13.8.5
+   TIOPTIOP — 13.8.6
 ========================================================= */
 
 
@@ -141,6 +141,17 @@ async function markAuthorized(
 }
 
 
+async function markPending(paymentId, metadata = null) {
+    const payment = await Payment.findById(paymentId);
+    if (!payment) throw new Error("Paiement introuvable.");
+    if ([Payment.STATUSES.PAID,Payment.STATUSES.CANCELLED,Payment.STATUSES.REFUNDED].includes(payment.status)) return payment;
+    if (payment.status===Payment.STATUSES.PENDING) return payment;
+    const updated=await Payment.updateStatus(payment.id,Payment.STATUSES.PENDING);
+    await Payment.addEvent({paymentId:payment.id,eventType:"PAYMENT_PENDING",description:"Paiement remis en attente.",payload:metadata});
+    return updated;
+}
+
+
 async function markFailed(
     paymentId,
     metadata = null
@@ -165,6 +176,17 @@ async function markFailed(
         Payment.STATUSES.FAILED
     ) {
 
+        return payment;
+    }
+
+
+    if (
+        [
+            Payment.STATUSES.PAID,
+            Payment.STATUSES.CANCELLED,
+            Payment.STATUSES.REFUNDED
+        ].includes(payment.status)
+    ) {
         return payment;
     }
 
@@ -1356,733 +1378,98 @@ async function initiateStripeCard({
 
 
 
-/* =========================================================
-   STRIPE CARD — 13.8.4
-   SYNCHRONISATION DU PAYMENT INTENT
-========================================================= */
 
-async function syncStripeCardPayment(
-    paymentOrId
-) {
 
-    const payment =
-        typeof paymentOrId ===
-        "object"
+function normalizeCurrency(value) { return String(value || "").trim().toUpperCase(); }
 
-            ? paymentOrId
-
-            : await Payment.findById(
-                paymentOrId
-            );
-
-
-    if (!payment) {
-
-        throw new Error(
-            "Paiement introuvable."
-        );
-    }
-
-
-    if (
-        payment.method !==
-        Payment.METHODS.CARD
-    ) {
-
-        const error =
-            new Error(
-                "Ce paiement n'est pas un paiement par carte."
-            );
-
-        error.code =
-            "PAYMENT_NOT_CARD";
-
-        throw error;
-    }
-
-
-    if (
-        !payment.provider_reference
-    ) {
-
-        const error =
-            new Error(
-                "Le paiement Stripe ne possède pas encore de PaymentIntent."
-            );
-
-        error.code =
-            "STRIPE_PAYMENT_INTENT_MISSING";
-
-        throw error;
-    }
-
-
-    const intent =
-        await StripeService
-            .retrievePaymentIntent(
-                payment.provider_reference
-            );
-
-
-    const stripeStatus =
-        String(
-            intent.status || ""
-        )
-            .trim()
-            .toLowerCase();
-
-
-    const lastPaymentError =
-        intent.last_payment_error
-        ||
-        null;
-
-
-    await Payment.addEvent({
-
-        paymentId:
-            payment.id,
-
-        eventType:
-            "STRIPE_STATUS_CHECKED",
-
-        description:
-            "Statut PaymentIntent vérifié auprès de Stripe.",
-
-        payload: {
-
-            providerReference:
-                intent.id,
-
-            stripeStatus,
-
-            livemode:
-                intent.livemode,
-
-            lastPaymentError:
-                lastPaymentError
-                    ? {
-                        code:
-                            lastPaymentError.code
-                            ||
-                            null,
-
-                        declineCode:
-                            lastPaymentError.decline_code
-                            ||
-                            null,
-
-                        message:
-                            lastPaymentError.message
-                            ||
-                            null
-                    }
-                    : null
-        }
-    });
-
-
-    /* =============================================
-       SUCCES
-    ============================================= */
-
-    if (
-        stripeStatus ===
-        "succeeded"
-    ) {
-
-        return {
-
-            stripeStatus,
-
-            intent,
-
-            payment:
-                await markPaid(
-                    payment.id,
-                    {
-                        provider:
-                            "STRIPE",
-
-                        providerStatus:
-                            stripeStatus,
-
-                        providerReference:
-                            intent.id,
-
-                        paymentMethodId:
-                            intent.payment_method
-                            ||
-                            null
-                    }
-                )
-        };
-    }
-
-
-    /* =============================================
-       ANNULE
-    ============================================= */
-
-    if (
-        stripeStatus ===
-        "canceled"
-    ) {
-
-        return {
-
-            stripeStatus,
-
-            intent,
-
-            payment:
-                await cancel(
-                    payment.id,
-                    {
-                        provider:
-                            "STRIPE",
-
-                        providerStatus:
-                            stripeStatus,
-
-                        providerReference:
-                            intent.id,
-
-                        cancellationReason:
-                            intent.cancellation_reason
-                            ||
-                            null
-                    }
-                )
-        };
-    }
-
-
-    /* =============================================
-       CARTE REFUSEE / ERREUR DE PAIEMENT
-
-       Stripe remet généralement le PaymentIntent en
-       requires_payment_method avec last_payment_error.
-    ============================================= */
-
-    if (
-        stripeStatus ===
-        "requires_payment_method"
-        &&
-        lastPaymentError
-    ) {
-
-        return {
-
-            stripeStatus,
-
-            intent,
-
-            payment:
-                await markFailed(
-                    payment.id,
-                    {
-                        provider:
-                            "STRIPE",
-
-                        providerStatus:
-                            stripeStatus,
-
-                        providerReference:
-                            intent.id,
-
-                        code:
-                            lastPaymentError.code
-                            ||
-                            null,
-
-                        declineCode:
-                            lastPaymentError.decline_code
-                            ||
-                            null,
-
-                        message:
-                            lastPaymentError.message
-                            ||
-                            null
-                    }
-                )
-        };
-    }
-
-
-    /*
-     * requires_payment_method sans erreur :
-     * aucune carte n'a encore été confirmée.
-     *
-     * requires_action :
-     * authentification 3DS en cours.
-     *
-     * processing :
-     * Stripe traite encore le paiement.
-     *
-     * requires_confirmation :
-     * confirmation encore requise.
-     *
-     * => le statut local reste PENDING.
-     */
-
-    return {
-
-        stripeStatus:
-            stripeStatus
-            ||
-            "unknown",
-
-        intent,
-
-        payment:
-            await Payment.findById(
-                payment.id
-            )
-    };
+function expectedLocalStripeStatus(intent) {
+    const s=String(intent?.status || "").trim().toLowerCase();
+    if (s==="succeeded") return Payment.STATUSES.PAID;
+    if (s==="canceled") return Payment.STATUSES.CANCELLED;
+    if (s==="requires_capture") return Payment.STATUSES.AUTHORIZED;
+    if (s==="requires_payment_method" && intent?.last_payment_error) return Payment.STATUSES.FAILED;
+    if (["requires_payment_method","requires_confirmation","requires_action","processing"].includes(s)) return Payment.STATUSES.PENDING;
+    return null;
 }
 
-
-
-
-/* =========================================================
-   STRIPE WEBHOOK — 13.8.5
-
-   Le statut final provient de Stripe côté serveur.
-   Le navigateur n'est jamais considéré comme source de vérité.
-========================================================= */
-
-async function handleStripeWebhookEvent(
-    stripeEvent
-) {
-
-    if (
-        !stripeEvent
-        ||
-        !stripeEvent.id
-        ||
-        !stripeEvent.type
-    ) {
-
-        const error =
-            new Error(
-                "Evénement Stripe invalide."
-            );
-
-        error.code =
-            "STRIPE_WEBHOOK_EVENT_INVALID";
-
-        throw error;
-    }
-
-
-    const eventType =
-        String(
-            stripeEvent.type
-        );
-
-
-    const intent =
-        stripeEvent.data?.object
-        ||
-        null;
-
-
-    /*
-     * 13.8.5 traite uniquement les PaymentIntent.
-     * Les autres événements Stripe sont acquittés sans effet.
-     */
-    if (
-        !eventType.startsWith(
-            "payment_intent."
-        )
-        ||
-        !intent
-        ||
-        !String(
-            intent.id || ""
-        ).startsWith(
-            "pi_"
-        )
-    ) {
-
-        return {
-            handled:
-                false,
-
-            ignored:
-                true,
-
-            reason:
-                "EVENT_NOT_USED",
-
-            eventId:
-                stripeEvent.id,
-
-            eventType
-        };
-    }
-
-
-    /*
-     * Protection supplémentaire :
-     * notre 13.8 est exclusivement en TEST.
-     */
-    if (
-        intent.livemode ===
-        true
-    ) {
-
-        const error =
-            new Error(
-                "Webhook Stripe LIVE refusé dans l'environnement 13.8 TEST."
-            );
-
-        error.code =
-            "STRIPE_LIVE_WEBHOOK_BLOCKED";
-
-        throw error;
-    }
-
-
-    const payment =
-        await Payment
-            .findByProviderReference(
-                intent.id
-            );
-
-
-    /*
-     * Stripe CLI peut envoyer des événements de test
-     * qui ne correspondent à aucune commande TiopTiop.
-     *
-     * On répond 200 pour éviter des retries inutiles,
-     * mais on ne modifie rien en base.
-     */
-    if (!payment) {
-
-        return {
-            handled:
-                false,
-
-            ignored:
-                true,
-
-            reason:
-                "PAYMENT_NOT_FOUND",
-
-            eventId:
-                stripeEvent.id,
-
-            eventType,
-
-            providerReference:
-                intent.id
-        };
-    }
-
-
-    if (
-        payment.method !==
-        Payment.METHODS.CARD
-    ) {
-
-        const error =
-            new Error(
-                "Le PaymentIntent Stripe correspond à un paiement local non CARD."
-            );
-
-        error.code =
-            "STRIPE_WEBHOOK_PAYMENT_METHOD_MISMATCH";
-
-        throw error;
-    }
-
-
-    const alreadyProcessed =
-        await Payment
-            .hasProcessedStripeWebhookEvent(
-                payment.id,
-                stripeEvent.id
-            );
-
-
-    if (
-        alreadyProcessed
-    ) {
-
-        return {
-            handled:
-                true,
-
-            duplicate:
-                true,
-
-            eventId:
-                stripeEvent.id,
-
-            eventType,
-
-            payment:
-                await Payment.findById(
-                    payment.id
-                )
-        };
-    }
-
-
-    /*
-     * On enregistre l'evt_ Stripe AVANT l'effet métier.
-     *
-     * Si Stripe renvoie exactement le même evt_,
-     * il sera reconnu comme doublon.
-     */
-    await Payment.addEvent({
-
-        paymentId:
-            payment.id,
-
-        eventType:
-            "STRIPE_WEBHOOK_RECEIVED",
-
-        description:
-            `Webhook Stripe ${eventType} reçu.`,
-
-        payload: {
-
-            stripeEventId:
-                stripeEvent.id,
-
-            stripeEventType:
-                eventType,
-
-            providerReference:
-                intent.id,
-
-            stripeStatus:
-                intent.status
-                ||
-                null,
-
-            livemode:
-                Boolean(
-                    intent.livemode
-                )
-        }
-    });
-
-
-    /* =============================================
-       PAIEMENT REUSSI
-    ============================================= */
-
-    if (
-        eventType ===
-        "payment_intent.succeeded"
-    ) {
-
-        const updated =
-            await markPaid(
-                payment.id,
-                {
-                    provider:
-                        "STRIPE",
-
-                    source:
-                        "WEBHOOK",
-
-                    stripeEventId:
-                        stripeEvent.id,
-
-                    providerStatus:
-                        intent.status
-                        ||
-                        "succeeded",
-
-                    providerReference:
-                        intent.id,
-
-                    paymentMethodId:
-                        intent.payment_method
-                        ||
-                        null
-                }
-            );
-
-
-        return {
-            handled:
-                true,
-
-            duplicate:
-                false,
-
-            eventId:
-                stripeEvent.id,
-
-            eventType,
-
-            payment:
-                updated
-        };
-    }
-
-
-    /* =============================================
-       PAIEMENT ECHOUE
-    ============================================= */
-
-    if (
-        eventType ===
-        "payment_intent.payment_failed"
-    ) {
-
-        const stripeError =
-            intent.last_payment_error
-            ||
-            null;
-
-
-        const updated =
-            await markFailed(
-                payment.id,
-                {
-                    provider:
-                        "STRIPE",
-
-                    source:
-                        "WEBHOOK",
-
-                    stripeEventId:
-                        stripeEvent.id,
-
-                    providerStatus:
-                        intent.status
-                        ||
-                        "requires_payment_method",
-
-                    providerReference:
-                        intent.id,
-
-                    code:
-                        stripeError?.code
-                        ||
-                        null,
-
-                    declineCode:
-                        stripeError?.decline_code
-                        ||
-                        null,
-
-                    message:
-                        stripeError?.message
-                        ||
-                        null
-                }
-            );
-
-
-        return {
-            handled:
-                true,
-
-            duplicate:
-                false,
-
-            eventId:
-                stripeEvent.id,
-
-            eventType,
-
-            payment:
-                updated
-        };
-    }
-
-
-    /* =============================================
-       PAIEMENT ANNULE
-    ============================================= */
-
-    if (
-        eventType ===
-        "payment_intent.canceled"
-    ) {
-
-        const updated =
-            await cancel(
-                payment.id,
-                {
-                    provider:
-                        "STRIPE",
-
-                    source:
-                        "WEBHOOK",
-
-                    stripeEventId:
-                        stripeEvent.id,
-
-                    providerStatus:
-                        intent.status
-                        ||
-                        "canceled",
-
-                    providerReference:
-                        intent.id,
-
-                    cancellationReason:
-                        intent.cancellation_reason
-                        ||
-                        null
-                }
-            );
-
-
-        return {
-            handled:
-                true,
-
-            duplicate:
-                false,
-
-            eventId:
-                stripeEvent.id,
-
-            eventType,
-
-            payment:
-                updated
-        };
-    }
-
-
-    /*
-     * Autres statuts utiles :
-     * processing / requires_action / created...
-     *
-     * On conserve la trace du webhook mais on laisse
-     * le paiement local dans son état actuel.
-     */
-    return {
-        handled:
-            true,
-
-        duplicate:
-            false,
-
-        eventId:
-            stripeEvent.id,
-
-        eventType,
-
-        payment:
-            await Payment.findById(
-                payment.id
-            )
-    };
+function assertStripePaymentConsistency(payment,intent) {
+    const issues=[];
+    if (String(intent.id || "")!==String(payment.provider_reference || "")) issues.push("provider_reference");
+    if (Math.round(Number(payment.amount || 0))!==Number(intent.amount || 0)) issues.push("amount");
+    if (normalizeCurrency(payment.currency)!==normalizeCurrency(intent.currency)) issues.push("currency");
+    if (payment.order_total_amount!==undefined && Math.round(Number(payment.order_total_amount || 0))!==Number(intent.amount || 0)) issues.push("order_total_amount");
+    if (payment.order_currency && normalizeCurrency(payment.order_currency)!==normalizeCurrency(intent.currency)) issues.push("order_currency");
+    const metadata=intent.metadata || {};
+    if (metadata.paymentPublicId && String(metadata.paymentPublicId)!==String(payment.public_id || "")) issues.push("metadata.paymentPublicId");
+    if (payment.order_reference && metadata.orderReference && String(metadata.orderReference)!==String(payment.order_reference)) issues.push("metadata.orderReference");
+    if (issues.length) { const e=new Error(`Incohérence Stripe/TiopTiop : ${issues.join(", ")}`); e.code="STRIPE_PAYMENT_CONSISTENCY_ERROR"; e.issues=issues; throw e; }
+    return true;
 }
 
+async function applyStripeIntentState(payment,intent,metadata={}) {
+    const s=String(intent?.status || "").trim().toLowerCase();
+    const err=intent?.last_payment_error || null;
+    const common={provider:"STRIPE",providerStatus:s,providerReference:intent?.id || payment.provider_reference,...metadata};
+    if (s==="succeeded") return markPaid(payment.id,{...common,paymentMethodId:intent.payment_method || null});
+    if (s==="canceled") return cancel(payment.id,{...common,cancellationReason:intent.cancellation_reason || null});
+    if (s==="requires_capture") return markAuthorized(payment.id,common);
+    if (s==="requires_payment_method" && err) return markFailed(payment.id,{...common,code:err.code || null,declineCode:err.decline_code || null,message:err.message || null});
+    if (["requires_payment_method","requires_confirmation","requires_action","processing"].includes(s)) return markPending(payment.id,common);
+    return Payment.findById(payment.id);
+}
+
+/* =========================================================
+   STRIPE CARD — 13.8.6
+   SYNCHRONISATION DEFINITIVE
+========================================================= */
+
+async function syncStripeCardPayment(paymentOrId) {
+    let payment = typeof paymentOrId === "object" ? paymentOrId : await Payment.findById(paymentOrId);
+    if (!payment) throw new Error("Paiement introuvable.");
+    if (payment.method!==Payment.METHODS.CARD) { const e=new Error("Ce paiement n'est pas un paiement par carte."); e.code="PAYMENT_NOT_CARD"; throw e; }
+    if (!payment.provider_reference) { const e=new Error("Le paiement Stripe ne possède pas encore de PaymentIntent."); e.code="STRIPE_PAYMENT_INTENT_MISSING"; throw e; }
+    const context=await Payment.findStripeContextByProviderReference(payment.provider_reference);
+    if (context) payment=context;
+    const intent=await StripeService.retrievePaymentIntent(payment.provider_reference);
+    assertStripePaymentConsistency(payment,intent);
+    const stripeStatus=String(intent.status || "").trim().toLowerCase();
+    await Payment.addEvent({paymentId:payment.id,eventType:"STRIPE_STATUS_CHECKED",description:"Statut PaymentIntent vérifié auprès de Stripe.",payload:{providerReference:intent.id,stripeStatus,expectedLocalStatus:expectedLocalStripeStatus(intent),livemode:intent.livemode}});
+    const updated=await applyStripeIntentState(payment,intent,{source:"SERVER_SYNC"});
+    return {stripeStatus,intent,payment:updated};
+}
+
+async function handleStripeWebhookEvent(stripeEvent) {
+    if (!stripeEvent || !stripeEvent.id || !stripeEvent.type) { const e=new Error("Evénement Stripe invalide."); e.code="STRIPE_WEBHOOK_EVENT_INVALID"; throw e; }
+    const eventType=String(stripeEvent.type);
+    const intent=stripeEvent.data?.object || null;
+    if (!eventType.startsWith("payment_intent.") || !intent || !String(intent.id || "").startsWith("pi_")) { return {handled:false,ignored:true,reason:"EVENT_NOT_USED",eventId:stripeEvent.id,eventType}; }
+    StripeService.assertStripeObjectMode(intent.livemode);
+    const payment=await Payment.findStripeContextByProviderReference(intent.id);
+    if (!payment) return {handled:false,ignored:true,reason:"PAYMENT_NOT_FOUND",eventId:stripeEvent.id,eventType,providerReference:intent.id};
+    if (payment.method!==Payment.METHODS.CARD) { const e=new Error("Le PaymentIntent Stripe correspond à un paiement local non CARD."); e.code="STRIPE_WEBHOOK_PAYMENT_METHOD_MISMATCH"; throw e; }
+    assertStripePaymentConsistency(payment,intent);
+    const registration=await Payment.registerStripeWebhookEventOnce({paymentId:payment.id,stripeEventId:stripeEvent.id,stripeEventType:eventType,providerReference:intent.id,stripeStatus:intent.status || null,livemode:intent.livemode});
+    if (registration.duplicate) return {handled:true,duplicate:true,eventId:stripeEvent.id,eventType,payment:await Payment.findById(payment.id)};
+    const updated=await applyStripeIntentState(payment,intent,{source:"WEBHOOK",stripeEventId:stripeEvent.id,stripeEventType:eventType});
+    return {handled:true,duplicate:false,eventId:stripeEvent.id,eventType,payment:updated};
+}
+
+async function auditStripeCardPayments({limit=50}={}) {
+    const payments=await Payment.findRecentStripeCardPayments(limit);
+    const results=[];
+    for (const payment of payments) {
+        const row={paymentId:payment.id,orderReference:payment.order_reference,providerReference:payment.provider_reference,localStatus:payment.status,stripeStatus:null,expectedLocalStatus:null,consistent:false,error:null};
+        try {
+            const intent=await StripeService.retrievePaymentIntent(payment.provider_reference);
+            row.stripeStatus=intent.status;
+            row.expectedLocalStatus=expectedLocalStripeStatus(intent);
+            assertStripePaymentConsistency(payment,intent);
+            row.consistent=row.expectedLocalStatus===null || row.expectedLocalStatus===payment.status;
+        } catch (error) { row.error=error.message; }
+        results.push(row);
+    }
+    return results;
+}
 
 /* =========================================================
    EXPORTS
@@ -2093,6 +1480,7 @@ module.exports = {
     getPaymentForOrder,
 
     markAuthorized,
+    markPending,
     markPaid,
     markFailed,
     cancel,
@@ -2106,5 +1494,10 @@ module.exports = {
 
     initiateStripeCard,
     syncStripeCardPayment,
-    handleStripeWebhookEvent
+    handleStripeWebhookEvent,
+
+    expectedLocalStripeStatus,
+    assertStripePaymentConsistency,
+    applyStripeIntentState,
+    auditStripeCardPayments
 };
