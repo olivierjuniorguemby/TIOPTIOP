@@ -51,6 +51,12 @@ const orderController =
         "../../controllers/admin/order.controller"
     );
 
+
+const paymentController =
+    require(
+        "../../controllers/admin/payment.controller"
+    );
+
 const deliveryController =
     require(
         "../../controllers/admin/delivery.controller"
@@ -522,10 +528,49 @@ router.post(
 
 router.get(
     "/paiements",
-    page.render(
-        "admin/operations/payments",
-        "Paiements & caisse"
-    )
+    paymentController.index
+);
+
+
+router.get(
+    "/paiements/:id",
+    paymentController.detail
+);
+
+
+router.post(
+    "/paiements/:id/remboursement/stripe",
+    paymentController.refundStripe
+);
+
+
+router.post(
+    "/paiements/:id/remboursement/mtn-momo",
+    paymentController.refundMtnCreate
+);
+
+
+router.post(
+    "/paiements/:id/remboursement/mtn-momo/:refundId/confirmer",
+    paymentController.refundMtnConfirm
+);
+
+
+router.post(
+    "/paiements/:id/remboursement/mtn-momo/:refundId/annuler",
+    paymentController.refundMtnCancel
+);
+
+
+router.post(
+    "/paiements/:id/encaissement-cash",
+    paymentController.collectCash
+);
+
+
+router.post(
+    "/paiements/:id/remboursement/cash",
+    paymentController.refundCash
 );
 
 

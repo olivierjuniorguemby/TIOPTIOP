@@ -1,0 +1,773 @@
+<%
+const money = (value, currency) =>
+    `${Number(value || 0).toLocaleString('fr-FR')} ${currency || 'XAF'}`;
+
+const dateTime = value =>
+    value ? new Date(value).toLocaleString('fr-FR') : '—';
+
+const customerName =
+    payment.customer_display_name
+    || [payment.customer_first_name, payment.customer_last_name].filter(Boolean).join(' ')
+    || 'Client';
+
+const rs = refundState || {
+    eligible:false, reason:'', paymentAmount:Number(payment.amount || 0),
+    refundedAmount:0, pendingAmount:0, refundableAmount:0,
+    processingMode:'MANUAL', currency:payment.currency || 'XAF'
+};
+
+const methodLabels = {
+    CARD: '💳 Carte bancaire',
+    MOBILE_MONEY: '📱 Mobile Money',
+    CASH: '💵 Espèces'
+};
+
+function prettyPayload(payload) {
+    if (!payload) return null;
+    try {
+        const value = typeof payload === 'string' ? JSON.parse(payload) : payload;
+        return JSON.stringify(value, null, 2);
+    } catch (_) {
+        return String(payload);
+    }
+}
+%>
+
+<section class="admin-heading payment-detail-heading">
+    <div>
+        <a class="back-link" href="/admin/paiements">← Retour aux paiements</a>
+        <div class="detail-title-line">
+            <div>
+                <span class="payments-badge">Administration · Paiement #<%= payment.id %></span>
+                <h1>Détail du paiement</h1>
+                <p><%= payment.order_reference %> · créé le <%= dateTime(payment.created_at) %></p>
+            </div>
+            <span class="payment-status detail-status status-<%= String(payment.status || '').toLowerCase() %>">
+                <%= payment.status %>
+            </span>
+        </div>
+    </div>
+</section>
+
+<section class="payment-detail-page">
+
+    <div class="detail-grid">
+        <article class="detail-card">
+            <div class="card-heading">
+                <span>🧾</span>
+                <div><strong>Commande</strong><small>Informations commerciales</small></div>
+            </div>
+            <dl>
+                <div><dt>Référence</dt><dd><a href="/admin/commandes/<%= encodeURIComponent(payment.order_reference) %>"><%= payment.order_reference %></a></dd></div>
+                <div><dt>Statut commande</dt><dd><%= payment.order_status || '—' %></dd></div>
+                <div><dt>Type</dt><dd><%= payment.order_type || '—' %></dd></div>
+                <div><dt>Sous-total</dt><dd><%= money(payment.order_subtotal_amount, payment.order_currency) %></dd></div>
+                <div><dt>Livraison</dt><dd><%= money(payment.order_delivery_fee, payment.order_currency) %></dd></div>
+                <div><dt>Réduction</dt><dd><%= money(payment.order_discount_amount, payment.order_currency) %></dd></div>
+                <div class="important-row"><dt>Total commande</dt><dd><%= money(payment.order_total_amount, payment.order_currency) %></dd></div>
+            </dl>
+        </article>
+
+        <article class="detail-card">
+            <div class="card-heading">
+                <span>👤</span>
+                <div><strong>Client</strong><small>Compte ayant passé la commande</small></div>
+            </div>
+            <dl>
+                <div><dt>Nom</dt><dd><%= customerName %></dd></div>
+                <div><dt>Email</dt><dd><%= payment.customer_email || '—' %></dd></div>
+                <div><dt>Téléphone</dt><dd><%= payment.customer_phone || '—' %></dd></div>
+                <div><dt>ID client</dt><dd><%= payment.customer_id || '—' %></dd></div>
+            </dl>
+        </article>
+
+        <article class="detail-card">
+            <div class="card-heading">
+                <span>💳</span>
+                <div><strong>Paiement</strong><small>État financier TiopTiop</small></div>
+            </div>
+            <dl>
+                <div><dt>Méthode</dt><dd><%= methodLabels[payment.method] || payment.method %></dd></div>
+                <div><dt>Provider</dt><dd><span class="provider-pill"><%= payment.provider || '—' %></span></dd></div>
+                <div class="important-row"><dt>Montant</dt><dd><%= money(payment.amount, payment.currency) %></dd></div>
+                <div><dt>Statut</dt><dd><span class="payment-status status-<%= String(payment.status || '').toLowerCase() %>"><%= payment.status %></span></dd></div>
+                <div><dt>Payé le</dt><dd><%= dateTime(payment.paid_at) %></dd></div>
+                <div><dt>Collecté par</dt><dd><%= payment.collector_name || '—' %></dd></div>
+            </dl>
+        </article>
+
+        <article class="detail-card">
+            <div class="card-heading">
+                <span>🔗</span>
+                <div><strong>Références techniques</strong><small>Traçabilité provider</small></div>
+            </div>
+            <dl>
+                <div><dt>Payment ID</dt><dd>#<%= payment.id %></dd></div>
+                <div><dt>Public ID</dt><dd><code><%= payment.public_id || '—' %></code></dd></div>
+                <div><dt>Provider reference</dt><dd><code class="break-code"><%= payment.provider_reference || '—' %></code></dd></div>
+                <div><dt>Créé</dt><dd><%= dateTime(payment.created_at) %></dd></div>
+                <div><dt>Mis à jour</dt><dd><%= dateTime(payment.updated_at) %></dd></div>
+            </dl>
+        </article>
+    </div>
+
+
+    <article class="refund-card">
+        <div class="refund-header">
+            <div>
+                <span class="payments-badge">13.9.4 · Remboursements</span>
+                <h2>Gestion du remboursement</h2>
+                <p>Stripe reste en TEST. MTN MoMo est suivi comme remboursement manuel contrôlé ; les espèces sont confirmées directement par l'administrateur.</p>
+            </div>
+            <% if (String(payment.method || '').toUpperCase() === 'CASH' && String(payment.status || '').toUpperCase() === 'PENDING') { %>
+                <form method="POST" action="/admin/paiements/<%= payment.id %>/encaissement-cash" onsubmit="return confirm('Confirmer que vous avez réellement reçu <%= money(payment.amount, payment.currency) %> en espèces ?');">
+                    <button type="submit" class="refund-open-button cash-collect-button">💵 Confirmer l’encaissement</button>
+                </form>
+            <% } else if (rs.canExecuteStripe) { %>
+                <button type="button" class="refund-open-button" id="openRefundModal">↩ Rembourser Stripe TEST</button>
+            <% } else if (rs.eligible && rs.processingMode === 'MOBILE_MONEY') { %>
+                <button type="button" class="refund-open-button" data-open-modal="mtnRefundModal">↩ Préparer remboursement MTN</button>
+            <% } else if (rs.eligible && rs.processingMode === 'CASH') { %>
+                <button type="button" class="refund-open-button" data-open-modal="cashRefundModal">↩ Rembourser en espèces</button>
+            <% } else { %>
+                <button type="button" class="refund-open-button disabled" disabled>↩ Rembourser</button>
+            <% } %>
+        </div>
+
+        <div class="refund-summary-grid">
+            <div><span>Paiement</span><strong><%= money(rs.paymentAmount, rs.currency) %></strong></div>
+            <div><span>Déjà remboursé</span><strong><%= money(rs.refundedAmount, rs.currency) %></strong></div>
+            <div><span>En attente</span><strong><%= money(rs.pendingAmount, rs.currency) %></strong></div>
+            <div><span>Remboursable</span><strong><%= money(rs.refundableAmount, rs.currency) %></strong></div>
+        </div>
+
+        <p class="refund-note">Traitement prévu : <strong><%= rs.processingMode %></strong><% if (!rs.eligible && rs.reason) { %> · <%= rs.reason %><% } %></p>
+
+        <% if (refunds && refunds.length) { %>
+            <div class="refund-history">
+                <h3>Remboursements enregistrés</h3>
+                <% refunds.forEach(refund => { %>
+                    <div class="refund-history-row">
+                        <div>
+                            <span>#<%= refund.id %> · <%= refund.refund_type %> · <%= dateTime(refund.requested_at) %></span>
+                            <small><%= refund.provider || '—' %><% if (refund.provider_reference) { %> · Réf. <%= refund.provider_reference %><% } %></small>
+                        </div>
+
+                        <div class="refund-history-status">
+                            <strong><%= money(refund.amount, refund.currency) %> · <%= refund.status %></strong>
+
+                            <% if (
+                                refund.status === 'PENDING'
+                                && String(refund.provider || '').toUpperCase() === 'MTN_MOMO_MANUAL'
+                            ) { %>
+                                <div class="mtn-pending-actions"><div class="mtn-pending-title">📱 Remboursement MTN en attente — saisissez la référence reçue après l’opération MTN</div>
+                                    <form method="POST" action="/admin/paiements/<%= payment.id %>/remboursement/mtn-momo/<%= refund.id %>/confirmer">
+                                        <input
+                                            type="text"
+                                            name="providerReference"
+                                            maxlength="180"
+                                            required
+                                            placeholder="Référence transaction MTN"
+                                        >
+                                        <input
+                                            type="text"
+                                            name="adminNote"
+                                            maxlength="500"
+                                            placeholder="Note facultative"
+                                        >
+                                        <button type="submit" class="mini-success">Confirmer effectué</button>
+                                    </form>
+
+                                    <form
+                                        method="POST"
+                                        action="/admin/paiements/<%= payment.id %>/remboursement/mtn-momo/<%= refund.id %>/annuler"
+                                        onsubmit="return confirm('Annuler cette demande MTN non exécutée ?');"
+                                    >
+                                        <input
+                                            type="hidden"
+                                            name="reason"
+                                            value="Demande annulée depuis l'administration"
+                                        >
+                                        <button type="submit" class="mini-danger">Annuler demande</button>
+                                    </form>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        <% } %>
+    </article>
+
+    <% if (rs.canExecuteStripe) { %>
+
+    <div class="refund-modal-backdrop" id="refundModal" hidden>
+
+        <form
+            class="refund-modal"
+            method="POST"
+            action="/admin/paiements/<%= payment.id %>/remboursement/stripe"
+            id="refundForm"
+        >
+            <input
+    type="hidden"
+    name="refundRequestToken"
+    value="<%= refundRequestToken %>"
+>
+            <div class="refund-modal-top">
+                <div>
+                    <span class="payments-badge">
+                        Stripe TEST · 13.9.4.3
+                    </span>
+
+                    <h2>Préparer un remboursement</h2>
+                </div>
+
+                <button type="button" id="closeRefundModal">×</button>
+            </div>
+
+
+            <p class="refund-warning">
+                Un remboursement Stripe TEST sera réellement créé dans l'environnement de test. Aucun argent réel ne sera débité ni remboursé.
+            </p>
+
+
+            <label>
+                <input
+                    type="radio"
+                    name="refundType"
+                    value="FULL"
+                    checked
+                >
+                Total
+            </label>
+
+            <label>
+                <input
+                    type="radio"
+                    name="refundType"
+                    value="PARTIAL"
+                >
+                Partiel
+            </label>
+
+
+            <label class="refund-field">
+
+                Montant
+
+                <input
+                    id="refundAmountPreview"
+                    name="amount"
+                    type="number"
+                    min="1"
+                    max="<%= rs.refundableAmount %>"
+                    step="1"
+                    value="<%= rs.refundableAmount %>"
+                    disabled
+                >
+
+            </label>
+
+
+            <label class="refund-field">
+
+                Motif
+
+                <select
+                    id="refundReasonPreview"
+                    name="reasonCode"
+                >
+
+                    <option value="CUSTOMER_REQUEST">
+                        Demande du client
+                    </option>
+
+                    <option value="ORDER_CANCELLED">
+                        Commande annulée
+                    </option>
+
+                    <option value="PRODUCT_UNAVAILABLE">
+                        Produit indisponible
+                    </option>
+
+                    <option value="DUPLICATE">
+                        Paiement en double
+                    </option>
+
+                    <option value="OTHER">
+                        Autre
+                    </option>
+
+                </select>
+
+            </label>
+
+
+            <label class="refund-field">
+
+                Commentaire administrateur
+
+                <textarea
+                    name="reasonText"
+                    maxlength="500"
+                    rows="3"
+                    placeholder="Précision facultative"
+                ></textarea>
+
+            </label>
+
+
+            <div class="refund-modal-actions">
+
+                <button
+                    type="button"
+                    id="cancelRefundModal"
+                >
+                    Annuler
+                </button>
+
+                <button
+                    type="submit"
+                    id="previewRefundButton"
+                >
+                    Confirmer le remboursement TEST
+                </button>
+
+            </div>
+
+
+            <p id="refundPreviewResult"></p>
+
+        </form>
+
+    </div>
+
+    <% } %>
+
+
+    <% if (rs.eligible && rs.processingMode === 'MOBILE_MONEY') { %>
+    <div class="refund-modal-backdrop" id="mtnRefundModal" hidden>
+        <form
+            class="refund-modal manual-refund-form"
+            method="POST"
+            action="/admin/paiements/<%= payment.id %>/remboursement/mtn-momo"
+            data-provider-label="MTN MoMo"
+        >
+            <input
+                type="hidden"
+                name="refundRequestToken"
+                value="<%= refundRequestToken %>"
+            >
+
+            <div class="refund-modal-top">
+                <div>
+                    <span class="payments-badge">MTN MoMo · 13.9.4.5</span>
+                    <h2>Préparer un remboursement MTN</h2>
+                </div>
+                <button type="button" data-close-modal="mtnRefundModal">×</button>
+            </div>
+
+            <p class="refund-warning">
+                TiopTiop enregistre d'abord la demande en PENDING.
+                Effectuez ensuite réellement le remboursement via votre canal MTN autorisé,
+                puis revenez saisir la référence de transaction pour le confirmer.
+            </p>
+
+            <div class="manual-radio-row">
+                <label><input type="radio" name="refundType" value="FULL" checked> Total</label>
+                <label><input type="radio" name="refundType" value="PARTIAL"> Partiel</label>
+            </div>
+
+            <label class="refund-field">
+                Montant
+                <input
+                    name="amount"
+                    type="number"
+                    min="1"
+                    max="<%= rs.refundableAmount %>"
+                    step="1"
+                    value="<%= rs.refundableAmount %>"
+                    data-refund-amount
+                    disabled
+                >
+            </label>
+
+            <label class="refund-field">
+                Motif
+                <select name="reasonCode">
+                    <option value="CUSTOMER_REQUEST">Demande du client</option>
+                    <option value="ORDER_CANCELLED">Commande annulée</option>
+                    <option value="PRODUCT_UNAVAILABLE">Produit indisponible</option>
+                    <option value="DUPLICATE">Paiement en double</option>
+                    <option value="OTHER">Autre</option>
+                </select>
+            </label>
+
+            <label class="refund-field">
+                Commentaire administrateur
+                <textarea
+                    name="reasonText"
+                    maxlength="500"
+                    rows="3"
+                    placeholder="Précision facultative"
+                ></textarea>
+            </label>
+
+            <div class="refund-modal-actions">
+                <button type="button" data-close-modal="mtnRefundModal">Annuler</button>
+                <button type="submit">Enregistrer la demande MTN</button>
+            </div>
+        </form>
+    </div>
+    <% } %>
+
+
+    <% if (rs.eligible && rs.processingMode === 'CASH') { %>
+    <div class="refund-modal-backdrop" id="cashRefundModal" hidden>
+        <form
+            class="refund-modal manual-refund-form"
+            method="POST"
+            action="/admin/paiements/<%= payment.id %>/remboursement/cash"
+            data-provider-label="Espèces"
+        >
+            <input
+                type="hidden"
+                name="refundRequestToken"
+                value="<%= refundRequestToken %>"
+            >
+
+            <div class="refund-modal-top">
+                <div>
+                    <span class="payments-badge">Espèces · 13.9.4.5</span>
+                    <h2>Confirmer un remboursement espèces</h2>
+                </div>
+                <button type="button" data-close-modal="cashRefundModal">×</button>
+            </div>
+
+            <p class="refund-warning">
+                Confirmez uniquement après avoir réellement remis l'argent au client.
+                Cette confirmation fera passer immédiatement le remboursement à SUCCEEDED.
+            </p>
+
+            <div class="manual-radio-row">
+                <label><input type="radio" name="refundType" value="FULL" checked> Total</label>
+                <label><input type="radio" name="refundType" value="PARTIAL"> Partiel</label>
+            </div>
+
+            <label class="refund-field">
+                Montant
+                <input
+                    name="amount"
+                    type="number"
+                    min="1"
+                    max="<%= rs.refundableAmount %>"
+                    step="1"
+                    value="<%= rs.refundableAmount %>"
+                    data-refund-amount
+                    disabled
+                >
+            </label>
+
+            <label class="refund-field">
+                Référence caisse / reçu
+                <input
+                    name="cashReference"
+                    type="text"
+                    maxlength="180"
+                    placeholder="Facultatif — généré automatiquement si vide"
+                >
+            </label>
+
+            <label class="refund-field">
+                Motif
+                <select name="reasonCode">
+                    <option value="CUSTOMER_REQUEST">Demande du client</option>
+                    <option value="ORDER_CANCELLED">Commande annulée</option>
+                    <option value="PRODUCT_UNAVAILABLE">Produit indisponible</option>
+                    <option value="DUPLICATE">Paiement en double</option>
+                    <option value="OTHER">Autre</option>
+                </select>
+            </label>
+
+            <label class="refund-field">
+                Commentaire administrateur
+                <textarea
+                    name="reasonText"
+                    maxlength="500"
+                    rows="3"
+                    placeholder="Précision facultative"
+                ></textarea>
+            </label>
+
+            <div class="refund-modal-actions">
+                <button type="button" data-close-modal="cashRefundModal">Annuler</button>
+                <button type="submit">Confirmer argent remis</button>
+            </div>
+        </form>
+    </div>
+    <% } %>
+
+    <article class="timeline-card">
+        <div class="timeline-header">
+            <div>
+                <span class="payments-badge">Audit</span>
+                <h2>Historique du paiement</h2>
+                <p><%= (events || []).length %> événement(s) enregistré(s) dans <code>payment_events</code>.</p>
+            </div>
+        </div>
+
+        <% if (!events || events.length === 0) { %>
+            <div class="empty-events">Aucun événement n'est encore enregistré pour ce paiement.</div>
+        <% } else { %>
+            <div class="payment-timeline">
+                <% events.forEach((event, index) => { const payloadText = prettyPayload(event.payload); %>
+                    <div class="timeline-item">
+                        <div class="timeline-axis">
+                            <span class="timeline-dot"></span>
+                            <% if (index < events.length - 1) { %><span class="timeline-line"></span><% } %>
+                        </div>
+
+                        <div class="timeline-content">
+                            <div class="timeline-top">
+                                <strong><%= event.event_type %></strong>
+                                <time><%= dateTime(event.created_at) %></time>
+                            </div>
+
+                            <% if (event.description) { %>
+                                <p><%= event.description %></p>
+                            <% } %>
+
+                            <% if (payloadText) { %>
+                                <details>
+                                    <summary>Voir les données techniques</summary>
+                                    <pre><%= payloadText %></pre>
+                                </details>
+                            <% } %>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        <% } %>
+    </article>
+
+    <div class="detail-actions">
+        <a href="/admin/paiements">← Tous les paiements</a>
+        <a class="primary-action" href="/admin/commandes/<%= encodeURIComponent(payment.order_reference) %>">Voir la commande →</a>
+    </div>
+</section>
+
+<style>
+.payment-detail-page{padding:12px}.payment-detail-heading{margin-bottom:20px}.back-link{display:inline-block;margin-bottom:12px;color:#746b64;font-size:11px;font-weight:900;text-decoration:none}.back-link:hover{color:#ff7900}.detail-title-line{display:flex;justify-content:space-between;align-items:flex-end;gap:20px}.detail-title-line h1{margin:10px 0 6px;font-size:34px}.detail-title-line p{margin:0;color:#81776f;font-size:12px}.payments-badge{display:inline-flex;padding:5px 11px;border-radius:999px;background:#fff0df;color:#ff7900;font-size:11px;font-weight:900}.detail-status{font-size:12px!important;padding:9px 13px!important}.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.detail-card,.timeline-card{border:1px solid #ece4dc;border-radius:20px;background:#fff;box-shadow:0 8px 30px rgba(24,19,15,.04)}.detail-card{padding:20px}.card-heading{display:flex;gap:11px;align-items:center;padding-bottom:15px;border-bottom:1px solid #f1ebe6}.card-heading>span{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#fff5ea;font-size:18px}.card-heading strong{display:block;font-size:14px}.card-heading small{display:block;margin-top:3px;color:#9a9088;font-size:9px}.detail-card dl{margin:7px 0 0}.detail-card dl>div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;padding:10px 0;border-bottom:1px dashed #eee7e1}.detail-card dl>div:last-child{border-bottom:0}.detail-card dt{color:#887e76;font-size:10px;font-weight:800}.detail-card dd{margin:0;color:#26201c;font-size:11px;font-weight:800;text-align:right;overflow-wrap:anywhere}.detail-card dd a{color:#ff7900;text-decoration:none}.important-row dd{font-size:14px;color:#171310}.provider-pill{display:inline-flex;padding:5px 8px;border-radius:999px;background:#f4f0ec;color:#665d57;font-size:9px;font-weight:900}.payment-status{display:inline-flex;padding:6px 9px;border-radius:999px;font-size:9px;font-weight:1000}.status-paid{background:#eaf7ee;color:#267346}.status-pending,.status-authorized{background:#fff4df;color:#9b5c00}.status-failed,.status-cancelled{background:#fff0f0;color:#a73535}.status-partial,.status-refunded{background:#eef4ff;color:#355e9b}.break-code{overflow-wrap:anywhere}.timeline-card{margin-top:16px;padding:22px}.timeline-header h2{margin:10px 0 5px;font-size:22px}.timeline-header p{margin:0;color:#8a8078;font-size:10px}.payment-timeline{margin-top:22px}.timeline-item{display:grid;grid-template-columns:24px minmax(0,1fr);gap:10px}.timeline-axis{position:relative;display:flex;justify-content:center}.timeline-dot{position:relative;z-index:2;width:10px;height:10px;margin-top:5px;border:3px solid #ff7900;border-radius:50%;background:#fff}.timeline-line{position:absolute;top:16px;bottom:-5px;width:2px;background:#eee5dd}.timeline-content{padding:0 0 22px}.timeline-top{display:flex;justify-content:space-between;gap:15px}.timeline-top strong{font-size:11px}.timeline-top time{color:#968c84;font-size:9px;white-space:nowrap}.timeline-content p{margin:6px 0;color:#716861;font-size:10px}.timeline-content details{margin-top:8px}.timeline-content summary{cursor:pointer;color:#ff7900;font-size:9px;font-weight:900}.timeline-content pre{max-height:260px;overflow:auto;margin:8px 0 0;padding:12px;border-radius:11px;background:#171310;color:#f8eee5;font-size:9px;white-space:pre-wrap;overflow-wrap:anywhere}.empty-events{padding:35px;text-align:center;color:#8d837b;font-size:11px}.detail-actions{display:flex;justify-content:space-between;gap:10px;margin-top:16px}.detail-actions a{display:inline-flex;align-items:center;min-height:42px;padding:0 15px;border:1px solid #ddd4cb;border-radius:11px;background:#fff;color:#332b26;font-size:10px;font-weight:900;text-decoration:none}.detail-actions .primary-action{border-color:#ff7900;background:#ff7900;color:#fff}@media(max-width:850px){.detail-grid{grid-template-columns:1fr}.detail-title-line{align-items:flex-start;flex-direction:column}.detail-card dl>div{grid-template-columns:120px 1fr}}@media(max-width:520px){.payment-detail-page{padding:4px}.detail-title-line h1{font-size:27px}.timeline-top{flex-direction:column;gap:4px}.detail-actions{flex-direction:column}.detail-actions a{justify-content:center}}
+
+.refund-card{margin-top:16px;padding:22px;border:1px solid #ece4dc;border-radius:20px;background:#fff}
+.refund-header{display:flex;justify-content:space-between;gap:15px}.refund-header h2{margin:9px 0 5px}.refund-header p,.refund-note{color:#8a8078;font-size:10px}
+.refund-open-button{border:0;border-radius:11px;background:#ff7900;color:#fff;padding:11px 15px;font-weight:900;cursor:pointer}.refund-open-button.disabled{background:#ddd5ce;color:#8c837d}
+.refund-summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}.refund-summary-grid div{padding:12px;border:1px solid #eee7e1;border-radius:12px}.refund-summary-grid span{display:block;color:#8d837b;font-size:9px}.refund-summary-grid strong{display:block;margin-top:5px}
+.refund-history-row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px dashed #eee7e1;font-size:10px}
+.refund-modal-backdrop{position:fixed;z-index:9999;inset:0;display:grid;place-items:center;padding:20px;background:rgba(20,16,13,.55)}.refund-modal-backdrop[hidden]{display:none}
+.refund-modal{width:min(520px,100%);padding:22px;border-radius:18px;background:#fff}.refund-modal-top{display:flex;justify-content:space-between}.refund-modal-top button{border:0;background:none;font-size:26px}
+.refund-warning{padding:10px;border-radius:10px;background:#fff5e8;color:#87510c;font-size:10px}.refund-field{display:block;margin-top:12px;font-size:10px;font-weight:900}.refund-field input,.refund-field select,.refund-field textarea{display:block;width:100%;margin-top:5px;padding:10px;border:1px solid #ddd4cb;border-radius:9px}
+.refund-modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.refund-modal-actions button{padding:10px;border-radius:9px;border:1px solid #ddd4cb;font-weight:900}.refund-modal-actions button:last-child{border-color:#ff7900;background:#ff7900;color:#fff}
+#refundPreviewResult{font-size:10px;font-weight:900;color:#267346}
+.refund-history-row small{display:block;margin-top:4px;color:#8d837b;font-size:8px}
+.refund-history-status{text-align:right;min-width:280px}
+.mtn-pending-actions{display:flex;flex-direction:column;gap:10px;margin-top:10px;padding:14px;border:1px solid #f0d4bb;border-radius:12px;background:#fffaf5;min-width:min(620px,80vw)}
+.mtn-pending-title{font-size:11px;font-weight:900;color:#6f3c0d;text-align:left}
+.mtn-pending-actions form{display:grid;grid-template-columns:minmax(220px,1fr) minmax(220px,1fr) auto;gap:8px;align-items:center}
+.mtn-pending-actions form:last-child{display:flex;justify-content:flex-end}
+.mtn-pending-actions input{width:100%;min-width:0;padding:10px 11px;border:1px solid #d9cec4;border-radius:9px;font-size:11px;background:#fff}
+.mtn-pending-actions button{padding:10px 12px;border:0;border-radius:9px;font-size:10px;font-weight:900;cursor:pointer}
+.cash-collect-button{white-space:nowrap}
+@media(max-width:850px){.mtn-pending-actions{min-width:0;width:100%}.mtn-pending-actions form{grid-template-columns:1fr}.refund-header{align-items:flex-start;flex-direction:column}}
+.mini-success{background:#eaf7ee;color:#267346}.mini-danger{background:#fff0f0;color:#a73535}
+.manual-radio-row{display:flex;gap:16px;margin:12px 0 4px}
+.manual-refund-form button[type=submit]{cursor:pointer}
+
+@media(max-width:700px){.refund-summary-grid{grid-template-columns:1fr 1fr}.refund-header{flex-direction:column}}
+
+</style>
+
+
+<% if (rs.canExecuteStripe) { %>
+<script>
+(() => {
+  const modal = document.getElementById('refundModal');
+  const amount = document.getElementById('refundAmountPreview');
+  const result = document.getElementById('refundPreviewResult');
+  const max = Number(<%- JSON.stringify(rs.refundableAmount) %>);
+  const hide = () => { modal.hidden = true; document.body.style.overflow=''; result.textContent=''; };
+  document.getElementById('openRefundModal')?.addEventListener('click',()=>{modal.hidden=false;document.body.style.overflow='hidden';});
+  document.getElementById('closeRefundModal')?.addEventListener('click',hide);
+  document.getElementById('cancelRefundModal')?.addEventListener('click',hide);
+  document.querySelectorAll('input[name="refundType"]').forEach(r => r.addEventListener('change', () => {
+    const partial = document.querySelector('input[name="refundType"]:checked')?.value === 'PARTIAL';
+    amount.disabled = !partial;
+    amount.value = partial ? Math.max(1, Math.floor(max/2)) : max;
+    result.textContent='';
+  }));
+  document.querySelector('#refundModal form')?.addEventListener('submit', (event) => {
+
+    const n = Number(amount.value);
+
+    if (!Number.isFinite(n) || n <= 0 || n > max) {
+        event.preventDefault();
+
+        result.style.color = '#a73535';
+        result.textContent = 'Montant invalide.';
+
+        return;
+    }
+
+    const type =
+        document.querySelector(
+            'input[name="refundType"]:checked'
+        )?.value;
+
+
+    if (type === 'PARTIAL' && n >= max) {
+
+        event.preventDefault();
+
+        result.style.color = '#a73535';
+
+        result.textContent =
+            'Pour rembourser tout le solde, choisissez Total.';
+
+        return;
+    }
+
+
+    const ok = window.confirm(
+        `Confirmer le remboursement Stripe TEST de ${n.toLocaleString('fr-FR')} <%= rs.currency %> ?`
+    );
+
+
+    if (!ok) {
+        event.preventDefault();
+        return;
+    }
+
+
+    // IMPORTANT :
+    // un input disabled n'est pas envoyé par le navigateur
+    if (type === 'FULL') {
+        amount.disabled = false;
+        amount.value = max;
+    }
+
+
+    const submit =
+        document.getElementById('previewRefundButton');
+
+    submit.disabled = true;
+
+    submit.textContent =
+        'Remboursement en cours...';
+});
+})();
+</script>
+<% } %>
+
+
+<script>
+(() => {
+    const max = Number(<%- JSON.stringify(rs.refundableAmount) %>);
+
+    document.querySelectorAll('[data-open-modal]').forEach(button => {
+        button.addEventListener('click', () => {
+            const modal = document.getElementById(button.dataset.openModal);
+            if (!modal) return;
+            modal.hidden = false;
+            document.body.style.overflow = 'hidden';
+        });
+    });
+
+    document.querySelectorAll('[data-close-modal]').forEach(button => {
+        button.addEventListener('click', () => {
+            const modal = document.getElementById(button.dataset.closeModal);
+            if (!modal) return;
+            modal.hidden = true;
+            document.body.style.overflow = '';
+        });
+    });
+
+    document.querySelectorAll('.manual-refund-form').forEach(form => {
+        const amount = form.querySelector('[data-refund-amount]');
+        const radios = form.querySelectorAll('input[name="refundType"]');
+
+        radios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                const type =
+                    form.querySelector('input[name="refundType"]:checked')?.value;
+
+                const partial =
+                    type === 'PARTIAL';
+
+                amount.disabled =
+                    !partial;
+
+                amount.value =
+                    partial
+                        ? Math.max(1, Math.floor(max / 2))
+                        : max;
+            });
+        });
+
+        form.addEventListener('submit', event => {
+            const type =
+                form.querySelector('input[name="refundType"]:checked')?.value;
+
+            const n =
+                Number(amount.value);
+
+            if (
+                !Number.isFinite(n)
+                ||
+                n <= 0
+                ||
+                n > max
+            ) {
+                event.preventDefault();
+                alert(`Montant invalide. Maximum : ${max.toLocaleString('fr-FR')} <%= rs.currency %>.`);
+                return;
+            }
+
+            if (
+                type === 'PARTIAL'
+                &&
+                n >= max
+            ) {
+                event.preventDefault();
+                alert('Pour rembourser tout le solde restant, choisissez Total.');
+                return;
+            }
+
+            if (
+                type === 'FULL'
+            ) {
+                amount.disabled =
+                    false;
+
+                amount.value =
+                    max;
+            }
+
+            const label =
+                form.dataset.providerLabel
+                || 'ce moyen de paiement';
+
+            const message =
+                label === 'Espèces'
+                    ? `Confirmer que ${n.toLocaleString('fr-FR')} <%= rs.currency %> ont réellement été remis au client ?`
+                    : `Enregistrer une demande MTN MoMo de ${n.toLocaleString('fr-FR')} <%= rs.currency %> ? Le remboursement devra ensuite être effectué via MTN puis confirmé avec sa référence.`;
+
+            if (
+                !window.confirm(message)
+            ) {
+                event.preventDefault();
+            }
+        });
+    });
+})();
+</script>

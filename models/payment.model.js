@@ -1049,6 +1049,123 @@ async function createRetryAttempt({
 
 
 /* =========================================================
+   ENCAISSEMENT ESPECES — 13.9.4.5.1
+========================================================= */
+
+async function collectCashPayment({
+    paymentId,
+    collectedBy = null,
+    comment = null
+}) {
+    const id = Number(paymentId);
+
+    if (!Number.isInteger(id) || id <= 0) {
+        throw new Error("Paiement espèces invalide.");
+    }
+
+    const connection = await db.pool.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const [paymentRows] = await connection.execute(
+            `
+                SELECT *
+                FROM payments
+                WHERE id = ?
+                LIMIT 1
+                FOR UPDATE
+            `,
+            [id]
+        );
+
+        const payment = paymentRows[0] || null;
+
+        if (!payment) {
+            const error = new Error("Paiement introuvable.");
+            error.code = "PAYMENT_NOT_FOUND";
+            throw error;
+        }
+
+        if (String(payment.method || "").toUpperCase() !== METHODS.CASH) {
+            const error = new Error(
+                "Ce paiement n'est pas un paiement en espèces."
+            );
+            error.code = "CASH_PAYMENT_METHOD_INVALID";
+            throw error;
+        }
+
+        if (payment.status === STATUSES.PAID) {
+            const error = new Error(
+                "Ce paiement en espèces est déjà encaissé."
+            );
+            error.code = "CASH_PAYMENT_ALREADY_PAID";
+            throw error;
+        }
+
+        if (payment.status !== STATUSES.PENDING) {
+            const error = new Error(
+                `Impossible d'encaisser un paiement espèces au statut ${payment.status}.`
+            );
+            error.code = "CASH_PAYMENT_STATUS_INVALID";
+            throw error;
+        }
+
+        await connection.execute(
+            `
+                UPDATE payments
+                SET
+                    status = ?,
+                    provider = COALESCE(provider, ?),
+                    paid_at = COALESCE(paid_at, CURRENT_TIMESTAMP)
+                WHERE id = ?
+            `,
+            [
+                STATUSES.PAID,
+                PROVIDERS.CASH,
+                id
+            ]
+        );
+
+        await addEventInTransaction(connection, {
+            paymentId: id,
+            eventType: "CASH_PAYMENT_COLLECTED",
+            description:
+                "Paiement en espèces confirmé comme encaissé par l'administrateur.",
+            payload: {
+                previousStatus: payment.status,
+                newStatus: STATUSES.PAID,
+                amount: Number(payment.amount),
+                currency: payment.currency || "XAF",
+                collectedBy: collectedBy || null,
+                comment: comment || null
+            }
+        });
+
+        await connection.commit();
+
+        return findById(id);
+    }
+    catch (error) {
+        try {
+            await connection.rollback();
+        }
+        catch (rollbackError) {
+            console.error(
+                "Erreur rollback encaissement espèces :",
+                rollbackError
+            );
+        }
+
+        throw error;
+    }
+    finally {
+        connection.release();
+    }
+}
+
+
+/* =========================================================
    STRIPE WEBHOOK — IDEMPOTENCE 13.8.5
 
    On ne modifie pas le schéma SQL.
@@ -1308,6 +1425,7 @@ module.exports = {
 
     setProvider,
     updateStatus,
+    collectCashPayment,
 
     hasProcessedStripeWebhookEvent,
     registerStripeWebhookEventOnce,

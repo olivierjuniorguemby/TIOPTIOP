@@ -1,440 +1,229 @@
-<section class="admin-heading">
-  <div class="payments-header">
-    <span class="admin-section-badge">Administration</span>
-    <h1>💳 Paiements & caisse</h1>
-  </div>
+<section class="admin-heading payments-heading">
+    <div>
+        <span class="payments-badge">Administration</span>
+        <h1>💳 Paiements & caisse</h1>
+        <p>Suivez les paiements Stripe, MTN MoMo et espèces depuis les vraies données MySQL.</p>
+    </div>
 </section>
 
 <section class="admin-payments-page">
 
-  
+    <div class="payment-kpis">
+        <article class="payment-kpi-card">
+            <span>Encaissé</span>
+            <strong><%= Number(stats?.paid_amount || 0).toLocaleString('fr-FR') %> XAF</strong>
+            <small><%= Number(stats?.paid_count || 0) %> paiement(s)</small>
+        </article>
 
-  <!-- KPI -->
-  <div class="payment-kpis">
+        <article class="payment-kpi-card">
+            <span>En attente</span>
+            <strong><%= Number(stats?.pending_amount || 0).toLocaleString('fr-FR') %> XAF</strong>
+            <small><%= Number(stats?.pending_count || 0) %> paiement(s)</small>
+        </article>
 
-    <article class="payment-kpi-card">
-      <span>Espèces EN ATTENTE</span>
-      <strong>39,70 €</strong>
-    </article>
+        <article class="payment-kpi-card">
+            <span>Carte encaissée</span>
+            <strong><%= Number(stats?.card_paid_amount || 0).toLocaleString('fr-FR') %> XAF</strong>
+            <small>Stripe / carte</small>
+        </article>
 
-    <article class="payment-kpi-card">
-      <span>Espèces encaissées</span>
-      <strong>26,40 €</strong>
-    </article>
-
-    <article class="payment-kpi-card">
-      <span>Carte</span>
-      <strong>0,00 €</strong>
-    </article>
-
-    <article class="payment-kpi-card">
-      <span>Mobile Money</span>
-      <strong>0,00 €</strong>
-    </article>
-
-  </div>
-
-  <!-- TABLEAU -->
-  <div class="payments-table-card">
-
-    <div class="payments-table-wrapper">
-
-      <table class="payments-table">
-
-        <thead>
-          <tr>
-            <th>Commande</th>
-            <th>Mode</th>
-            <th>Montant</th>
-            <th>Statut</th>
-            <th>Encaissement</th>
-          </tr>
-        </thead>
-
-        <tbody>
-
-          <!-- PAIEMENT DÉJÀ ENCAISSÉ -->
-          <tr>
-            <td>
-              <a href="/admin/commandes/TIOP-30634"
-                 class="payment-order-link">
-                TIOP-30634
-              </a>
-            </td>
-
-            <td>Espèces</td>
-
-            <td>26,40 €</td>
-
-            <td>
-              <span class="payment-status paid">
-                PAYÉ
-              </span>
-            </td>
-
-            <td>
-              Caissier Démo
-            </td>
-          </tr>
-
-
-          <!-- PAIEMENT EN ATTENTE -->
-          <tr>
-            <td>
-              <a href="/admin/commandes/TIOP-41969"
-                 class="payment-order-link">
-                TIOP-41969
-              </a>
-            </td>
-
-            <td>Espèces</td>
-
-            <td>12,40 €</td>
-
-            <td>
-              <span class="payment-status pending">
-                EN_ATTENTE
-              </span>
-            </td>
-
-            <td>
-              <form
-                method="POST"
-                action="/admin/paiements/TIOP-41969/confirmer"
-              >
-                <button
-                  type="submit"
-                  class="btn-confirm-payment"
-                >
-                  Confirmer reçu
-                </button>
-              </form>
-            </td>
-          </tr>
-
-
-          <!-- PAIEMENT EN ATTENTE -->
-          <tr>
-            <td>
-              <a href="/admin/commandes/TIOP-00124"
-                 class="payment-order-link">
-                TIOP-00124
-              </a>
-            </td>
-
-            <td>Espèces</td>
-
-            <td>27,30 €</td>
-
-            <td>
-              <span class="payment-status pending">
-                EN_ATTENTE
-              </span>
-            </td>
-
-            <td>
-              <form
-                method="POST"
-                action="/admin/paiements/TIOP-00124/confirmer"
-              >
-                <button
-                  type="submit"
-                  class="btn-confirm-payment"
-                >
-                  Confirmer reçu
-                </button>
-              </form>
-            </td>
-          </tr>
-
-        </tbody>
-
-      </table>
-
+        <article class="payment-kpi-card">
+            <span>Mobile Money encaissé</span>
+            <strong><%= Number(stats?.momo_paid_amount || 0).toLocaleString('fr-FR') %> XAF</strong>
+            <small>MTN MoMo</small>
+        </article>
     </div>
 
-  </div>
+    <form class="payments-filters" method="GET" action="/admin/paiements">
+        <div class="filter-search">
+            <label for="paymentSearch">Rechercher</label>
+            <input
+                id="paymentSearch"
+                type="search"
+                name="search"
+                value="<%= filters?.search || '' %>"
+                placeholder="Commande, paiement, pi_..., email, téléphone..."
+            >
+        </div>
 
+        <div>
+            <label for="paymentMethod">Méthode</label>
+            <select id="paymentMethod" name="method">
+                <option value="">Toutes</option>
+                <option value="CARD" <%= filters?.method === 'CARD' ? 'selected' : '' %>>Carte bancaire</option>
+                <option value="MOBILE_MONEY" <%= filters?.method === 'MOBILE_MONEY' ? 'selected' : '' %>>Mobile Money</option>
+                <option value="CASH" <%= filters?.method === 'CASH' ? 'selected' : '' %>>Espèces</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="paymentStatus">Statut</label>
+            <select id="paymentStatus" name="status">
+                <option value="">Tous</option>
+                <% ['PENDING','AUTHORIZED','PAID','FAILED','CANCELLED','PARTIAL','REFUNDED'].forEach(status => { %>
+                    <option value="<%= status %>" <%= filters?.status === status ? 'selected' : '' %>><%= status %></option>
+                <% }) %>
+            </select>
+        </div>
+
+        <div>
+            <label for="paymentProvider">Provider</label>
+            <select id="paymentProvider" name="provider">
+                <option value="">Tous</option>
+                <% (providers || []).forEach(provider => { %>
+                    <option value="<%= provider %>" <%= filters?.provider === String(provider).toUpperCase() ? 'selected' : '' %>><%= provider %></option>
+                <% }) %>
+            </select>
+        </div>
+
+        <div class="payments-filter-actions">
+            <button type="submit">Filtrer</button>
+            <a href="/admin/paiements">Réinitialiser</a>
+        </div>
+    </form>
+
+    <div class="payments-result-bar">
+        <strong><%= (payments || []).length %></strong> paiement(s) affiché(s)
+        <span>·</span>
+        <span><%= Number(stats?.total_count || 0) %> au total</span>
+    </div>
+
+    <div class="payments-table-card">
+        <div class="payments-table-wrapper">
+            <table class="payments-table">
+                <thead>
+                    <tr>
+                        <th>Commande</th>
+                        <th>Client</th>
+                        <th>Méthode</th>
+                        <th>Provider</th>
+                        <th>Montant</th>
+                        <th>Statut</th>
+                        <th>Référence provider</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <% if (!payments || payments.length === 0) { %>
+                        <tr>
+                            <td colspan="9" class="payments-empty">
+                                Aucun paiement ne correspond à ces filtres.
+                            </td>
+                        </tr>
+                    <% } %>
+
+                    <% (payments || []).forEach(payment => { %>
+                        <%
+                            const customerName = payment.customer_display_name
+                                || [payment.customer_first_name, payment.customer_last_name].filter(Boolean).join(' ')
+                                || 'Client';
+
+                            const methodLabels = {
+                                CARD: '💳 Carte',
+                                MOBILE_MONEY: '📱 Mobile Money',
+                                CASH: '💵 Espèces'
+                            };
+                        %>
+
+                        <tr>
+                            <td>
+                                <a class="payment-order-link" href="/admin/commandes/<%= encodeURIComponent(payment.order_reference) %>">
+                                    <%= payment.order_reference %>
+                                </a>
+                                <small>#<%= payment.id %></small>
+                            </td>
+
+                            <td>
+                                <strong class="payment-customer"><%= customerName %></strong>
+                                <small><%= payment.customer_email || payment.customer_phone || '—' %></small>
+                            </td>
+
+                            <td><%= methodLabels[payment.method] || payment.method %></td>
+                            <td><span class="provider-pill"><%= payment.provider || '—' %></span></td>
+
+                            <td class="payment-amount">
+                                <%= Number(payment.amount || 0).toLocaleString('fr-FR') %>
+                                <%= payment.currency || 'XAF' %>
+                            </td>
+
+                            <td>
+                                <span class="payment-status status-<%= String(payment.status || '').toLowerCase() %>">
+                                    <%= payment.status %>
+                                </span>
+                            </td>
+
+                            <td>
+                                <code class="provider-reference" title="<%= payment.provider_reference || '' %>">
+                                    <%= payment.provider_reference
+                                        ? (payment.provider_reference.length > 24
+                                            ? payment.provider_reference.slice(0, 21) + '...'
+                                            : payment.provider_reference)
+                                        : '—'
+                                    %>
+                                </code>
+                            </td>
+
+                            <td class="payment-date">
+                                <%= new Date(payment.created_at).toLocaleString('fr-FR') %>
+                            </td>
+
+                            <td>
+                                <a class="payment-view" href="/admin/paiements/<%= payment.id %>">
+                                    Voir →
+                                </a>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </section>
 
 <style>
-  /* =========================================================
-   ADMIN - PAIEMENTS & CAISSE
-========================================================= */
-
-.admin-payments-page {
-    padding: 12px;
-}
-
-
-/* HEADER */
-
-.payments-header {
-    margin-bottom: 26px;
-}
-
-.admin-section-badge {
-    display: inline-flex;
-    align-items: center;
-
-    padding: 5px 11px;
-
-    border-radius: 999px;
-
-    background: #fff0df;
-    color: #ff7900;
-
-    font-size: 12px;
-    font-weight: 800;
-}
-
-.payments-header h1 {
-    margin: 10px 0 0;
-
-    font-size: 34px;
-    line-height: 1.1;
-
-    font-weight: 800;
-    color: #171310;
-}
-
-
-/* =========================================================
-   KPI
-========================================================= */
-
-.payment-kpis {
-    display: grid;
-
-    grid-template-columns:
-        repeat(4, minmax(0, 1fr));
-
-    gap: 14px;
-
-    margin-bottom: 16px;
-}
-
-.payment-kpi-card {
-    min-height: 105px;
-
-    padding: 24px 18px;
-
-    border-radius: 20px;
-
-    background: #fff;
-
-    box-sizing: border-box;
-}
-
-.payment-kpi-card span {
-    display: block;
-
-    margin-bottom: 14px;
-
-    color: #776f6a;
-
-    font-size: 14px;
-}
-
-.payment-kpi-card strong {
-    display: block;
-
-    color: #171310;
-
-    font-size: 30px;
-    line-height: 1;
-
-    font-weight: 800;
-}
-
-
-/* =========================================================
-   TABLEAU
-========================================================= */
-
-.payments-table-card {
-    overflow: hidden;
-
-    background: #fff;
-
-    border-radius: 20px;
-}
-
-.payments-table-wrapper {
-    width: 100%;
-
-    overflow-x: auto;
-}
-
-.payments-table {
-    width: 100%;
-
-    border-collapse: collapse;
-
-    font-size: 14px;
-}
-
-
-/* HEADER */
-
-.payments-table thead {
-    background: #faf8f5;
-}
-
-.payments-table th {
-    padding: 16px 14px;
-
-    text-align: left;
-
-    color: #171310;
-
-    font-weight: 800;
-
-    border-bottom: 1px solid #dedbd7;
-}
-
-
-/* CELLULES */
-
-.payments-table td {
-    padding: 18px 14px;
-
-    color: #171310;
-
-    vertical-align: middle;
-
-    border-bottom: 1px solid #e7e4e0;
-}
-
-.payments-table tbody tr:last-child td {
-    border-bottom: 0;
-}
-
-
-/* LIEN COMMANDE */
-
-.payment-order-link {
-    color: #171310;
-
-    text-decoration: none;
-
-    font-weight: 500;
-}
-
-.payment-order-link:hover {
-    color: #ff7900;
-
-    text-decoration: underline;
-}
-
-
-/* =========================================================
-   STATUTS
-========================================================= */
-
-.payment-status {
-    display: inline-flex;
-
-    align-items: center;
-
-    font-size: 13px;
-
-    font-weight: 600;
-}
-
-.payment-status.paid {
-    color: #171310;
-}
-
-.payment-status.pending {
-    color: #171310;
-}
-
-
-/* =========================================================
-   BOUTON CONFIRMATION
-========================================================= */
-
-.btn-confirm-payment {
-    border: 0;
-
-    padding: 12px 18px;
-
-    border-radius: 999px;
-
-    background: #ff7900;
-
-    color: #fff;
-
-    font-size: 14px;
-
-    font-weight: 800;
-
-    cursor: pointer;
-
-    transition:
-        transform .15s ease,
-        background .15s ease;
-}
-
-.btn-confirm-payment:hover {
-    background: #e86e00;
-
-    transform: translateY(-1px);
-}
-
-.btn-confirm-payment:active {
-    transform: translateY(0);
-}
-
-
-/* =========================================================
-   TABLETTE
-========================================================= */
-
-@media (max-width: 1000px) {
-
-    .payment-kpis {
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
-    }
-
-}
-
-
-/* =========================================================
-   MOBILE
-========================================================= */
-
-@media (max-width: 650px) {
-
-    .admin-payments-page {
-        padding: 10px;
-    }
-
-    .payments-header h1 {
-        font-size: 29px;
-    }
-
-    .payment-kpis {
-        grid-template-columns: 1fr;
-
-        gap: 10px;
-    }
-
-    .payment-kpi-card {
-        min-height: auto;
-
-        padding: 20px;
-    }
-
-    .payment-kpi-card strong {
-        font-size: 27px;
-    }
-
-    .payments-table {
-        min-width: 720px;
-    }
-
-}
+.admin-payments-page { padding: 12px; }
+.payments-heading { margin-bottom: 22px; }
+.payments-heading h1 { margin: 10px 0 8px; font-size: 34px; line-height: 1.05; }
+.payments-heading p { margin: 0; color: #786f69; font-size: 13px; }
+.payments-badge { display:inline-flex; padding:5px 11px; border-radius:999px; background:#fff0df; color:#ff7900; font-size:12px; font-weight:900; }
+.payment-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-bottom:18px; }
+.payment-kpi-card { padding:20px; border:1px solid #ece4dc; border-radius:20px; background:#fff; box-shadow:0 8px 30px rgba(24,19,15,.04); }
+.payment-kpi-card span { display:block; margin-bottom:10px; color:#776f6a; font-size:12px; font-weight:800; }
+.payment-kpi-card strong { display:block; color:#171310; font-size:24px; line-height:1.1; }
+.payment-kpi-card small { display:block; margin-top:9px; color:#9b9189; font-size:10px; }
+.payments-filters { display:grid; grid-template-columns:2fr repeat(3,minmax(150px,1fr)) auto; gap:12px; padding:16px; margin-bottom:12px; border:1px solid #ece4dc; border-radius:18px; background:#fff; align-items:end; }
+.payments-filters label { display:block; margin-bottom:6px; color:#6f6761; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.04em; }
+.payments-filters input, .payments-filters select { width:100%; min-height:42px; padding:0 12px; border:1px solid #ddd4cb; border-radius:11px; background:#fff; font:inherit; font-size:12px; outline:none; }
+.payments-filters input:focus, .payments-filters select:focus { border-color:#ff7900; box-shadow:0 0 0 3px rgba(255,121,0,.08); }
+.payments-filter-actions { display:flex; gap:7px; }
+.payments-filter-actions button, .payments-filter-actions a { min-height:42px; display:inline-flex; align-items:center; justify-content:center; padding:0 14px; border-radius:11px; font-size:11px; font-weight:900; text-decoration:none; white-space:nowrap; }
+.payments-filter-actions button { border:0; background:#ff7900; color:#fff; cursor:pointer; }
+.payments-filter-actions a { border:1px solid #ddd4cb; color:#332b26; background:#fff; }
+.payments-result-bar { display:flex; gap:7px; align-items:center; margin:0 2px 12px; color:#837a73; font-size:11px; }
+.payments-result-bar strong { color:#171310; }
+.payments-table-card { overflow:hidden; border:1px solid #ece4dc; border-radius:20px; background:#fff; }
+.payments-table-wrapper { overflow-x:auto; }
+.payments-table { width:100%; min-width:1150px; border-collapse:collapse; }
+.payments-table th { padding:13px 14px; background:#faf7f4; color:#746b64; text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; }
+.payments-table td { padding:15px 14px; border-top:1px solid #f0e9e3; color:#29231f; font-size:11px; vertical-align:middle; }
+.payments-table tbody tr:hover { background:#fffaf5; }
+.payments-table td small { display:block; margin-top:4px; color:#9b9189; font-size:9px; }
+.payment-order-link { color:#ff7900; font-weight:1000; text-decoration:none; }
+.payment-customer { display:block; max-width:190px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.provider-pill { display:inline-flex; padding:5px 8px; border-radius:999px; background:#f4f0ec; color:#665d57; font-size:9px; font-weight:900; }
+.payment-amount { font-weight:1000; white-space:nowrap; }
+.payment-status { display:inline-flex; padding:6px 9px; border-radius:999px; font-size:9px; font-weight:1000; }
+.status-paid { background:#eaf7ee; color:#267346; }
+.status-pending, .status-authorized { background:#fff4df; color:#9b5c00; }
+.status-failed, .status-cancelled { background:#fff0f0; color:#a73535; }
+.status-partial, .status-refunded { background:#eef4ff; color:#355e9b; }
+.provider-reference { max-width:210px; display:inline-block; overflow:hidden; color:#655d56; background:#faf7f4; border-radius:7px; padding:4px 6px; font-size:9px; }
+.payment-date { white-space:nowrap; color:#756d67; }
+.payment-view { color:#171310; font-weight:900; text-decoration:none; white-space:nowrap; }
+.payment-view:hover { color:#ff7900; }
+.payments-empty { padding:38px !important; text-align:center; color:#8c837c !important; }
+@media(max-width:1100px) { .payment-kpis { grid-template-columns:repeat(2,1fr); } .payments-filters { grid-template-columns:1fr 1fr; } .filter-search { grid-column:1/-1; } }
+@media(max-width:650px) { .admin-payments-page { padding:4px; } .payments-heading h1 { font-size:28px; } .payment-kpis { grid-template-columns:1fr; } .payments-filters { grid-template-columns:1fr; } .filter-search { grid-column:auto; } .payments-filter-actions { width:100%; } .payments-filter-actions > * { flex:1; } }
 </style>

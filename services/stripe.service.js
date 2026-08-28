@@ -117,4 +117,128 @@ function constructWebhookEvent(rawBody,signature) {
     return event;
 }
 
-module.exports={getConfig,getClient,maskKey,assertStripeObjectMode,testConnection,createPaymentIntent,retrievePaymentIntent,retrieveEvent,getWebhookSecret,constructWebhookEvent};
+
+/* =========================================================
+   STRIPE REFUNDS — 13.9.4.3
+========================================================= */
+
+async function createRefund({
+    paymentIntentId,
+    amount,
+    reason = null,
+    refundPublicId,
+    paymentId,
+    idempotencyKey
+}) {
+    const config = getConfig();
+
+    /*
+     * 13.9.4.3 est volontairement TEST ONLY.
+     * Même si le projet sait préparer LIVE, cette fonction
+     * refuse explicitement l'environnement live.
+     */
+    if (config.environment !== "test") {
+        const error = new Error(
+            "SECURITE : les remboursements 13.9.4.3 sont autorisés uniquement en Stripe TEST."
+        );
+        error.code = "STRIPE_REFUND_TEST_ONLY";
+        throw error;
+    }
+
+    const intentId = String(paymentIntentId || "").trim();
+
+    if (!intentId.startsWith("pi_")) {
+        const error = new Error(
+            "PaymentIntent Stripe invalide pour le remboursement."
+        );
+        error.code = "STRIPE_REFUND_PAYMENT_INTENT_INVALID";
+        throw error;
+    }
+
+    const numericAmount = Number(amount);
+
+    if (
+        !Number.isFinite(numericAmount)
+        ||
+        numericAmount <= 0
+    ) {
+        const error = new Error(
+            "Montant Stripe Refund invalide."
+        );
+        error.code = "STRIPE_REFUND_AMOUNT_INVALID";
+        throw error;
+    }
+
+    const key = String(idempotencyKey || "").trim();
+
+    if (!key) {
+        const error = new Error(
+            "Clé d'idempotence Stripe Refund obligatoire."
+        );
+        error.code = "STRIPE_REFUND_IDEMPOTENCY_REQUIRED";
+        throw error;
+    }
+
+    const params = {
+        payment_intent: intentId,
+        amount: Math.round(numericAmount),
+
+        metadata: {
+            tioptiopRefundPublicId:
+                String(refundPublicId || ""),
+
+            tioptiopPaymentId:
+                String(paymentId || "")
+        }
+    };
+
+    if (
+        [
+            "duplicate",
+            "fraudulent",
+            "requested_by_customer"
+        ].includes(reason)
+    ) {
+        params.reason = reason;
+    }
+
+    const refund = await getClient()
+        .refunds
+        .create(
+            params,
+            {
+                idempotencyKey: key
+            }
+        );
+
+    assertStripeObjectMode(
+        refund.livemode
+    );
+
+    return refund;
+}
+
+async function retrieveRefund(refundId) {
+    const value = String(refundId || "").trim();
+
+    if (!value.startsWith("re_")) {
+        const error = new Error(
+            "Référence Stripe Refund invalide."
+        );
+        error.code = "STRIPE_REFUND_ID_INVALID";
+        throw error;
+    }
+
+    const refund = await getClient()
+        .refunds
+        .retrieve(value);
+
+    assertStripeObjectMode(
+        refund.livemode
+    );
+
+    return refund;
+}
+
+
+module.exports={getConfig,getClient,maskKey,assertStripeObjectMode,testConnection,createPaymentIntent,retrievePaymentIntent,retrieveEvent,getWebhookSecret,constructWebhookEvent,createRefund,retrieveRefund};
