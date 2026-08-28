@@ -1,741 +1,251 @@
 <section class="admin-heading">
-  <div>
-    <span class="eyebrow">Administration</span>
-    <h1>➕ POS / Nouvelle commande</h1>
-  </div>
+  <div><span class="eyebrow">Administration</span><h1>➕ POS / Nouvelle commande</h1></div>
 </section>
 
 <section class="pos-page">
-
+  <% if (typeof posError !== "undefined" && posError) { %>
+    <div class="pos-alert"><%= posError %></div>
+  <% } %>
 
   <div class="pos-layout">
-
-    <!-- ==================================================
-         COLONNE GAUCHE
-    =================================================== -->
     <div class="pos-panel">
-
       <h3>Client & canal</h3>
-
       <div class="pos-fields">
-
-        <!-- CLIENT -->
-        <select id="posClient" class="pos-field">
-          <option value="guest">Invité</option>
-          <option value="client-demo">Client Démo</option>
-          <option value="nouveau">+ Nouveau client</option>
+        <select id="posClientMode" class="pos-field">
+          <option value="GUEST">Client invité</option>
+          <option value="ACCOUNT">Client avec compte</option>
+          <option value="ANONYMOUS">Comptoir / anonyme</option>
         </select>
-
-        <!-- CANAL -->
         <select id="posChannel" class="pos-field">
-          <option value="pos">Téléphone/POS</option>
-          <option value="restaurant">Sur place</option>
-          <option value="takeaway">À emporter</option>
-          <option value="whatsapp">WhatsApp</option>
+          <option value="POS">POS / comptoir</option>
+          <option value="PHONE">Téléphone</option>
+          <option value="WHATSAPP">WhatsApp</option>
         </select>
-
-        <!-- PAIEMENT -->
         <select id="posPayment" class="pos-field">
-          <option value="cash">Espèces</option>
-          <option value="card">Carte bancaire</option>
-          <option value="mobile">Mobile Money</option>
+          <option value="CASH">Espèces</option><option value="CARD">Carte bancaire</option><option value="MOBILE_MONEY">Mobile Money</option>
         </select>
-
       </div>
 
+      <div id="posGuestCustomer" class="pos-customer-box">
+        <div class="pos-customer-box-title"><strong>Client invité</strong><small>Aucun compte ne sera créé.</small></div>
+        <div class="pos-customer-grid">
+          <input id="posGuestFirstName" class="pos-field" maxlength="100" placeholder="Prénom">
+          <input id="posGuestLastName" class="pos-field" maxlength="100" placeholder="Nom">
+          <input id="posGuestPhone" class="pos-field" type="tel" maxlength="40" placeholder="Téléphone">
+          <input id="posGuestEmail" class="pos-field" type="email" maxlength="190" placeholder="Email (facultatif)">
+        </div>
+        <small class="pos-customer-help">Téléphone obligatoire pour Téléphone / WhatsApp.</small>
+      </div>
 
-      <!-- ==================================================
-           PRODUITS
-      =================================================== -->
+      <div id="posAccountCustomer" class="pos-customer-box" style="display:none">
+        <div class="pos-customer-box-title"><strong>Client avec compte</strong><small>Recherche par nom, téléphone ou email.</small></div>
+        <div class="pos-client-search-row">
+          <input id="posCustomerSearch" class="pos-field" type="search" autocomplete="off" placeholder="Rechercher un client...">
+          <button type="button" id="posCustomerSearchButton" class="pos-client-search-button">Rechercher</button>
+        </div>
+        <div id="posCustomerSearchState" class="pos-customer-help"></div>
+        <div id="posCustomerResults" class="pos-customer-results"></div>
+        <div id="posSelectedCustomer" class="pos-selected-customer" style="display:none"></div>
+      </div>
+
+      <div id="posAnonymousCustomer" class="pos-customer-box" style="display:none">
+        <strong>Commande comptoir / anonyme</strong>
+        <small>Aucune identité client ne sera associée.</small>
+      </div>
+
+      <div class="pos-fulfillment-box">
+        <div class="pos-customer-box-title">
+          <strong>Mode de réception</strong>
+          <small>Préparation de la livraison / du retrait avant création de la commande.</small>
+        </div>
+
+        <div class="pos-pricing-context">
+          <div>
+            <label class="pos-mini-label" for="posRestaurant">Restaurant</label>
+            <select id="posRestaurant" class="pos-field">
+              <% (restaurants || []).forEach(function(restaurant){ %>
+                <option value="<%= restaurant.id %>"><%= restaurant.name %> — <%= restaurant.city %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div id="posDeliveryZoneBlock">
+            <label class="pos-mini-label" for="posDeliveryZone">Zone de livraison</label>
+            <select id="posDeliveryZone" class="pos-field">
+              <option value="">Chargement des zones...</option>
+            </select>
+            <small id="posDeliveryZoneHelp" class="pos-customer-help"></small>
+          </div>
+        </div>
+
+        <div class="pos-fulfillment-types">
+          <label><input type="radio" name="posOrderType" value="DELIVERY" checked> 🚚 Livraison</label>
+          <label><input type="radio" name="posOrderType" value="PICKUP"> 🛍️ Retrait</label>
+          <label><input type="radio" name="posOrderType" value="DINE_IN"> 🍽️ Sur place</label>
+        </div>
+
+        <div id="posDeliveryDetails" class="pos-delivery-details">
+          <div id="posAccountAddressBlock" style="display:none">
+            <label class="pos-mini-label" for="posSavedAddress">Adresse enregistrée du client</label>
+            <select id="posSavedAddress" class="pos-field">
+              <option value="">Choisir une adresse...</option>
+            </select>
+            <div id="posSavedAddressPreview" class="pos-address-preview"></div>
+          </div>
+
+          <div id="posManualAddressBlock">
+            <div class="pos-customer-grid">
+              <input id="posDeliveryRecipient" class="pos-field" maxlength="160" placeholder="Nom du destinataire">
+              <input id="posDeliveryPhone" class="pos-field" type="tel" maxlength="40" placeholder="Téléphone livraison *">
+              <input id="posDeliveryAddress1" class="pos-field" maxlength="255" placeholder="Adresse / rue *">
+              <input id="posDeliveryAddress2" class="pos-field" maxlength="255" placeholder="Complément d'adresse">
+              <input id="posDeliveryDistrict" class="pos-field" maxlength="120" placeholder="Quartier">
+              <input id="posDeliveryCity" class="pos-field" maxlength="120" value="Brazzaville" placeholder="Ville *">
+            </div>
+            <textarea id="posDeliveryInstructions" class="pos-field pos-delivery-instructions" rows="2" placeholder="Instructions de livraison (facultatif)"></textarea>
+          </div>
+        </div>
+
+        <div id="posPickupInformation" class="pos-fulfillment-info" style="display:none">
+          Retrait : aucune adresse de livraison n'est nécessaire.
+        </div>
+        <div id="posDineInInformation" class="pos-fulfillment-info" style="display:none">
+          Sur place : aucune adresse de livraison n'est nécessaire.
+        </div>
+      </div>
 
       <div class="pos-products-header">
-        <h3>Produits</h3>
-
-        <input
-          type="search"
-          id="posProductSearch"
-          placeholder="Rechercher..."
-          oninput="filterPosProducts()"
-        >
+        <div><h3>Catalogue réel</h3><small><%= products.length %> produit(s) · <%= formulas.length %> formule(s)</small></div>
+        <input type="search" id="posProductSearch" placeholder="Rechercher un produit ou une formule...">
       </div>
 
+      <div class="pos-filters" id="posCategoryFilters">
+        <button type="button" class="active" data-category="all">Tout</button>
+        <% categories.forEach(category => { %>
+          <button type="button" data-category="<%= category.id %>"><%= category.icon || "" %> <%= category.name %></button>
+        <% }) %>
+        <% if (formulas.length) { %><button type="button" data-category="formula">🍱 Formules</button><% } %>
+      </div>
 
       <div class="pos-products-list" id="posProductsList">
+        <% if (!products.length && !formulas.length) { %><div class="pos-empty-catalog">Aucun produit ou formule actif.</div><% } %>
 
-        <!-- PRODUIT 1 -->
-        <div
-          class="pos-product"
-          data-name="Saka-Saka Royal"
-        >
-
-          <div class="pos-product-info">
-
-            <div class="pos-product-icon">
-              🌿
+        <% products.forEach(item => { %>
+          <article class="pos-product" data-name="<%= item.name.toLowerCase() %>" data-category="<%= item.categoryId %>">
+            <div class="pos-product-info">
+              <div class="pos-product-icon">
+                <% if (item.image) { %><img src="<%= item.image %>" alt="<%= item.name %>"><% } else { %><span><%= item.icon %></span><% } %>
+              </div>
+              <div><strong><%= item.name %></strong><small><%= item.categoryName %></small><b><%= new Intl.NumberFormat('fr-FR').format(item.price) %> <%= item.currency %></b></div>
             </div>
+            <button type="button" class="pos-add-button" data-pos-item='<%- JSON.stringify(item).replace(/'/g, "&#39;") %>'>Détails / Ajouter</button>
+          </article>
+        <% }) %>
 
-            <div>
-              <strong>Saka-Saka Royal</strong>
-              <small>8,90 €</small>
+        <% formulas.forEach(item => { %>
+          <article class="pos-product" data-name="<%= item.name.toLowerCase() %>" data-category="formula">
+            <div class="pos-product-info">
+              <div class="pos-product-icon formula">
+                <% if (item.image) { %><img src="<%= item.image %>" alt="<%= item.name %>"><% } else { %><span>🍱</span><% } %>
+              </div>
+              <div><strong><%= item.name %></strong><small>Formule</small><b><%= new Intl.NumberFormat('fr-FR').format(item.price) %> <%= item.currency %></b></div>
             </div>
-
-          </div>
-
-          <button
-            type="button"
-            class="pos-add-button"
-            onclick="addPosProduct(
-              'saka',
-              'Saka-Saka Royal',
-              8.90,
-              '🌿'
-            )"
-          >
-            Ajouter
-          </button>
-
-        </div>
-
-
-        <!-- PRODUIT 2 -->
-        <div
-          class="pos-product"
-          data-name="Poulet Braisé Tiop"
-        >
-
-          <div class="pos-product-info">
-
-            <div class="pos-product-icon">
-              🔥
-            </div>
-
-            <div>
-              <strong>Poulet Braisé Tiop</strong>
-              <small>12,90 €</small>
-            </div>
-
-          </div>
-
-          <button
-            type="button"
-            class="pos-add-button"
-            onclick="addPosProduct(
-              'poulet',
-              'Poulet Braisé Tiop',
-              12.90,
-              '🔥'
-            )"
-          >
-            Ajouter
-          </button>
-
-        </div>
-
-
-        <!-- PRODUIT 3 -->
-        <div
-          class="pos-product"
-          data-name="Haricots Madesu"
-        >
-
-          <div class="pos-product-info">
-
-            <div class="pos-product-icon">
-              🍲
-            </div>
-
-            <div>
-              <strong>Haricots Madesu</strong>
-              <small>7,90 €</small>
-            </div>
-
-          </div>
-
-          <button
-            type="button"
-            class="pos-add-button"
-            onclick="addPosProduct(
-              'haricots',
-              'Haricots Madesu',
-              7.90,
-              '🍲'
-            )"
-          >
-            Ajouter
-          </button>
-
-        </div>
-
-
-        <!-- PRODUIT 4 -->
-        <div
-          class="pos-product"
-          data-name="Maboké de Poisson"
-        >
-
-          <div class="pos-product-info">
-
-            <div class="pos-product-icon">
-              🐟
-            </div>
-
-            <div>
-              <strong>Maboké de Poisson</strong>
-              <small>13,50 €</small>
-            </div>
-
-          </div>
-
-          <button
-            type="button"
-            class="pos-add-button"
-            onclick="addPosProduct(
-              'maboke',
-              'Maboké de Poisson',
-              13.50,
-              '🐟'
-            )"
-          >
-            Ajouter
-          </button>
-
-        </div>
-
-
-        <!-- PRODUIT 5 -->
-        <div
-          class="pos-product"
-          data-name="Brochettes Congo"
-        >
-
-          <div class="pos-product-info">
-
-            <div class="pos-product-icon">
-              🥩
-            </div>
-
-            <div>
-              <strong>Brochettes Congo</strong>
-              <small>10,00 €</small>
-            </div>
-
-          </div>
-
-          <button
-            type="button"
-            class="pos-add-button"
-            onclick="addPosProduct(
-              'brochettes',
-              'Brochettes Congo',
-              10,
-              '🥩'
-            )"
-          >
-            Ajouter
-          </button>
-
-        </div>
-
-
-        <!-- PRODUIT 6 -->
-        <div
-          class="pos-product"
-          data-name="Poulet Moambe"
-        >
-
-          <div class="pos-product-info">
-
-            <div class="pos-product-icon">
-              🍗
-            </div>
-
-            <div>
-              <strong>Poulet Moambe</strong>
-              <small>11,90 €</small>
-            </div>
-
-          </div>
-
-          <button
-            type="button"
-            class="pos-add-button"
-            onclick="addPosProduct(
-              'moambe',
-              'Poulet Moambe',
-              11.90,
-              '🍗'
-            )"
-          >
-            Ajouter
-          </button>
-
-        </div>
-
-
-        <!-- PRODUIT 7 -->
-        <div
-          class="pos-product"
-          data-name="Banane Plantain"
-        >
-
-          <div class="pos-product-info">
-
-            <div class="pos-product-icon">
-              🍌
-            </div>
-
-            <div>
-              <strong>Banane Plantain</strong>
-              <small>4,00 €</small>
-            </div>
-
-          </div>
-
-          <button
-            type="button"
-            class="pos-add-button"
-            onclick="addPosProduct(
-              'plantain',
-              'Banane Plantain',
-              4,
-              '🍌'
-            )"
-          >
-            Ajouter
-          </button>
-
-        </div>
-
+            <button type="button" class="pos-add-button" data-pos-item='<%- JSON.stringify(item).replace(/'/g, "&#39;") %>'>Détails / Ajouter</button>
+          </article>
+        <% }) %>
       </div>
-
     </div>
 
-
-    <!-- ==================================================
-         PANIER POS
-    =================================================== -->
-
     <aside class="pos-panel pos-cart-panel">
-
-      <h3>Panier POS</h3>
-
-      <div id="posCartEmpty" class="pos-cart-empty">
-        Panier vide.
-      </div>
-
+      <div class="pos-cart-title"><div><h3>Panier POS</h3><small id="posCartCount">0 article</small></div><button type="button" id="clearPosCartButton" class="pos-clear-cart">Vider</button></div>
+      <div id="posCartEmpty" class="pos-cart-empty">Panier vide.</div>
       <div id="posCartItems"></div>
-
-
-      <!-- TOTAL -->
-      <div
-        id="posCartSummary"
-        class="pos-cart-summary"
-        style="display:none;"
-      >
-
-        <div>
-          <span>Sous-total</span>
-          <strong id="posSubtotal">0,00 €</strong>
-        </div>
-
-        <div>
-          <span>Livraison</span>
-          <strong>0,00 €</strong>
-        </div>
-
-        <div class="pos-total">
-          <span>Total</span>
-          <strong id="posTotal">0,00 €</strong>
-        </div>
-
+      <div id="posCartSummary" class="pos-cart-summary" style="display:none">
+        <div><span>Sous-total</span><strong id="posSubtotal">0 XAF</strong></div>
+        <div><span>Réduction</span><strong id="posDiscount">0 XAF</strong></div>
+        <div><span>Livraison</span><strong id="posDeliveryFee">0 XAF</strong></div>
+        <div><span>Taxes</span><strong id="posTaxAmount">0 XAF</strong></div>
+        <div class="pos-total"><span>Total</span><strong id="posTotal">0 XAF</strong></div>
+        <small id="posCalculationState" class="pos-calculation-state"></small>
       </div>
-
-
-      <!-- INFORMATION PAIEMENT -->
-
-      <div
-        id="posPaymentInformation"
-        class="pos-payment-information"
-      >
-        Espèces = EN ATTENTE jusqu'à confirmation de l'encaissement.
-      </div>
-
-
-      <!-- CRÉATION COMMANDE -->
-
-      <button
-        type="button"
-        id="createPosOrderButton"
-        class="pos-create-order"
-        onclick="createPosOrder()"
-      >
-        Créer la commande
-      </button>
-
+      <div id="posPaymentInformation" class="pos-payment-information">Espèces : encaissement à confirmer dans l'étape paiement.</div>
+      <button type="button" id="createPosOrderButton" class="pos-create-order">Continuer la commande</button>
+      <small class="pos-step-note">13.9.6.7 : après vérification, la commande et son paiement PENDING sont créés atomiquement en MySQL.</small>
     </aside>
-
   </div>
-
 </section>
 
+
+<div id="posItemModal" class="pos-item-modal" hidden>
+  <div class="pos-item-backdrop" data-pos-item-close></div>
+  <section class="pos-item-dialog" role="dialog" aria-modal="true" aria-labelledby="posItemModalTitle">
+    <div class="pos-item-head">
+      <div>
+        <small id="posItemKind">Produit</small>
+        <h2 id="posItemModalTitle">Détails</h2>
+      </div>
+      <button type="button" class="pos-item-close" data-pos-item-close aria-label="Fermer">×</button>
+    </div>
+    <div id="posItemModalError" class="pos-review-error" hidden></div>
+    <div id="posItemModalLoading" class="pos-item-loading">Chargement…</div>
+    <div id="posItemModalBody" hidden>
+      <div class="pos-item-summary">
+        <img id="posItemImage" alt="" hidden>
+        <div>
+          <p id="posItemDescription"></p>
+          <strong id="posItemBasePrice"></strong>
+        </div>
+      </div>
+
+      <div id="posItemOptions"></div>
+      <div id="posFormulaComposition"></div>
+
+      <div class="pos-item-quantity-row">
+        <strong>Quantité</strong>
+        <div class="pos-quantity">
+          <button type="button" id="posItemQtyMinus">−</button>
+          <strong id="posItemQtyValue">1</strong>
+          <button type="button" id="posItemQtyPlus">+</button>
+        </div>
+      </div>
+
+      <label class="pos-item-instructions-label" for="posItemInstructions">Instructions pour la cuisine</label>
+      <textarea id="posItemInstructions" class="pos-field pos-item-instructions" maxlength="2000" rows="3" placeholder="Ex. sans oignon, sauce à part, bien cuit…"></textarea>
+
+      <div class="pos-item-footer">
+        <div><small>Prix unitaire estimé</small><strong id="posItemCalculatedPrice">0 XAF</strong></div>
+        <button type="button" id="posItemAddButton" class="button primary">Ajouter au panier POS</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="posReviewModal" class="pos-review-modal" hidden>
+  <div class="pos-review-backdrop" data-pos-review-close></div>
+  <section class="pos-review-dialog" role="dialog" aria-modal="true" aria-labelledby="posReviewTitle">
+    <div class="pos-review-head">
+      <div><small>13.9.6.7 — Vérification avant création réelle</small><h2 id="posReviewTitle">Récapitulatif de la commande</h2></div>
+      <button type="button" class="pos-review-close" data-pos-review-close aria-label="Fermer">×</button>
+    </div>
+    <div id="posReviewError" class="pos-review-error" hidden></div>
+    <div class="pos-review-grid">
+      <div class="pos-review-card"><h3>Client & canal</h3><div id="posReviewCustomer"></div></div>
+      <div class="pos-review-card"><h3>Réception</h3><div id="posReviewFulfillment"></div></div>
+    </div>
+    <div class="pos-review-card"><h3>Articles</h3><div id="posReviewItems"></div></div>
+    <div class="pos-review-card"><h3>Montants vérifiés par le serveur</h3><div id="posReviewTotals"></div><small class="pos-review-security">Prix, frais et total recalculés côté serveur/MySQL.</small></div>
+    <div class="pos-review-card"><h3>Paiement prévu</h3><div id="posReviewPayment"></div><small>Le paiement réel sera traité après création de la commande.</small></div>
+    <div class="pos-review-actions">
+      <button type="button" class="button" data-pos-review-close>Modifier</button>
+      <button type="button" id="posReviewConfirmButton" class="button primary">Créer réellement la commande</button>
+    </div>
+    <p class="pos-review-note">Après confirmation, la commande, les articles, les options, l’historique et le paiement PENDING seront enregistrés dans une seule transaction.</p>
+  </section>
+</div>
+
 <style>
-  /* =====================================================
-   POS
-===================================================== */
+.pos-page{padding:20px}.pos-layout{display:grid;grid-template-columns:1.25fr .9fr;gap:14px;align-items:start}.pos-panel{background:#fff;border-radius:18px;padding:18px;min-width:0;box-shadow:0 5px 22px rgba(0,0,0,.04)}.pos-panel h3{margin:0 0 14px}.pos-fields{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}.pos-field,#posProductSearch{min-height:42px;border:1px solid #ddd;border-radius:10px;background:#fff;padding:0 12px;outline:none}.pos-field:focus,#posProductSearch:focus{border-color:#ff7900}.pos-pricing-context{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.pos-pricing-context .pos-field{width:100%}.pos-fulfillment-box{border:1px solid #ece7e2;background:#fff;border-radius:14px;padding:13px;margin:0 0 18px}.pos-fulfillment-types{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.pos-fulfillment-types label{border:1px solid #e5e5e5;border-radius:22px;padding:8px 12px;cursor:pointer;background:#fff}.pos-fulfillment-types label:has(input:checked){border-color:#ff7900;background:#fff4e9}.pos-fulfillment-types input{margin-right:5px}.pos-delivery-details{display:grid;gap:10px}.pos-mini-label{display:block;font-size:12px;font-weight:800;margin-bottom:5px}.pos-address-preview{margin-top:7px;color:#555;font-size:12px}.pos-delivery-instructions{width:100%;margin-top:8px;resize:vertical}.pos-fulfillment-info{border-radius:10px;background:#f5f5f5;padding:10px;color:#666}.pos-customer-box{border:1px solid #ece7e2;background:#fffaf6;border-radius:14px;padding:13px;margin:-8px 0 18px}.pos-customer-box-title{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}.pos-customer-box-title small,.pos-customer-help{color:#777}.pos-customer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.pos-client-search-row{display:grid;grid-template-columns:1fr auto;gap:8px}.pos-client-search-button{border:0;border-radius:10px;background:#17130f;color:#fff;padding:0 16px;font-weight:800;cursor:pointer}.pos-customer-results{display:grid;gap:7px;margin-top:8px}.pos-customer-result{width:100%;border:1px solid #e5e5e5;background:#fff;border-radius:11px;padding:10px 12px;text-align:left;cursor:pointer;display:flex;justify-content:space-between;gap:12px}.pos-customer-result:hover{border-color:#ff7900}.pos-customer-result strong,.pos-customer-result small{display:block}.pos-customer-result small{color:#777}.pos-selected-customer{margin-top:9px;border:1px solid #b9dfc7;background:#eefaf2;border-radius:11px;padding:11px}.pos-selected-customer-head{display:flex;justify-content:space-between;gap:10px}.pos-selected-customer button{border:0;background:none;color:#b42318;cursor:pointer}.pos-customer-error{color:#b42318}.pos-products-header{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:10px}.pos-products-header h3{margin-bottom:2px}.pos-products-header small{color:#777}.pos-products-header input{width:min(330px,100%)}.pos-filters{display:flex;gap:7px;overflow-x:auto;padding:2px 0 12px}.pos-filters button{white-space:nowrap;border:1px solid #e3e3e3;background:#fff;border-radius:999px;padding:8px 12px;cursor:pointer}.pos-filters button.active{background:#ff7900;color:#fff;border-color:#ff7900}.pos-products-list{border:1px solid #e5e5e5;border-radius:14px;max-height:520px;overflow-y:auto;padding:8px}.pos-product{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #eee;border-radius:12px;padding:10px;margin-bottom:8px}.pos-product:hover{border-color:#ff7900;background:#fffaf5}.pos-product-info{display:flex;align-items:center;gap:12px;min-width:0}.pos-product-info strong,.pos-product-info small,.pos-product-info b{display:block}.pos-product-info small{color:#777;margin:2px 0}.pos-product-info b{font-size:13px}.pos-product-icon{width:52px;height:52px;border-radius:12px;background:#fff2df;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 52px;font-size:22px}.pos-product-icon.formula{background:#fff5e8}.pos-product-icon img{width:100%;height:100%;object-fit:cover}.pos-add-button{border:0;background:#fff;padding:9px 15px;border-radius:25px;font-weight:800;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,.06)}.pos-add-button:hover{background:#ff7900;color:#fff}.pos-cart-panel{position:sticky;top:16px;min-height:430px}.pos-cart-title{display:flex;align-items:center;justify-content:space-between;gap:12px}.pos-cart-title h3{margin-bottom:2px}.pos-cart-title small{color:#777}.pos-clear-cart{border:1px solid #ddd;background:#fff;border-radius:20px;padding:7px 12px;cursor:pointer}.pos-cart-empty,.pos-empty-catalog{color:#777;padding:16px 4px}.pos-cart-item{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #eee}.pos-cart-product{display:flex;align-items:center;gap:9px;min-width:0}.pos-cart-product strong,.pos-cart-product small{display:block}.pos-cart-product small{color:#777}.pos-quantity{display:flex;align-items:center;gap:7px}.pos-quantity button{width:28px;height:28px;border:1px solid #ddd;background:#fff;border-radius:50%;cursor:pointer}.pos-remove{border:0;background:none;color:#b42318;cursor:pointer;font-size:12px}.pos-cart-summary{border-top:1px solid #eee;margin-top:12px;padding-top:12px}.pos-cart-summary>div{display:flex;justify-content:space-between;margin-bottom:9px}.pos-total{border-top:1px solid #ddd;padding-top:12px;font-size:18px}.pos-payment-information{background:#eaf8ef;color:#377450;padding:12px;border-radius:10px;margin-top:12px;font-size:13px}.pos-calculation-state{display:block;margin-top:8px;color:#377450}.pos-calculation-state.error{color:#b42318}.pos-create-order:disabled{opacity:.5;cursor:not-allowed}.pos-create-order{width:100%;border:0;margin-top:12px;padding:13px;border-radius:30px;background:#ff7900;color:#fff;font-weight:800;cursor:pointer}.pos-step-note{display:block;color:#777;margin-top:8px;text-align:center}.pos-alert{background:#fff0f0;color:#a00;padding:12px;border-radius:10px;margin-bottom:12px}@media(max-width:900px){.pos-layout{grid-template-columns:1fr}.pos-cart-panel{position:static}.pos-fields{grid-template-columns:1fr}}@media(max-width:600px){.pos-pricing-context{grid-template-columns:1fr}.pos-customer-grid{grid-template-columns:1fr}.pos-client-search-row{grid-template-columns:1fr}.pos-page{padding:10px}.pos-products-header{align-items:stretch;flex-direction:column}.pos-products-header input{width:100%}.pos-cart-item{grid-template-columns:1fr}.pos-product{align-items:flex-start}}
+.pos-review-modal[hidden]{display:none}.pos-review-modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:18px}.pos-review-backdrop{position:absolute;inset:0;background:rgba(20,16,12,.55)}.pos-review-dialog{position:relative;width:min(820px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:18px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.25)}.pos-review-head{display:flex;justify-content:space-between;gap:15px;align-items:flex-start;margin-bottom:14px}.pos-review-head h2{margin:3px 0 0}.pos-review-close{border:0;background:#f3f3f3;border-radius:50%;width:36px;height:36px;font-size:22px}.pos-review-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.pos-review-card{border:1px solid #ebe6e1;border-radius:13px;padding:12px;margin-bottom:10px}.pos-review-card h3{margin:0 0 8px;font-size:14px}.pos-review-line{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px dashed #eee}.pos-review-line strong{text-align:right}.pos-review-item{display:grid;grid-template-columns:1fr auto;gap:10px;padding:7px 0;border-bottom:1px solid #eee}.pos-review-item small{display:block;color:#777}.pos-review-security{display:block;color:#3c8b5b;margin-top:8px}.pos-review-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}.pos-review-note{text-align:center;color:#888;font-size:12px}.pos-review-error{background:#fff0f0;color:#b42318;padding:10px;border-radius:10px;margin-bottom:10px}@media(max-width:650px){.pos-review-grid{grid-template-columns:1fr}.pos-review-actions{flex-direction:column}}
+.pos-item-modal[hidden]{display:none}.pos-item-modal{position:fixed;inset:0;z-index:1100;display:grid;place-items:center;padding:18px}.pos-item-backdrop{position:absolute;inset:0;background:rgba(20,16,12,.58)}.pos-item-dialog{position:relative;width:min(720px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:18px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.25)}.pos-item-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}.pos-item-head h2{margin:3px 0 0}.pos-item-head small{color:#ff7900;font-weight:800}.pos-item-close{border:0;background:#f3f3f3;border-radius:50%;width:36px;height:36px;font-size:22px;cursor:pointer}.pos-item-loading{padding:24px;text-align:center;color:#777}.pos-item-summary{display:flex;gap:12px;align-items:center;border:1px solid #eee;border-radius:13px;padding:12px;margin-bottom:12px}.pos-item-summary img{width:74px;height:74px;object-fit:cover;border-radius:12px}.pos-item-summary p{margin:0 0 6px;color:#666}.pos-option-group{border:1px solid #ebe6e1;border-radius:13px;padding:12px;margin-bottom:10px}.pos-option-group-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px}.pos-option-group-head small{color:#b35b00}.pos-option-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-top:1px solid #f1f1f1}.pos-option-row label{display:flex;gap:8px;align-items:center;cursor:pointer}.pos-formula-composition{border:1px solid #ebe6e1;border-radius:13px;padding:12px;margin-bottom:10px}.pos-formula-composition h3{margin:0 0 9px}.pos-formula-component{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid #f1f1f1}.pos-formula-component-info{display:flex;align-items:center;gap:9px}.pos-formula-component img{width:42px;height:42px;object-fit:cover;border-radius:9px}.pos-item-quantity-row{display:flex;justify-content:space-between;align-items:center;border:1px solid #eee;border-radius:12px;padding:12px;margin:10px 0}.pos-item-instructions-label{display:block;font-weight:800;margin:8px 0 6px}.pos-item-instructions{width:100%;padding:10px;resize:vertical}.pos-item-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px}.pos-item-footer small,.pos-item-footer strong{display:block}.pos-cart-customization{margin-top:4px;color:#6b645e;font-size:11px;line-height:1.4}.pos-cart-instructions{display:block;margin-top:3px;color:#8a4e16;font-style:italic}.pos-review-options{display:block;color:#666;margin-top:3px;font-size:12px}@media(max-width:600px){.pos-item-footer{align-items:stretch;flex-direction:column}.pos-item-footer .button{width:100%}}
 
-.pos-page {
-    padding: 20px;
-}
-
-.pos-page-header {
-    margin-bottom: 20px;
-}
-
-.pos-page-header h1 {
-    margin: 8px 0 0;
-    font-size: 32px;
-}
-
-.pos-layout {
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 12px;
-    align-items: stretch;
-}
-
-.pos-panel {
-    background: #fff;
-    border-radius: 18px;
-    padding: 18px;
-    min-width: 0;
-}
-
-.pos-panel h3 {
-    margin: 0 0 15px;
-}
-
-
-/* =========================
-   CHAMPS
-========================= */
-
-.pos-fields {
-    display: grid;
-    gap: 8px;
-    margin-bottom: 18px;
-}
-
-.pos-field {
-    width: 100%;
-    min-height: 42px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background: #fff;
-    padding: 0 12px;
-    outline: none;
-}
-
-.pos-field:focus {
-    border-color: #ff7900;
-}
-
-
-/* =========================
-   PRODUITS
-========================= */
-
-.pos-products-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 15px;
-}
-
-.pos-products-header input {
-    display: none;
-    max-width: 230px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    padding: 10px 12px;
-}
-
-.pos-products-list {
-    border: 1px solid #ddd;
-    border-radius: 14px;
-
-    max-height: 430px;
-    overflow-y: auto;
-
-    padding: 8px;
-}
-
-.pos-product {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    border: 1px solid #ddd;
-    border-radius: 11px;
-
-    padding: 10px;
-    margin-bottom: 8px;
-
-    transition: .15s;
-}
-
-.pos-product:last-child {
-    margin-bottom: 0;
-}
-
-.pos-product:hover {
-    border-color: #ff7900;
-    background: #fffaf5;
-}
-
-.pos-product-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.pos-product-info strong,
-.pos-product-info small {
-    display: block;
-}
-
-.pos-product-info small {
-    margin-top: 3px;
-    color: #777;
-}
-
-.pos-product-icon {
-    width: 42px;
-    height: 42px;
-
-    border-radius: 12px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: #fff2df;
-
-    font-size: 20px;
-}
-
-.pos-add-button {
-    border: 0;
-    background: #fff;
-
-    padding: 9px 15px;
-
-    border-radius: 25px;
-
-    font-weight: 800;
-    cursor: pointer;
-
-    box-shadow: 0 4px 15px rgba(0,0,0,.05);
-}
-
-.pos-add-button:hover {
-    background: #ff7900;
-    color: #fff;
-}
-
-
-/* =========================
-   PANIER
-========================= */
-
-.pos-cart-panel {
-    min-height: 560px;
-}
-
-.pos-cart-empty {
-    color: #777;
-    margin-bottom: 12px;
-}
-
-
-/* ARTICLE PANIER */
-
-.pos-cart-item {
-    display: grid;
-
-    grid-template-columns:
-        minmax(0,1fr)
-        auto
-        auto;
-
-    align-items: center;
-
-    gap: 15px;
-
-    padding: 12px 0;
-
-    border-bottom: 1px solid #eee;
-}
-
-.pos-cart-product {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.pos-cart-product strong,
-.pos-cart-product small {
-    display: block;
-}
-
-.pos-cart-product small {
-    color: #777;
-    margin-top: 3px;
-}
-
-
-/* QUANTITÉ */
-
-.pos-quantity {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.pos-quantity button {
-    width: 27px;
-    height: 27px;
-
-    border: 1px solid #ddd;
-    background: #fff;
-
-    border-radius: 50%;
-
-    cursor: pointer;
-}
-
-
-/* SUPPRESSION */
-
-.pos-remove {
-    border: none;
-    background: transparent;
-
-    color: #b8432c;
-
-    cursor: pointer;
-    font-weight: 700;
-}
-
-
-/* =========================
-   RÉCAPITULATIF
-========================= */
-
-.pos-cart-summary {
-    margin-top: 20px;
-
-    border-top: 1px solid #eee;
-
-    padding-top: 15px;
-}
-
-.pos-cart-summary > div {
-    display: flex;
-    justify-content: space-between;
-
-    margin-bottom: 9px;
-}
-
-.pos-cart-summary .pos-total {
-    border-top: 1px solid #ddd;
-
-    margin-top: 12px;
-    padding-top: 14px;
-
-    font-size: 18px;
-}
-
-
-/* =========================
-   PAIEMENT
-========================= */
-
-.pos-payment-information {
-    background: #eaf8ef;
-    color: #377450;
-
-    padding: 12px;
-
-    border-radius: 10px;
-
-    margin-top: 12px;
-
-    font-size: 13px;
-}
-
-
-/* =========================
-   BOUTON COMMANDE
-========================= */
-
-.pos-create-order {
-    width: 100%;
-
-    border: none;
-
-    margin-top: 12px;
-
-    padding: 13px;
-
-    border-radius: 30px;
-
-    background: #ff7900;
-    color: white;
-
-    font-weight: 800;
-
-    cursor: pointer;
-}
-
-.pos-create-order:hover {
-    background: #e96f00;
-}
-
-
-/* =========================
-   RESPONSIVE
-========================= */
-
-@media(max-width: 900px) {
-
-    .pos-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .pos-cart-panel {
-        min-height: auto;
-    }
-
-}
-
-@media(max-width: 600px) {
-
-    .pos-page {
-        padding: 12px;
-    }
-
-    .pos-page-header h1 {
-        font-size: 25px;
-    }
-
-    .pos-product {
-        gap: 10px;
-    }
-
-    .pos-cart-item {
-        grid-template-columns: 1fr;
-    }
-
-}
 </style>
 <script src="/js/admin-pos.js"></script>

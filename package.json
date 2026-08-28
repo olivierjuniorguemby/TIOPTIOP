@@ -9,7 +9,8 @@
     "start": "node app.js",
     "dev": "nodemon app.js",
     "check": "node scripts/check-project.js",
-    "db:test": "node scripts/test-database.js"
+    "db:test": "node scripts/test-database.js",
+    "audit:pos-payments": "node scripts/audit-pos-payments-final.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

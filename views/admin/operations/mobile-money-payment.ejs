@@ -1,0 +1,58 @@
+<% const ref = order.reference || order.order_reference || ''; const amount = Number(order.total_amount || payment.amount || 0); const providerRef = payment.provider_reference || ''; %>
+<style>
+.momo-shell{max-width:920px;margin:28px auto 56px;padding:0 18px}.momo-head{text-align:center;margin-bottom:20px}.momo-pill{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;background:#fff1d8;color:#9a4b00;font-size:12px;font-weight:900}.momo-head h1{margin:13px 0 6px;font-size:32px;letter-spacing:-.8px}.momo-head p{margin:0;color:#6f665f}.momo-card{background:#fff;border:1px solid #eadfd5;border-radius:22px;box-shadow:0 18px 55px rgba(31,23,17,.08);overflow:hidden}.momo-summary{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid #eee2d8}.momo-stat{padding:18px 20px;border-right:1px solid #eee2d8}.momo-stat:last-child{border-right:0}.momo-label{display:block;color:#887d73;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}.momo-value{font-weight:950;word-break:break-word}.momo-value.orange{color:#ff7900}.momo-body{padding:24px}.momo-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:18px}.momo-panel{border:1px solid #eee2d8;border-radius:16px;padding:18px}.momo-panel h3{margin:0 0 6px;font-size:16px}.momo-help{color:#7a7067;font-size:13px;line-height:1.5;margin:0 0 14px}.momo-input{width:100%;height:48px;border:1px solid #d9cec5;border-radius:12px;padding:0 14px;font-size:16px;outline:none}.momo-input:focus{border-color:#ff7900;box-shadow:0 0 0 3px rgba(255,121,0,.12)}.momo-btn{width:100%;min-height:46px;border:0;border-radius:999px;padding:11px 16px;font-weight:900;cursor:pointer}.momo-btn.primary{background:#ff7900;color:#fff;margin-top:12px}.momo-btn.secondary{background:#fff;border:1px solid #ddd1c7;color:#211b17}.momo-btn:disabled{opacity:.55;cursor:not-allowed}.momo-status{margin-top:16px;border-radius:14px;padding:14px 15px;border:1px solid #f0dfc9;background:#fff8ef}.momo-status.success{background:#ecfdf3;border-color:#bce8ca;color:#176534}.momo-status.failed{background:#fff0f0;border-color:#f1c0c0;color:#9f2424}.momo-status.pending{background:#fff8ef;border-color:#f0dfc9;color:#7c4a16}.momo-status-title{font-weight:950;margin-bottom:3px}.momo-status-text{font-size:13px;line-height:1.45}.momo-steps{display:grid;gap:11px;margin-top:12px}.momo-step{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.4}.momo-step b{display:grid;place-items:center;flex:0 0 24px;height:24px;border-radius:50%;background:#fff1e5;color:#d86100}.momo-test{margin-top:16px;padding:14px;border-radius:14px;background:#f8f6f3;font-size:12px;line-height:1.55;color:#655c55}.momo-test strong{color:#211b17}.momo-actions{display:flex;gap:10px;margin-top:16px}.momo-actions>*{flex:1;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center}.momo-ref{margin-top:10px;font-size:11px;color:#8a8179;word-break:break-all}.momo-loader{display:none;width:14px;height:14px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:mspin .8s linear infinite;margin-right:7px}.loading .momo-loader{display:inline-block}@keyframes mspin{to{transform:rotate(360deg)}}
+@media(max-width:760px){.momo-summary{grid-template-columns:1fr}.momo-stat{border-right:0;border-bottom:1px solid #eee2d8}.momo-stat:last-child{border-bottom:0}.momo-grid{grid-template-columns:1fr}.momo-actions{flex-direction:column}.momo-head h1{font-size:27px}}
+</style>
+<div class="momo-shell">
+ <div class="momo-head"><span class="momo-pill">📱 MTN MoMo · SANDBOX</span><h1>Paiement Mobile Money</h1><p>Encaissement sécurisé de la commande <strong><%= ref %></strong></p></div>
+ <section class="momo-card">
+  <div class="momo-summary">
+   <div class="momo-stat"><span class="momo-label">Commande</span><div class="momo-value"><%= ref %></div></div>
+   <div class="momo-stat"><span class="momo-label">Montant TiopTiop</span><div class="momo-value orange"><%= amount.toLocaleString('fr-FR') %> XAF</div></div>
+   <div class="momo-stat"><span class="momo-label">Statut</span><div class="momo-value" id="localStatus"><%= payment.status %></div></div>
+  </div>
+  <div class="momo-body">
+   <div class="momo-grid">
+    <div class="momo-panel">
+     <h3>Demander le paiement</h3><p class="momo-help">Saisissez le numéro MTN MoMo du payeur. TiopTiop restera en <strong>PENDING</strong> tant que MTN n'aura pas retourné un statut final.</p>
+     <label class="momo-label" for="momoMsisdn">Numéro MTN Mobile Money</label>
+     <input id="momoMsisdn" class="momo-input" value="<%= defaultPhone %>" placeholder="Ex. 46733123470" inputmode="numeric" autocomplete="tel">
+     <button id="startMomo" class="momo-btn primary"><span class="momo-loader"></span><span class="btnText"><%= providerRef ? 'Demande déjà envoyée' : 'Envoyer la demande MTN MoMo TEST' %></span></button>
+     <div id="momoMessage" class="momo-status pending"><div class="momo-status-title">En attente d'une demande</div><div class="momo-status-text">Le paiement n'est jamais validé localement sans confirmation de MTN.</div></div>
+     <div id="providerRef" class="momo-ref"><% if(providerRef){ %>Référence MTN : <%= providerRef %><% } %></div>
+     <div class="momo-actions"><button id="checkMomo" class="momo-btn secondary">↻ Vérifier maintenant</button><a class="momo-btn secondary" href="/admin/commandes/<%= encodeURIComponent(ref) %>">Retour à la commande</a></div>
+    </div>
+    <aside class="momo-panel">
+     <h3>Comment fonctionne le test ?</h3>
+     <div class="momo-steps"><div class="momo-step"><b>1</b><span>TiopTiop envoie <strong>RequestToPay</strong> à MTN.</span></div><div class="momo-step"><b>2</b><span>MTN accepte la demande puis traite la transaction de façon asynchrone.</span></div><div class="momo-step"><b>3</b><span>TiopTiop interroge MTN automatiquement. Seul <strong>SUCCESSFUL</strong> devient <strong>PAID</strong>.</span></div></div>
+     <div class="momo-test"><strong>Numéros sandbox MTN</strong><br>Pour RequestToPay, MTN réserve notamment 46733123450 à 46733123463 à différents scénarios d'erreur/attente. Un autre numéro de test, par exemple <strong>46733123470</strong>, doit suivre le scénario de succès du sandbox.<br><br><strong>Important :</strong> le sandbox utilise sa propre devise/montant technique ; le montant commercial TiopTiop reste celui affiché ci-dessus.</div>
+    </aside>
+   </div>
+  </div>
+ </section>
+</div>
+<script>
+(()=>{
+ const ref=<%- JSON.stringify(ref) %>, initialProviderRef=<%- JSON.stringify(providerRef) %>;
+ const start=document.getElementById('startMomo'), check=document.getElementById('checkMomo'), msg=document.getElementById('momoMessage'), status=document.getElementById('localStatus'), phone=document.getElementById('momoMsisdn'), providerRefBox=document.getElementById('providerRef');
+ let timer=null, checks=0, busy=false;
+ function paint(kind,title,text){msg.className='momo-status '+kind;msg.innerHTML=`<div class="momo-status-title">${title}</div><div class="momo-status-text">${text}</div>`;}
+ function setBusy(v){busy=v;check.disabled=v; if(v) check.textContent='Vérification…'; else check.textContent='↻ Vérifier maintenant';}
+ async function sync(auto=false){
+  if(busy)return; setBusy(true);
+  try{const r=await fetch(`/admin/pos/mobile-money/${encodeURIComponent(ref)}/sync`,{method:'POST',headers:{Accept:'application/json'}});const d=await r.json();if(!r.ok||!d.success)throw new Error(d.message||'Vérification MTN impossible.');
+   const ps=String(d.providerStatus||'PENDING').toUpperCase(), ls=String(d.payment?.status||'PENDING').toUpperCase(); status.textContent=ls;
+   if(d.payment?.providerReference)providerRefBox.textContent='Référence MTN : '+d.payment.providerReference;
+   if(ls==='PAID'||ps==='SUCCESSFUL'){clearInterval(timer);paint('success','Paiement confirmé','MTN a retourné SUCCESSFUL. Le paiement TiopTiop est maintenant PAID.');setTimeout(()=>location.href=`/admin/commandes/${encodeURIComponent(ref)}`,1200);}
+   else if(['FAILED','REJECTED','EXPIRED'].includes(ps)||ls==='FAILED'){clearInterval(timer);paint('failed','Paiement refusé ou échoué',`Statut MTN : ${ps}. La commande n'a pas été marquée payée.`);}
+   else {checks++;paint('pending','Traitement MTN en cours',`Statut fournisseur : ${ps}. TiopTiop reste ${ls}. ${auto?'Nouvelle vérification automatique dans quelques secondes.':''}`);if(checks>=24&&timer){clearInterval(timer);timer=null;paint('pending','Toujours en attente','MTN retourne toujours PENDING. Vous pouvez relancer une vérification manuelle sans risque de double paiement.');}}
+  }catch(e){paint('failed','Vérification impossible',e.message);}finally{setBusy(false);}
+ }
+ start.addEventListener('click',async()=>{if(initialProviderRef||providerRefBox.textContent.trim()){await sync();return;} const msisdn=phone.value.replace(/\D/g,''); if(msisdn.length<8||msisdn.length>15){paint('failed','Numéro invalide','Saisissez entre 8 et 15 chiffres.');return;} start.disabled=true;start.classList.add('loading');start.querySelector('.btnText').textContent='Envoi à MTN…';
+  try{const r=await fetch(`/admin/pos/mobile-money/${encodeURIComponent(ref)}/initier`,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({momoMsisdn:msisdn})});const d=await r.json();if(!r.ok||!d.success)throw new Error(d.message||'Initialisation impossible.');if(d.providerReference)providerRefBox.textContent='Référence MTN : '+d.providerReference;paint('pending','Demande acceptée par MTN','RequestToPay envoyée. Vérification automatique du statut en cours…');start.querySelector('.btnText').textContent='Demande MTN envoyée';await sync(true);if(status.textContent!=='PAID')timer=setInterval(()=>sync(true),3000);
+  }catch(e){start.disabled=false;paint('failed','Demande MTN impossible',e.message);start.querySelector('.btnText').textContent='Réessayer la demande MTN MoMo TEST';}finally{start.classList.remove('loading');}
+ });
+ check.addEventListener('click',()=>sync(false));
+ if(initialProviderRef){start.disabled=true;start.querySelector('.btnText').textContent='Demande MTN déjà envoyée';paint('pending','Demande MTN existante','Vérification automatique du statut…');sync(true);timer=setInterval(()=>sync(true),3000);}
+})();
+</script>

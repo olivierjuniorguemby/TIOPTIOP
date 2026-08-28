@@ -4,6 +4,9 @@ const Order =
 const Delivery =
     require("../../models/delivery.model");
 
+const PaymentRefund =
+    require("../../models/payment-refund.model");
+
 
 const PaymentService =
     require("../../services/payment.service");
@@ -106,13 +109,82 @@ async function getFullOrder(
     }
 
 
+    let refunds = [];
+    let refundSummary = {
+        total_refunded: 0,
+        total_pending: 0,
+        total_failed: 0,
+        total_cancelled: 0,
+        refund_count: 0
+    };
+
+
+    if (payment) {
+
+        [
+            refunds,
+            refundSummary
+        ] =
+            await Promise.all([
+                PaymentRefund.listClientByPaymentId(
+                    payment.id
+                ),
+
+                PaymentRefund.getClientSummaryByPaymentId(
+                    payment.id
+                )
+            ]);
+    }
+
+
+    const paymentAmount =
+        Number(
+            payment?.amount || 0
+        );
+
+
+    const totalRefunded =
+        Number(
+            refundSummary.total_refunded || 0
+        );
+
+
+    const totalPending =
+        Number(
+            refundSummary.total_pending || 0
+        );
+
+
+    const refundRemaining =
+        Math.max(
+            0,
+            paymentAmount
+            -
+            totalRefunded
+            -
+            totalPending
+        );
+
+
     return {
         order,
         items,
         payment,
         history,
         delivery,
-        latestTrackingPoint
+        latestTrackingPoint,
+
+        refunds,
+
+        refundSummary: {
+            ...refundSummary,
+            total_refunded:
+                totalRefunded,
+            total_pending:
+                totalPending,
+            remaining_amount:
+                refundRemaining
+        }
     };
 }
 
@@ -439,6 +511,33 @@ async function (
         }
 
 
+        const [
+            refunds,
+            refundSummary
+        ] =
+            await Promise.all([
+                PaymentRefund.listClientByPaymentId(
+                    payment.id
+                ),
+
+                PaymentRefund.getClientSummaryByPaymentId(
+                    payment.id
+                )
+            ]);
+
+
+        const totalRefunded =
+            Number(
+                refundSummary.total_refunded || 0
+            );
+
+
+        const totalPending =
+            Number(
+                refundSummary.total_pending || 0
+            );
+
+
         return res.json({
             success:
                 true,
@@ -479,6 +578,66 @@ async function (
                     ].includes(
                         payment.status
                     )
+            },
+
+            refund: {
+                totalRefunded,
+                totalPending,
+
+                remainingAmount:
+                    Math.max(
+                        0,
+                        Number(
+                            payment.amount || 0
+                        )
+                        -
+                        totalRefunded
+                        -
+                        totalPending
+                    ),
+
+                count:
+                    Array.isArray(refunds)
+                        ? refunds.length
+                        : 0,
+
+                items:
+                    (refunds || [])
+                        .map(item => ({
+                            id:
+                                item.id,
+
+                            type:
+                                item.refund_type,
+
+                            status:
+                                item.status,
+
+                            amount:
+                                Number(
+                                    item.amount || 0
+                                ),
+
+                            currency:
+                                item.currency,
+
+                            reason:
+                                item.reason_text
+                                ||
+                                item.reason_code
+                                ||
+                                null,
+
+                            requestedAt:
+                                item.requested_at
+                                ||
+                                item.created_at,
+
+                            processedAt:
+                                item.processed_at
+                                ||
+                                null
+                        }))
             }
         });
     }

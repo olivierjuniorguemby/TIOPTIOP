@@ -89,6 +89,156 @@ function normalizeStatus(value) {
 }
 
 
+
+
+/* =========================================================
+   13.9.5.1 — TRANSITIONS DE STATUT SECURISEES
+========================================================= */
+
+const PAYMENT_STATUS_TRANSITIONS = Object.freeze({
+
+    PENDING: Object.freeze([
+        STATUSES.AUTHORIZED,
+        STATUSES.PAID,
+        STATUSES.FAILED,
+        STATUSES.CANCELLED
+    ]),
+
+    AUTHORIZED: Object.freeze([
+        STATUSES.PAID,
+        STATUSES.FAILED,
+        STATUSES.CANCELLED
+    ]),
+
+    /*
+     * Un provider peut parfois confirmer tardivement un paiement
+     * que l'application avait classé FAILED/CANCELLED.
+     * On autorise donc PAID comme état de réconciliation finale.
+     */
+    FAILED: Object.freeze([
+        STATUSES.PENDING,
+        STATUSES.PAID,
+        STATUSES.CANCELLED
+    ]),
+
+    CANCELLED: Object.freeze([
+        STATUSES.PAID
+    ]),
+
+    /*
+     * Après encaissement réel, seules les transitions financières
+     * de remboursement sont permises.
+     */
+    PAID: Object.freeze([
+        STATUSES.PARTIAL,
+        STATUSES.REFUNDED
+    ]),
+
+    PARTIAL: Object.freeze([
+        STATUSES.REFUNDED
+    ]),
+
+    REFUNDED: Object.freeze([])
+});
+
+
+function getAllowedPaymentNextStatuses(currentStatus) {
+
+    const current =
+        normalizeStatus(
+            currentStatus
+        );
+
+
+    return Array.isArray(
+        PAYMENT_STATUS_TRANSITIONS[current]
+    )
+        ? [
+            ...PAYMENT_STATUS_TRANSITIONS[current]
+        ]
+        : [];
+}
+
+
+function canTransitionPaymentStatus(
+    currentStatus,
+    nextStatus
+) {
+
+    const current =
+        normalizeStatus(
+            currentStatus
+        );
+
+
+    const next =
+        normalizeStatus(
+            nextStatus
+        );
+
+
+    if (
+        current ===
+        next
+    ) {
+        return true;
+    }
+
+
+    return getAllowedPaymentNextStatuses(
+        current
+    ).includes(
+        next
+    );
+}
+
+
+function assertPaymentStatusTransition(
+    currentStatus,
+    nextStatus
+) {
+
+    const current =
+        normalizeStatus(
+            currentStatus
+        );
+
+
+    const next =
+        normalizeStatus(
+            nextStatus
+        );
+
+
+    if (
+        !canTransitionPaymentStatus(
+            current,
+            next
+        )
+    ) {
+
+        const error =
+            new Error(
+                `Transition paiement interdite : ${current} → ${next}.`
+            );
+
+        error.code =
+            "PAYMENT_STATUS_INVALID_TRANSITION";
+
+        error.currentStatus =
+            current;
+
+        error.nextStatus =
+            next;
+
+        throw error;
+    }
+
+
+    return true;
+}
+
+
 function getDefaultProvider(method) {
 
     const normalized =
@@ -725,39 +875,177 @@ async function updateStatus(
     status
 ) {
 
+    const id =
+        Number(
+            paymentId
+        );
+
+
+    if (
+        !Number.isInteger(id)
+        ||
+        id <= 0
+    ) {
+
+        const error =
+            new Error(
+                "Paiement invalide."
+            );
+
+        error.code =
+            "PAYMENT_ID_INVALID";
+
+        throw error;
+    }
+
+
     const normalizedStatus =
         normalizeStatus(
             status
         );
 
 
-    await db.query(
-        `
-        UPDATE payments
-        SET
-            status = ?,
-            paid_at =
-                CASE
-                    WHEN ? = 'PAID'
-                    THEN COALESCE(
-                        paid_at,
-                        CURRENT_TIMESTAMP
-                    )
-                    ELSE paid_at
-                END
-        WHERE id = ?
-        `,
-        [
-            normalizedStatus,
-            normalizedStatus,
-            paymentId
-        ]
-    );
+    const connection =
+        await db.pool.getConnection();
 
 
-    return findById(
-        paymentId
-    );
+    try {
+
+        await connection.beginTransaction();
+
+
+        const [
+            rows
+        ] =
+            await connection.execute(
+                `
+                SELECT *
+                FROM payments
+                WHERE id = ?
+                LIMIT 1
+                FOR UPDATE
+                `,
+                [
+                    id
+                ]
+            );
+
+
+        const payment =
+            rows[0]
+            ||
+            null;
+
+
+        if (!payment) {
+
+            const error =
+                new Error(
+                    "Paiement introuvable."
+                );
+
+            error.code =
+                "PAYMENT_NOT_FOUND";
+
+            throw error;
+        }
+
+
+        const currentStatus =
+            normalizeStatus(
+                payment.status
+            );
+
+
+        if (
+            currentStatus ===
+            normalizedStatus
+        ) {
+
+            await connection.commit();
+
+            return payment;
+        }
+
+
+        assertPaymentStatusTransition(
+            currentStatus,
+            normalizedStatus
+        );
+
+
+        const [
+            result
+        ] =
+            await connection.execute(
+                `
+                UPDATE payments
+                SET
+                    status = ?,
+                    paid_at =
+                        CASE
+                            WHEN ? = 'PAID'
+                            THEN COALESCE(
+                                paid_at,
+                                CURRENT_TIMESTAMP
+                            )
+                            ELSE paid_at
+                        END
+                WHERE id = ?
+                  AND status = ?
+                `,
+                [
+                    normalizedStatus,
+                    normalizedStatus,
+                    id,
+                    currentStatus
+                ]
+            );
+
+
+        if (
+            result.affectedRows !== 1
+        ) {
+
+            const error =
+                new Error(
+                    "Le paiement a été modifié entre-temps. Rechargez la page."
+                );
+
+            error.code =
+                "PAYMENT_STATUS_CONFLICT";
+
+            throw error;
+        }
+
+
+        await connection.commit();
+
+
+        return findById(
+            id
+        );
+    }
+    catch (error) {
+
+        try {
+            await connection.rollback();
+        }
+        catch (rollbackError) {
+
+            console.error(
+                "Erreur rollback statut paiement :",
+                rollbackError
+            );
+        }
+
+
+        throw error;
+    }
+    finally {
+
+        connection.release();
+    }
 }
 
 
@@ -1055,6 +1343,7 @@ async function createRetryAttempt({
 async function collectCashPayment({
     paymentId,
     collectedBy = null,
+    receivedAmount = null,
     comment = null
 }) {
     const id = Number(paymentId);
@@ -1096,11 +1385,18 @@ async function collectCashPayment({
         }
 
         if (payment.status === STATUSES.PAID) {
-            const error = new Error(
-                "Ce paiement en espèces est déjà encaissé."
-            );
-            error.code = "CASH_PAYMENT_ALREADY_PAID";
-            throw error;
+            /*
+             * 13.9.5.2 — IDEMPOTENCE CASH
+             * Un double clic / double POST attend ici à cause du FOR UPDATE.
+             * Le premier appel a déjà encaissé le paiement ; le second
+             * retourne donc un succès idempotent SANS recréer d'événement.
+             */
+            await connection.commit();
+
+            return {
+                payment,
+                duplicate: true
+            };
         }
 
         if (payment.status !== STATUSES.PENDING) {
@@ -1111,18 +1407,47 @@ async function collectCashPayment({
             throw error;
         }
 
+        const expectedAmount = Number(payment.amount || 0);
+        const received = Number(receivedAmount);
+
+        if (!Number.isFinite(received) || received < 0) {
+            const error = new Error("Le montant reçu en espèces est invalide.");
+            error.code = "CASH_RECEIVED_AMOUNT_INVALID";
+            throw error;
+        }
+
+        if (received < expectedAmount) {
+            const error = new Error(
+                `Montant insuffisant : ${received.toLocaleString("fr-FR")} ${payment.currency || "XAF"} reçu(s) pour ${expectedAmount.toLocaleString("fr-FR")} ${payment.currency || "XAF"} attendu(s).`
+            );
+            error.code = "CASH_RECEIVED_AMOUNT_INSUFFICIENT";
+            throw error;
+        }
+
+        const changeAmount = Number((received - expectedAmount).toFixed(2));
+        const collectorId = Number(collectedBy);
+        const safeCollectorId = Number.isInteger(collectorId) && collectorId > 0
+            ? collectorId
+            : null;
+
         await connection.execute(
             `
                 UPDATE payments
                 SET
                     status = ?,
                     provider = COALESCE(provider, ?),
+                    collected_by_admin_user_id = ?,
+                    cash_received_amount = ?,
+                    cash_change_amount = ?,
                     paid_at = COALESCE(paid_at, CURRENT_TIMESTAMP)
                 WHERE id = ?
             `,
             [
                 STATUSES.PAID,
                 PROVIDERS.CASH,
+                safeCollectorId,
+                received,
+                changeAmount,
                 id
             ]
         );
@@ -1135,16 +1460,21 @@ async function collectCashPayment({
             payload: {
                 previousStatus: payment.status,
                 newStatus: STATUSES.PAID,
-                amount: Number(payment.amount),
+                amount: expectedAmount,
+                receivedAmount: received,
+                changeAmount,
                 currency: payment.currency || "XAF",
-                collectedBy: collectedBy || null,
-                comment: comment || null
+                collectedBy: safeCollectorId,
+                comment: String(comment || "").trim().slice(0, 500) || null
             }
         });
 
         await connection.commit();
 
-        return findById(id);
+        return {
+            payment: await findById(id),
+            duplicate: false
+        };
     }
     catch (error) {
         try {
@@ -1400,6 +1730,10 @@ module.exports = {
     METHODS,
     STATUSES,
     PROVIDERS,
+    PAYMENT_STATUS_TRANSITIONS,
+    getAllowedPaymentNextStatuses,
+    canTransitionPaymentStatus,
+    assertPaymentStatusTransition,
 
     normalizeMethod,
     normalizeStatus,

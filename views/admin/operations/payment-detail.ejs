@@ -92,6 +92,10 @@ function prettyPayload(payload) {
                 <div class="important-row"><dt>Montant</dt><dd><%= money(payment.amount, payment.currency) %></dd></div>
                 <div><dt>Statut</dt><dd><span class="payment-status status-<%= String(payment.status || '').toLowerCase() %>"><%= payment.status %></span></dd></div>
                 <div><dt>Payé le</dt><dd><%= dateTime(payment.paid_at) %></dd></div>
+                <% if (String(payment.method || '').toUpperCase() === 'CASH') { %>
+                    <div><dt>Montant reçu</dt><dd><%= payment.cash_received_amount != null ? money(payment.cash_received_amount, payment.currency) : '—' %></dd></div>
+                    <div><dt>Monnaie rendue</dt><dd><%= payment.cash_change_amount != null ? money(payment.cash_change_amount, payment.currency) : '—' %></dd></div>
+                <% } %>
                 <div><dt>Collecté par</dt><dd><%= payment.collector_name || '—' %></dd></div>
             </dl>
         </article>
@@ -120,7 +124,15 @@ function prettyPayload(payload) {
                 <p>Stripe reste en TEST. MTN MoMo est suivi comme remboursement manuel contrôlé ; les espèces sont confirmées directement par l'administrateur.</p>
             </div>
             <% if (String(payment.method || '').toUpperCase() === 'CASH' && String(payment.status || '').toUpperCase() === 'PENDING') { %>
-                <form method="POST" action="/admin/paiements/<%= payment.id %>/encaissement-cash" onsubmit="return confirm('Confirmer que vous avez réellement reçu <%= money(payment.amount, payment.currency) %> en espèces ?');">
+                <form class="cash-collect-form" method="POST" action="/admin/paiements/<%= payment.id %>/encaissement-cash" onsubmit="return confirm('Confirmer cet encaissement espèces ? La commande sera marquée payée.');">
+                    <label>
+                        <span>Montant reçu</span>
+                        <input type="number" name="receivedAmount" min="<%= Number(payment.amount || 0) %>" step="0.01" value="<%= Number(payment.amount || 0) %>" required>
+                    </label>
+                    <label>
+                        <span>Commentaire (optionnel)</span>
+                        <input type="text" name="comment" maxlength="500" placeholder="Ex. Billet de 10 000 XAF">
+                    </label>
                     <button type="submit" class="refund-open-button cash-collect-button">💵 Confirmer l’encaissement</button>
                 </form>
             <% } else if (rs.canExecuteStripe) { %>
@@ -578,7 +590,7 @@ function prettyPayload(payload) {
 .mtn-pending-actions form:last-child{display:flex;justify-content:flex-end}
 .mtn-pending-actions input{width:100%;min-width:0;padding:10px 11px;border:1px solid #d9cec4;border-radius:9px;font-size:11px;background:#fff}
 .mtn-pending-actions button{padding:10px 12px;border:0;border-radius:9px;font-size:10px;font-weight:900;cursor:pointer}
-.cash-collect-button{white-space:nowrap}
+.cash-collect-form{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}.cash-collect-form label{display:grid;gap:5px;font-size:12px;font-weight:700}.cash-collect-form input{min-width:170px;padding:10px 12px;border:1px solid #d9d9d9;border-radius:10px;background:#fff}.cash-collect-button{white-space:nowrap}
 @media(max-width:850px){.mtn-pending-actions{min-width:0;width:100%}.mtn-pending-actions form{grid-template-columns:1fr}.refund-header{align-items:flex-start;flex-direction:column}}
 .mini-success{background:#eaf7ee;color:#267346}.mini-danger{background:#fff0f0;color:#a73535}
 .manual-radio-row{display:flex;gap:16px;margin:12px 0 4px}

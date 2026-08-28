@@ -52,6 +52,12 @@ const orderController =
     );
 
 
+const posController =
+    require(
+        "../../controllers/admin/pos.controller"
+    );
+
+
 const paymentController =
     require(
         "../../controllers/admin/payment.controller"
@@ -495,11 +501,76 @@ router.get(
 
 router.get(
     "/pos",
-    page.render(
-        "admin/operations/pos",
-        "POS / Nouvelle commande"
-    )
+    posController.index
 );
+
+router.post(
+    "/pos/calcul",
+    posController.calculateCart
+);
+
+router.post(
+    "/pos/commandes",
+    posController.createOrder
+);
+
+router.get(
+    "/pos/carte/:reference",
+    posController.cardPaymentPage
+);
+
+router.post(
+    "/pos/carte/:reference/sync",
+    posController.syncCardPayment
+);
+
+router.get(
+    "/pos/carte/:reference/retour",
+    posController.cardReturn
+);
+
+router.get(
+    "/pos/mobile-money/:reference",
+    posController.mobileMoneyPage
+);
+
+router.post(
+    "/pos/mobile-money/:reference/initier",
+    posController.initiateMobileMoney
+);
+
+router.post(
+    "/pos/mobile-money/:reference/sync",
+    posController.syncMobileMoney
+);
+
+
+router.get(
+    "/pos/produits/:productId/configuration",
+    posController.productConfiguration
+);
+
+router.get(
+    "/pos/formules/:formulaId/configuration",
+    posController.formulaConfiguration
+);
+
+
+router.get(
+    "/pos/clients/recherche",
+    posController.searchCustomers
+);
+
+router.get(
+    "/pos/clients/:userId/adresses",
+    posController.customerAddresses
+);
+
+router.get(
+    "/pos/restaurants/:restaurantId/zones",
+    posController.deliveryZones
+);
+
 
 
 router.get(

@@ -34,6 +34,8 @@ async function list(filters = {}) {
             p.currency,
             p.provider_reference,
             p.collected_by_admin_user_id,
+            p.cash_received_amount,
+            p.cash_change_amount,
             p.paid_at,
             p.created_at,
             p.updated_at,

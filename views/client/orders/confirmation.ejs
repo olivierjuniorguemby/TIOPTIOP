@@ -799,6 +799,141 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 }
 
+
+.client-refund-card {
+    border-color: rgba(255,121,0,.22);
+}
+
+.client-refund-intro {
+    margin: -3px 0 16px;
+    color: #77716c;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.client-refund-summary {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.client-refund-summary > div {
+    padding: 12px;
+    border: 1px solid #eadfd3;
+    border-radius: 14px;
+    background: #fffaf5;
+}
+
+.client-refund-summary span {
+    display: block;
+    margin-bottom: 4px;
+    color: #77716c;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.client-refund-summary strong {
+    font-size: 13px;
+}
+
+.client-refund-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.client-refund-step {
+    position: relative;
+    display: grid;
+    grid-template-columns: 18px minmax(0,1fr);
+    gap: 10px;
+    padding-bottom: 17px;
+}
+
+.client-refund-step:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 13px;
+    bottom: -2px;
+    width: 2px;
+    background: #eadfd3;
+}
+
+.client-refund-dot {
+    position: relative;
+    z-index: 1;
+    width: 14px;
+    height: 14px;
+    margin-top: 2px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    background: #ff7900;
+    box-shadow: 0 0 0 1px #ff7900;
+}
+
+.client-refund-step[data-refund-status="SUCCEEDED"] .client-refund-dot {
+    background: #2c8b50;
+    box-shadow: 0 0 0 1px #2c8b50;
+}
+
+.client-refund-step[data-refund-status="FAILED"] .client-refund-dot,
+.client-refund-step[data-refund-status="CANCELLED"] .client-refund-dot {
+    background: #b93838;
+    box-shadow: 0 0 0 1px #b93838;
+}
+
+.client-refund-step-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.client-refund-step-top strong {
+    font-size: 13px;
+}
+
+.client-refund-step-top span {
+    color: #ff7900;
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.client-refund-step-content p {
+    margin: 4px 0 5px;
+    color: #77716c;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.client-refund-step-content small {
+    display: block;
+    margin-top: 3px;
+    color: #90867f;
+    font-size: 10px;
+}
+
+.client-refund-security {
+    margin: 3px 0 0;
+    padding-top: 12px;
+    border-top: 1px dashed #eadfd3;
+    color: #90867f;
+    font-size: 10px;
+}
+
+@media(max-width:600px) {
+    .client-refund-summary {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .client-refund-step-top {
+        flex-direction: column;
+        gap: 3px;
+    }
+}
+
 </style>
 
 
@@ -1266,6 +1401,183 @@ document.addEventListener("DOMContentLoaded", function () {
                 <% } %>
 
             </section>
+
+
+
+
+            <!-- REMBOURSEMENT CLIENT — 13.9.4.6 -->
+
+            <% if (
+                payment
+                &&
+                refunds
+                &&
+                refunds.length > 0
+            ) { %>
+
+            <section class="confirmation-card client-refund-card">
+
+                <h2 class="confirmation-card-title">
+                    ↩️ Remboursement
+                </h2>
+
+                <p class="client-refund-intro">
+                    Suivez ici l'évolution de votre remboursement.
+                </p>
+
+                <div class="client-refund-summary">
+
+                    <div>
+                        <span>Montant payé</span>
+                        <strong>
+                            <%= money(payment.amount) %>
+                            <%= payment.currency %>
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Remboursé</span>
+                        <strong>
+                            <%= money(refundSummary?.total_refunded || 0) %>
+                            <%= payment.currency %>
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>En traitement</span>
+                        <strong>
+                            <%= money(refundSummary?.total_pending || 0) %>
+                            <%= payment.currency %>
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Reste</span>
+                        <strong>
+                            <%= money(refundSummary?.remaining_amount || 0) %>
+                            <%= payment.currency %>
+                        </strong>
+                    </div>
+
+                </div>
+
+
+                <div class="client-refund-timeline">
+
+                    <% (refunds || []).forEach(refund => {
+
+                        const refundStatus =
+                            String(
+                                refund.status || "PENDING"
+                            ).toUpperCase();
+
+                        const refundLabels = {
+                            PENDING:
+                                "En traitement",
+
+                            SUCCEEDED:
+                                "Remboursement effectué",
+
+                            FAILED:
+                                "Échec du remboursement",
+
+                            CANCELLED:
+                                "Demande annulée"
+                        };
+
+                        const refundDescriptions = {
+                            PENDING:
+                                "Votre demande de remboursement a été enregistrée et est en cours de traitement.",
+
+                            SUCCEEDED:
+                                "Le remboursement a été confirmé.",
+
+                            FAILED:
+                                "Le remboursement n'a pas pu être finalisé. Notre équipe peut reprendre le traitement.",
+
+                            CANCELLED:
+                                "Cette demande de remboursement a été annulée."
+                        };
+
+                    %>
+
+                        <article
+                            class="client-refund-step"
+                            data-refund-status="<%= refundStatus %>"
+                        >
+
+                            <div class="client-refund-dot"></div>
+
+                            <div class="client-refund-step-content">
+
+                                <div class="client-refund-step-top">
+
+                                    <strong>
+                                        <%= refundLabels[refundStatus]
+                                            || refundStatus
+                                        %>
+                                    </strong>
+
+                                    <span>
+                                        <%= money(refund.amount) %>
+                                        <%= refund.currency %>
+                                    </span>
+
+                                </div>
+
+                                <p>
+                                    <%= refundDescriptions[refundStatus]
+                                        || "Mise à jour du remboursement."
+                                    %>
+                                </p>
+
+                                <% if (refund.reason_text) { %>
+
+                                    <small>
+                                        Motif :
+                                        <%= refund.reason_text %>
+                                    </small>
+
+                                <% } %>
+
+                                <small>
+                                    Demande du
+                                    <%= new Date(
+                                        refund.requested_at
+                                        || refund.created_at
+                                    ).toLocaleString("fr-FR") %>
+                                </small>
+
+                                <% if (
+                                    refund.processed_at
+                                    &&
+                                    refundStatus === "SUCCEEDED"
+                                ) { %>
+
+                                    <small>
+                                        Confirmé le
+                                        <%= new Date(
+                                            refund.processed_at
+                                        ).toLocaleString("fr-FR") %>
+                                    </small>
+
+                                <% } %>
+
+                            </div>
+
+                        </article>
+
+                    <% }) %>
+
+                </div>
+
+                <p class="client-refund-security">
+                    🔒 Les références techniques de paiement restent réservées à l'administration.
+                </p>
+
+            </section>
+
+            <% } %>
 
 
             <!-- TOTAL -->

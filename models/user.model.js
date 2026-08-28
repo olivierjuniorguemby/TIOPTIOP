@@ -508,6 +508,78 @@ async function phoneExistsForAnotherUser(
 }
 
 
+/* =========================================================
+   RECHERCHE CLIENT POUR POS
+   13.9.6.3
+========================================================= */
+
+async function searchCustomersForPos(search, limit = 12) {
+
+    const term = String(search || "").trim();
+
+    if (term.length < 2) {
+        return [];
+    }
+
+    const safeLimit =
+        Math.min(
+            Math.max(Number(limit) || 12, 1),
+            20
+        );
+
+    const like = `%${term}%`;
+
+    return await db.query(`
+        SELECT
+            u.id,
+            u.public_id,
+            u.email,
+            u.phone,
+            u.status,
+
+            up.first_name,
+            up.last_name,
+            up.display_name,
+            up.avatar_url
+
+        FROM users u
+
+        LEFT JOIN user_profiles up
+            ON up.user_id = u.id
+
+        WHERE u.account_type = 'CUSTOMER'
+          AND u.status <> 'DELETED'
+          AND (
+                u.email LIKE ?
+             OR u.phone LIKE ?
+             OR up.first_name LIKE ?
+             OR up.last_name LIKE ?
+             OR up.display_name LIKE ?
+             OR CONCAT_WS(
+                    ' ',
+                    up.first_name,
+                    up.last_name
+                ) LIKE ?
+          )
+
+        ORDER BY
+            CASE WHEN u.status = 'ACTIVE' THEN 0 ELSE 1 END,
+            up.first_name ASC,
+            up.last_name ASC,
+            u.id DESC
+
+        LIMIT ${safeLimit}
+    `, [
+        like,
+        like,
+        like,
+        like,
+        like,
+        like
+    ]);
+}
+
+
 module.exports = {
 
     findByEmail,
@@ -522,6 +594,8 @@ module.exports = {
     updateLastLogin,
 
     findAllForAdmin,
+
+    searchCustomersForPos,
 
     /* ADMIN CLIENTS */
 

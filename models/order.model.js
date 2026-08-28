@@ -123,6 +123,22 @@ async function getAddressById(userId, addressId) {
 }
 
 
+async function getPosCustomerAddresses(userId) {
+    const id = Number(userId);
+    if (!Number.isInteger(id) || id <= 0) return [];
+
+    const rows = await db.query(`
+        SELECT id, label, recipient_name, phone,
+               address_line1, address_line2, district, city, country_code,
+               latitude, longitude, delivery_instructions, is_default
+        FROM user_addresses
+        WHERE user_id = ?
+        ORDER BY is_default DESC, id DESC
+    `, [id]);
+
+    return Array.isArray(rows) ? rows : [];
+}
+
 /* =========================================================
    RESTAURANTS
 ========================================================= */
@@ -1220,6 +1236,808 @@ async function createFromCart({
     }
 }
 
+
+/* =========================================================
+   13.9.6.7 — CREATION TRANSACTIONNELLE POS
+
+   Une seule transaction contient :
+   - orders
+   - order_items
+   - order_item_options
+   - order_status_history
+   - payments
+   - payment_events
+   - order_pos_context
+
+   Aucun appel Stripe / MTN n'est effectué ici.
+========================================================= */
+
+async function findPosOrderByIdempotencyKey(idempotencyKey) {
+    const key = String(idempotencyKey || "").trim();
+
+    if (!key) return null;
+
+    const rows = await db.query(
+        `
+        SELECT
+            opc.idempotency_key,
+            o.id AS order_id,
+            o.public_id,
+            o.reference,
+            o.channel,
+            o.order_type,
+            o.status AS order_status,
+            o.subtotal,
+            o.discount_amount,
+            o.delivery_fee,
+            o.tax_amount,
+            o.total_amount,
+            o.currency,
+            p.id AS payment_id,
+            p.public_id AS payment_public_id,
+            p.method AS payment_method,
+            p.provider AS payment_provider,
+            p.status AS payment_status
+        FROM order_pos_context opc
+        INNER JOIN orders o
+            ON o.id = opc.order_id
+        LEFT JOIN payments p
+            ON p.id = (
+                SELECT p2.id
+                FROM payments p2
+                WHERE p2.order_id = o.id
+                ORDER BY p2.id DESC
+                LIMIT 1
+            )
+        WHERE opc.idempotency_key = ?
+        LIMIT 1
+        `,
+        [key]
+    );
+
+    return rows[0] || null;
+}
+
+function posExistingResult(row) {
+    if (!row) return null;
+
+    return {
+        duplicate: true,
+        orderId: Number(row.order_id),
+        publicId: row.public_id,
+        reference: row.reference,
+        channel: row.channel,
+        orderType: row.order_type,
+        orderStatus: row.order_status,
+        paymentId: row.payment_id ? Number(row.payment_id) : null,
+        paymentPublicId: row.payment_public_id || null,
+        paymentMethod: row.payment_method || null,
+        paymentProvider: row.payment_provider || null,
+        paymentStatus: row.payment_status || null,
+        subtotal: toNumber(row.subtotal),
+        discountAmount: toNumber(row.discount_amount),
+        deliveryFee: toNumber(row.delivery_fee),
+        taxAmount: toNumber(row.tax_amount),
+        totalAmount: toNumber(row.total_amount),
+        currency: row.currency || "XAF"
+    };
+}
+
+async function createFromPos({
+    idempotencyKey,
+    adminUserId = null,
+    clientMode,
+    userId = null,
+    guest = {},
+    channel,
+    restaurantId,
+    deliveryAddressId = null,
+    deliveryZoneId = null,
+    orderType,
+    paymentMethod,
+    deliverySnapshot = {},
+    cart
+}) {
+    const key = String(idempotencyKey || "").trim().slice(0, 100);
+
+    if (!key) {
+        const error = new Error("Clé d'idempotence POS obligatoire.");
+        error.code = "POS_IDEMPOTENCY_KEY_REQUIRED";
+        throw error;
+    }
+
+    /*
+     * Rejeu après succès :
+     * retourne la commande déjà créée au lieu d'en créer une seconde.
+     */
+    const alreadyCreated =
+        await findPosOrderByIdempotencyKey(key);
+
+    if (alreadyCreated) {
+        return posExistingResult(alreadyCreated);
+    }
+
+    const connection = await db.pool.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const [existingRows] = await connection.execute(
+            `
+            SELECT
+                opc.idempotency_key,
+                o.id AS order_id,
+                o.public_id,
+                o.reference,
+                o.channel,
+                o.order_type,
+                o.status AS order_status,
+                o.subtotal,
+                o.discount_amount,
+                o.delivery_fee,
+                o.tax_amount,
+                o.total_amount,
+                o.currency,
+                p.id AS payment_id,
+                p.public_id AS payment_public_id,
+                p.method AS payment_method,
+                p.provider AS payment_provider,
+                p.status AS payment_status
+            FROM order_pos_context opc
+            INNER JOIN orders o
+                ON o.id = opc.order_id
+            LEFT JOIN payments p
+                ON p.id = (
+                    SELECT p2.id
+                    FROM payments p2
+                    WHERE p2.order_id = o.id
+                    ORDER BY p2.id DESC
+                    LIMIT 1
+                )
+            WHERE opc.idempotency_key = ?
+            LIMIT 1
+            FOR UPDATE
+            `,
+            [key]
+        );
+
+        if (existingRows.length) {
+            await connection.commit();
+            return posExistingResult(existingRows[0]);
+        }
+
+        const normalizedMode =
+            String(clientMode || "").trim().toUpperCase();
+
+        if (!["ACCOUNT", "GUEST", "ANONYMOUS"].includes(normalizedMode)) {
+            const error = new Error("Type de client POS invalide.");
+            error.code = "POS_CUSTOMER_MODE_INVALID";
+            throw error;
+        }
+
+        const normalizedChannel =
+            String(channel || "POS").trim().toUpperCase();
+
+        if (!["POS", "PHONE", "WHATSAPP"].includes(normalizedChannel)) {
+            const error = new Error("Canal POS invalide.");
+            error.code = "POS_CHANNEL_INVALID";
+            throw error;
+        }
+
+        const normalizedOrderType =
+            String(orderType || "").trim().toUpperCase();
+
+        if (!["DELIVERY", "PICKUP", "DINE_IN"].includes(normalizedOrderType)) {
+            const error = new Error("Type de commande POS invalide.");
+            error.code = "POS_ORDER_TYPE_INVALID";
+            throw error;
+        }
+
+        const normalizedPaymentMethod =
+            Payment.normalizeMethod(paymentMethod);
+
+        if (!cart || !Array.isArray(cart.items) || cart.items.length === 0) {
+            const error = new Error("Le panier POS est vide.");
+            error.code = "POS_CART_EMPTY";
+            throw error;
+        }
+
+        /*
+         * Le panier reçu ici provient exclusivement du recalcul serveur
+         * buildPosPricedCart() exécuté juste avant l'entrée en transaction.
+         */
+        const subtotal =
+            cart.items.reduce(
+                (sum, item) =>
+                    sum +
+                    (
+                        toNumber(item.unitPrice) *
+                        Number(item.quantity || 0)
+                    ),
+                0
+            );
+
+        if (subtotal <= 0) {
+            const error = new Error("Sous-total POS invalide.");
+            error.code = "POS_SUBTOTAL_INVALID";
+            throw error;
+        }
+
+        const [restaurantRows] = await connection.execute(
+            `
+            SELECT *
+            FROM restaurants
+            WHERE id = ?
+              AND status = 'OPEN'
+            LIMIT 1
+            FOR UPDATE
+            `,
+            [restaurantId]
+        );
+
+        const restaurant = restaurantRows[0] || null;
+
+        if (!restaurant) {
+            const error = new Error("Restaurant indisponible.");
+            error.code = "POS_RESTAURANT_UNAVAILABLE";
+            throw error;
+        }
+
+        const supportColumn =
+            normalizedOrderType === "DELIVERY"
+                ? "supports_delivery"
+                : normalizedOrderType === "PICKUP"
+                    ? "supports_pickup"
+                    : "supports_dine_in";
+
+        if (Number(restaurant[supportColumn]) !== 1) {
+            const error = new Error(
+                "Ce restaurant ne prend pas en charge ce mode de réception."
+            );
+            error.code = "POS_ORDER_TYPE_UNSUPPORTED";
+            throw error;
+        }
+
+        let finalUserId = null;
+        let accountCustomer = null;
+
+        if (normalizedMode === "ACCOUNT") {
+            const accountId = Number(userId);
+
+            if (!Number.isInteger(accountId) || accountId <= 0) {
+                const error = new Error("Client avec compte invalide.");
+                error.code = "POS_ACCOUNT_INVALID";
+                throw error;
+            }
+
+            const [userRows] = await connection.execute(
+                `
+                SELECT
+                    u.id,
+                    u.email,
+                    u.phone,
+                    up.first_name,
+                    up.last_name,
+                    up.display_name
+                FROM users u
+                LEFT JOIN user_profiles up
+                    ON up.user_id = u.id
+                WHERE u.id = ?
+                  AND u.status = 'ACTIVE'
+                LIMIT 1
+                FOR UPDATE
+                `,
+                [accountId]
+            );
+
+            accountCustomer = userRows[0] || null;
+
+            if (!accountCustomer) {
+                const error = new Error(
+                    "Le compte client sélectionné n'est plus disponible."
+                );
+                error.code = "POS_ACCOUNT_UNAVAILABLE";
+                throw error;
+            }
+
+            finalUserId = accountId;
+        }
+
+        let finalAddressId = null;
+        let finalDelivery = {
+            recipientName:
+                String(deliverySnapshot.recipientName || "").trim().slice(0, 160),
+            phone:
+                String(deliverySnapshot.phone || "").trim().slice(0, 40),
+            addressLine1:
+                String(deliverySnapshot.addressLine1 || "").trim().slice(0, 255),
+            addressLine2:
+                String(deliverySnapshot.addressLine2 || "").trim().slice(0, 255),
+            district:
+                String(deliverySnapshot.district || "").trim().slice(0, 120),
+            city:
+                String(deliverySnapshot.city || "").trim().slice(0, 120),
+            countryCode:
+                String(deliverySnapshot.countryCode || "CG").trim().slice(0, 2) || "CG",
+            instructions:
+                String(deliverySnapshot.instructions || "").trim().slice(0, 2000)
+        };
+
+        let zone = null;
+        let deliveryFee = 0;
+
+        if (normalizedOrderType === "DELIVERY") {
+            if (
+                normalizedMode === "ACCOUNT" &&
+                Number.isInteger(Number(deliveryAddressId)) &&
+                Number(deliveryAddressId) > 0
+            ) {
+                const [addressRows] = await connection.execute(
+                    `
+                    SELECT *
+                    FROM user_addresses
+                    WHERE id = ?
+                      AND user_id = ?
+                    LIMIT 1
+                    FOR UPDATE
+                    `,
+                    [
+                        Number(deliveryAddressId),
+                        finalUserId
+                    ]
+                );
+
+                const address = addressRows[0] || null;
+
+                if (!address) {
+                    const error = new Error(
+                        "L'adresse enregistrée n'appartient pas au client sélectionné."
+                    );
+                    error.code = "POS_ADDRESS_INVALID";
+                    throw error;
+                }
+
+                finalAddressId = Number(address.id);
+
+                /*
+                 * Snapshot issu de MySQL, pas des champs modifiables du navigateur.
+                 */
+                finalDelivery = {
+                    recipientName:
+                        address.recipient_name ||
+                        accountCustomer?.display_name ||
+                        [
+                            accountCustomer?.first_name,
+                            accountCustomer?.last_name
+                        ].filter(Boolean).join(" "),
+                    phone:
+                        address.phone ||
+                        accountCustomer?.phone ||
+                        "",
+                    addressLine1: address.address_line1 || "",
+                    addressLine2: address.address_line2 || "",
+                    district: address.district || "",
+                    city: address.city || "Brazzaville",
+                    countryCode: address.country_code || "CG",
+                    instructions:
+                        String(deliverySnapshot.instructions || address.delivery_instructions || "")
+                            .trim()
+                            .slice(0, 2000)
+                };
+            }
+
+            if (!finalDelivery.phone) {
+                const error = new Error("Téléphone de livraison obligatoire.");
+                error.code = "POS_DELIVERY_PHONE_REQUIRED";
+                throw error;
+            }
+
+            if (!finalDelivery.addressLine1 || !finalDelivery.city) {
+                const error = new Error("Adresse de livraison incomplète.");
+                error.code = "POS_DELIVERY_ADDRESS_REQUIRED";
+                throw error;
+            }
+
+            const zoneId = Number(deliveryZoneId);
+
+            if (!Number.isInteger(zoneId) || zoneId <= 0) {
+                const error = new Error("Zone de livraison obligatoire.");
+                error.code = "POS_DELIVERY_ZONE_REQUIRED";
+                throw error;
+            }
+
+            const [zoneRows] = await connection.execute(
+                `
+                SELECT *
+                FROM delivery_zones
+                WHERE id = ?
+                  AND restaurant_id = ?
+                  AND is_active = 1
+                LIMIT 1
+                FOR UPDATE
+                `,
+                [
+                    zoneId,
+                    restaurantId
+                ]
+            );
+
+            zone = zoneRows[0] || null;
+
+            if (!zone) {
+                const error = new Error("Zone de livraison invalide.");
+                error.code = "POS_DELIVERY_ZONE_INVALID";
+                throw error;
+            }
+
+            const minOrder = toNumber(zone.min_order);
+
+            if (subtotal < minOrder) {
+                const error = new Error(
+                    `Le minimum de commande pour ${zone.name} est de ${minOrder.toLocaleString("fr-FR")} XAF.`
+                );
+                error.code = "POS_MIN_ORDER_NOT_REACHED";
+                throw error;
+            }
+
+            deliveryFee =
+                calculateDeliveryFee(
+                    subtotal,
+                    normalizedOrderType,
+                    zone
+                );
+        }
+
+        const discountAmount = 0;
+        const taxAmount = 0;
+
+        const totalAmount =
+            subtotal -
+            discountAmount +
+            deliveryFee +
+            taxAmount;
+
+        const publicId = crypto.randomUUID();
+        const reference = createReference();
+
+        const [orderResult] = await connection.execute(
+            `
+            INSERT INTO orders
+            (
+                public_id,
+                reference,
+                user_id,
+                restaurant_id,
+                delivery_address_id,
+                order_type,
+                channel,
+                status,
+                subtotal,
+                discount_amount,
+                delivery_fee,
+                tax_amount,
+                total_amount,
+                currency,
+                customer_note
+            )
+            VALUES
+            (
+                ?, ?, ?, ?, ?, ?, ?,
+                'RECEIVED',
+                ?, ?, ?, ?, ?,
+                ?,
+                ?
+            )
+            `,
+            [
+                publicId,
+                reference,
+                finalUserId,
+                restaurantId,
+                finalAddressId,
+                normalizedOrderType,
+                normalizedChannel,
+                subtotal,
+                discountAmount,
+                deliveryFee,
+                taxAmount,
+                totalAmount,
+                cart.currency || "XAF",
+                normalizedOrderType === "DELIVERY"
+                    ? (finalDelivery.instructions || null)
+                    : null
+            ]
+        );
+
+        const orderId = Number(orderResult.insertId);
+
+        for (const item of cart.items) {
+            const quantity = Number(item.quantity);
+
+            if (!Number.isInteger(quantity) || quantity <= 0 || quantity > 99) {
+                const error = new Error("Quantité POS invalide.");
+                error.code = "POS_ITEM_QUANTITY_INVALID";
+                throw error;
+            }
+
+            const unitPrice = toNumber(item.unitPrice);
+            const lineTotal = unitPrice * quantity;
+
+            const [itemResult] = await connection.execute(
+                `
+                INSERT INTO order_items
+                (
+                    order_id,
+                    product_id,
+                    formula_id,
+                    product_name,
+                    unit_price,
+                    quantity,
+                    line_total,
+                    notes
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                `,
+                [
+                    orderId,
+                    item.type === "PRODUCT"
+                        ? Number(item.id)
+                        : null,
+                    item.type === "FORMULA"
+                        ? Number(item.id)
+                        : null,
+                    item.name,
+                    unitPrice,
+                    quantity,
+                    lineTotal,
+                    item.instructions || null
+                ]
+            );
+
+            const orderItemId = Number(itemResult.insertId);
+
+            for (const option of (item.selectedOptions || [])) {
+                await connection.execute(
+                    `
+                    INSERT INTO order_item_options
+                    (
+                        order_item_id,
+                        option_name,
+                        option_value,
+                        price_delta
+                    )
+                    VALUES (?, ?, ?, ?)
+                    `,
+                    [
+                        orderItemId,
+                        option.groupName || "Option",
+                        option.name || "Choix",
+                        toNumber(option.priceDelta)
+                    ]
+                );
+            }
+        }
+
+        await connection.execute(
+            `
+            INSERT INTO order_status_history
+            (
+                order_id,
+                status,
+                comment,
+                changed_by_user_id,
+                changed_by_admin_user_id
+            )
+            VALUES
+            (
+                ?,
+                'RECEIVED',
+                ?,
+                NULL,
+                ?
+            )
+            `,
+            [
+                orderId,
+                `Commande créée depuis le POS — canal ${normalizedChannel}.`,
+                adminUserId || null
+            ]
+        );
+
+        const paymentPublicId = crypto.randomUUID();
+        const paymentProvider =
+            Payment.getDefaultProvider(normalizedPaymentMethod);
+
+        const payment =
+            await Payment.createInTransaction(
+                connection,
+                {
+                    publicId: paymentPublicId,
+                    orderId,
+                    method: normalizedPaymentMethod,
+                    provider: paymentProvider,
+                    status: Payment.STATUSES.PENDING,
+                    amount: totalAmount,
+                    currency: cart.currency || "XAF",
+                    providerReference: null
+                }
+            );
+
+        await Payment.addEventInTransaction(
+            connection,
+            {
+                paymentId: payment.id,
+                eventType: "PAYMENT_CREATED",
+                description:
+                    "Paiement initial créé avec la commande POS.",
+                payload: {
+                    source: "ADMIN_POS",
+                    orderReference: reference,
+                    channel: normalizedChannel,
+                    method: normalizedPaymentMethod,
+                    provider: paymentProvider,
+                    amount: totalAmount,
+                    currency: cart.currency || "XAF",
+                    status: Payment.STATUSES.PENDING
+                }
+            }
+        );
+
+        /*
+         * Snapshot POS + clé d'idempotence.
+         * La contrainte UNIQUE sur idempotency_key est la dernière barrière
+         * contre deux commandes concurrentes.
+         */
+        await connection.execute(
+            `
+            INSERT INTO order_pos_context
+            (
+                order_id,
+                idempotency_key,
+                client_mode,
+                guest_first_name,
+                guest_last_name,
+                contact_phone,
+                contact_email,
+                delivery_zone_id,
+                delivery_recipient_name,
+                delivery_phone,
+                delivery_address_line1,
+                delivery_address_line2,
+                delivery_district,
+                delivery_city,
+                delivery_country_code,
+                delivery_instructions,
+                created_by_admin_user_id
+            )
+            VALUES
+            (
+                ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?
+            )
+            `,
+            [
+                orderId,
+                key,
+                normalizedMode,
+
+                normalizedMode === "GUEST"
+                    ? String(guest.firstName || "").trim().slice(0, 100)
+                    : null,
+
+                normalizedMode === "GUEST"
+                    ? String(guest.lastName || "").trim().slice(0, 100)
+                    : null,
+
+                normalizedMode === "ACCOUNT"
+                    ? (accountCustomer?.phone || null)
+                    : normalizedMode === "GUEST"
+                        ? (String(guest.phone || "").trim().slice(0, 40) || null)
+                        : null,
+
+                normalizedMode === "ACCOUNT"
+                    ? (accountCustomer?.email || null)
+                    : normalizedMode === "GUEST"
+                        ? (String(guest.email || "").trim().slice(0, 190) || null)
+                        : null,
+
+                zone ? Number(zone.id) : null,
+
+                normalizedOrderType === "DELIVERY"
+                    ? (finalDelivery.recipientName || null)
+                    : null,
+
+                normalizedOrderType === "DELIVERY"
+                    ? (finalDelivery.phone || null)
+                    : null,
+
+                normalizedOrderType === "DELIVERY"
+                    ? (finalDelivery.addressLine1 || null)
+                    : null,
+
+                normalizedOrderType === "DELIVERY"
+                    ? (finalDelivery.addressLine2 || null)
+                    : null,
+
+                normalizedOrderType === "DELIVERY"
+                    ? (finalDelivery.district || null)
+                    : null,
+
+                normalizedOrderType === "DELIVERY"
+                    ? (finalDelivery.city || null)
+                    : null,
+
+                normalizedOrderType === "DELIVERY"
+                    ? (finalDelivery.countryCode || "CG")
+                    : null,
+
+                normalizedOrderType === "DELIVERY"
+                    ? (finalDelivery.instructions || null)
+                    : null,
+
+                adminUserId || null
+            ]
+        );
+
+        await connection.commit();
+
+        return {
+            duplicate: false,
+            orderId,
+            publicId,
+            reference,
+            channel: normalizedChannel,
+            orderType: normalizedOrderType,
+            orderStatus: "RECEIVED",
+            paymentId: payment.id,
+            paymentPublicId: payment.publicId,
+            paymentMethod: payment.method,
+            paymentProvider: payment.provider,
+            paymentStatus: payment.status,
+            subtotal,
+            discountAmount,
+            deliveryFee,
+            taxAmount,
+            totalAmount,
+            currency: cart.currency || "XAF"
+        };
+    }
+    catch (error) {
+        try {
+            await connection.rollback();
+        }
+        catch (rollbackError) {
+            console.error(
+                "Erreur rollback commande POS :",
+                rollbackError
+            );
+        }
+
+        /*
+         * Deux requêtes strictement concurrentes peuvent toutes les deux
+         * franchir le SELECT initial. L'index UNIQUE gagne :
+         * la transaction perdante est rollbackée puis retrouve la gagnante.
+         */
+        if (
+            error &&
+            error.code === "ER_DUP_ENTRY"
+        ) {
+            const winner =
+                await findPosOrderByIdempotencyKey(key);
+
+            if (winner) {
+                return posExistingResult(winner);
+            }
+        }
+
+        throw error;
+    }
+    finally {
+        connection.release();
+    }
+}
+
+
 /* =========================================================
    LISTE DES COMMANDES D'UN CLIENT
 ========================================================= */
@@ -2052,6 +2870,126 @@ function canTransitionOrderStatus(
 }
 
 
+
+
+/* =========================================================
+   13.9.5.1 — COHERENCE COMMANDE / PAIEMENT
+========================================================= */
+
+function evaluateOrderPaymentConsistency({
+    orderStatus,
+    paymentStatus,
+    paymentMethod = null
+}) {
+
+    const order =
+        String(
+            orderStatus || ""
+        )
+            .trim()
+            .toUpperCase();
+
+
+    const payment =
+        String(
+            paymentStatus || ""
+        )
+            .trim()
+            .toUpperCase();
+
+
+    const method =
+        String(
+            paymentMethod || ""
+        )
+            .trim()
+            .toUpperCase();
+
+
+    const errors = [];
+    const warnings = [];
+
+
+    if (
+        order === "REFUNDED"
+        &&
+        payment !== Payment.STATUSES.REFUNDED
+    ) {
+
+        errors.push(
+            "Une commande REFUNDED doit avoir un paiement REFUNDED."
+        );
+    }
+
+
+    if (
+        payment === Payment.STATUSES.REFUNDED
+        &&
+        order !== "REFUNDED"
+    ) {
+
+        warnings.push(
+            "Le paiement est REFUNDED mais la commande conserve encore son statut opérationnel."
+        );
+    }
+
+
+    if (
+        order === "DELIVERED"
+        &&
+        [
+            Payment.STATUSES.FAILED,
+            Payment.STATUSES.CANCELLED
+        ].includes(payment)
+        &&
+        method !== Payment.METHODS.CASH
+    ) {
+
+        warnings.push(
+            "Commande livrée avec un paiement électronique non payé."
+        );
+    }
+
+
+    return {
+        valid:
+            errors.length === 0,
+
+        errors,
+        warnings
+    };
+}
+
+
+function assertOrderPaymentConsistency(data) {
+
+    const result =
+        evaluateOrderPaymentConsistency(
+            data
+        );
+
+
+    if (!result.valid) {
+
+        const error =
+            new Error(
+                result.errors.join(" ")
+            );
+
+        error.code =
+            "ORDER_PAYMENT_INCONSISTENT";
+
+        error.details =
+            result;
+
+        throw error;
+    }
+
+
+    return result;
+}
+
+
 /* =========================================================
    ADMIN - MODIFIER LE STATUT D'UNE COMMANDE
 
@@ -2130,6 +3068,67 @@ async function updateStatus({
             String(
                 nextStatus || ""
             ).toUpperCase();
+
+
+        /*
+         * Une commande ne peut être marquée REFUNDED que si
+         * son dernier paiement est réellement REFUNDED.
+         */
+        if (
+            normalizedNextStatus ===
+            "REFUNDED"
+        ) {
+
+            const [
+                paymentRows
+            ] =
+                await connection.execute(
+                    `
+                    SELECT
+                        method,
+                        status
+                    FROM payments
+                    WHERE order_id = ?
+                    ORDER BY id DESC
+                    LIMIT 1
+                    `,
+                    [
+                        order.id
+                    ]
+                );
+
+
+            const latestPayment =
+                paymentRows[0]
+                ||
+                null;
+
+
+            if (!latestPayment) {
+
+                const error =
+                    new Error(
+                        "Impossible de rembourser la commande : aucun paiement associé."
+                    );
+
+                error.code =
+                    "ORDER_REFUND_PAYMENT_MISSING";
+
+                throw error;
+            }
+
+
+            assertOrderPaymentConsistency({
+                orderStatus:
+                    normalizedNextStatus,
+
+                paymentStatus:
+                    latestPayment.status,
+
+                paymentMethod:
+                    latestPayment.method
+            });
+        }
 
 
         if (
@@ -2419,6 +3418,7 @@ module.exports = {
 
     getAddresses,
     getAddressById,
+    getPosCustomerAddresses,
 
     getRestaurants,
     getRestaurantById,
@@ -2439,11 +3439,15 @@ module.exports = {
     ORDER_STATUS_LABELS,
     getAllowedNextStatuses,
     canTransitionOrderStatus,
+    evaluateOrderPaymentConsistency,
+    assertOrderPaymentConsistency,
     updateStatus,
 
     getOrderItems,
     getPaymentByOrderId,
     getStatusHistory,
 
-    createFromCart
+    createFromCart,
+    createFromPos,
+    findPosOrderByIdempotencyKey
 };

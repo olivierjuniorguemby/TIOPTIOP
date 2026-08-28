@@ -424,7 +424,8 @@ exports.refundMtnCancel = async function (req, res) {
                 req.session?.admin?.id
             );
 
-        await RefundService
+        const result =
+            await RefundService
             .cancelManualMtnRefund({
                 payment,
                 refundId,
@@ -443,7 +444,9 @@ exports.refundMtnCancel = async function (req, res) {
             });
 
         req.session.flashSuccess =
-            "Demande de remboursement MTN MoMo annulée.";
+            result.duplicate
+                ? "Cette demande MTN MoMo était déjà annulée."
+                : "Demande de remboursement MTN MoMo annulée.";
 
         return res.redirect(
             redirectUrl
@@ -574,7 +577,9 @@ exports.collectCash = async function (req, res) {
         const adminId = Number(req.session?.admin?.id);
         const result = await Payment.collectCashPayment({
             paymentId,
-            adminUserId: Number.isInteger(adminId) && adminId > 0 ? adminId : null
+            collectedBy: Number.isInteger(adminId) && adminId > 0 ? adminId : null,
+            receivedAmount: req.body.receivedAmount,
+            comment: cleanString(req.body.comment, 500)
         });
         // collectCashPayment() peut renvoyer directement le paiement
         // ou un objet contenant { payment, duplicate } selon l'implémentation.

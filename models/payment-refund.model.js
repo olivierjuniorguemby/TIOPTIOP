@@ -480,64 +480,409 @@ async function createPendingValidated({
     }
 }
 
-async function updateProviderResult({
+async function updateProviderResultAtomic({
     refundId,
     status,
     providerReference = null,
     providerPayload = null,
-    processed = false
+    processed = false,
+    expectedCurrentStatus = null
 }) {
     const id = normalizeId(refundId);
 
     if (!id) {
-        throw new Error("Remboursement invalide.");
+        const error = new Error("Remboursement invalide.");
+        error.code = "REFUND_ID_INVALID";
+        throw error;
     }
 
     const normalizedStatus = String(status || "").trim().toUpperCase();
 
-    if (
-        ![
-            "PENDING",
-            "SUCCEEDED",
-            "FAILED",
-            "CANCELLED"
-        ].includes(normalizedStatus)
-    ) {
-        throw new Error("Statut remboursement invalide.");
+    if (![
+        "PENDING",
+        "SUCCEEDED",
+        "FAILED",
+        "CANCELLED"
+    ].includes(normalizedStatus)) {
+        const error = new Error("Statut remboursement invalide.");
+        error.code = "REFUND_STATUS_INVALID";
+        throw error;
     }
 
-    await db.query(
+    const expected = expectedCurrentStatus
+        ? String(expectedCurrentStatus).trim().toUpperCase()
+        : null;
+
+    const connection = await db.pool.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        /*
+         * 13.9.5.2 — VERROU ATOMIQUE
+         * Confirmation / annulation / résultat provider d'un même refund
+         * sont sérialisés sur la ligne payment_refunds.
+         */
+        const [rows] = await connection.execute(
+            `SELECT *
+             FROM payment_refunds
+             WHERE id = ?
+             LIMIT 1
+             FOR UPDATE`,
+            [id]
+        );
+
+        const current = rows[0] || null;
+
+        if (!current) {
+            const error = new Error("Remboursement introuvable.");
+            error.code = "REFUND_NOT_FOUND";
+            throw error;
+        }
+
+        const currentStatus = String(current.status || "").toUpperCase();
+
+        /*
+         * Si l'appelant exige PENDING et qu'un autre POST a déjà gagné,
+         * on ne réécrit jamais l'état terminal.
+         */
+        if (expected && currentStatus !== expected) {
+            await connection.commit();
+
+            return {
+                refund: current,
+                updated: false,
+                duplicate: currentStatus === normalizedStatus,
+                conflict: currentStatus !== normalizedStatus,
+                previousStatus: currentStatus
+            };
+        }
+
+        if (currentStatus === normalizedStatus) {
+            /*
+             * 13.9.5.4 — idempotence enrichissante.
+             * Un replay du même statut ne doit pas recréer l'opération,
+             * mais il peut apporter une référence/payload provider qui
+             * manquait après un timeout ou une reprise 13.9.5.3.
+             *
+             * Exemple : PENDING local créé avant l'appel Stripe, puis la
+             * réponse Stripe PENDING arrive avec re_... : on conserve le
+             * statut PENDING tout en enregistrant la vérité provider.
+             */
+            const hasMetadataToPersist =
+                Boolean(providerReference)
+                || providerPayload !== null && providerPayload !== undefined
+                || Boolean(processed);
+
+            if (hasMetadataToPersist) {
+                await connection.execute(
+                    `UPDATE payment_refunds
+                     SET
+                         provider_reference = COALESCE(?, provider_reference),
+                         provider_payload = CASE
+                             WHEN ? IS NULL THEN provider_payload
+                             ELSE ?
+                         END,
+                         processed_at = CASE
+                             WHEN ? THEN COALESCE(processed_at, CURRENT_TIMESTAMP)
+                             ELSE processed_at
+                         END
+                     WHERE id = ?
+                       AND status = ?`,
+                    [
+                        providerReference || null,
+                        providerPayload === null || providerPayload === undefined
+                            ? null
+                            : 1,
+                        serializePayload(providerPayload),
+                        processed ? 1 : 0,
+                        id,
+                        currentStatus
+                    ]
+                );
+            }
+
+            const [sameStatusRows] = await connection.execute(
+                `SELECT *
+                 FROM payment_refunds
+                 WHERE id = ?
+                 LIMIT 1`,
+                [id]
+            );
+
+            await connection.commit();
+
+            return {
+                refund: sameStatusRows[0] || current,
+                updated: hasMetadataToPersist,
+                duplicate: true,
+                conflict: false,
+                previousStatus: currentStatus
+            };
+        }
+
+        /*
+         * Une ligne terminale ne doit jamais revenir vers un autre état.
+         */
+        if (["SUCCEEDED", "FAILED", "CANCELLED"].includes(currentStatus)) {
+            await connection.commit();
+
+            return {
+                refund: current,
+                updated: false,
+                duplicate: false,
+                conflict: true,
+                previousStatus: currentStatus
+            };
+        }
+
+        const [result] = await connection.execute(
+            `UPDATE payment_refunds
+             SET
+                 status = ?,
+                 provider_reference = COALESCE(?, provider_reference),
+                 provider_payload = ?,
+                 processed_at =
+                    CASE
+                        WHEN ?
+                        THEN COALESCE(processed_at, CURRENT_TIMESTAMP)
+                        ELSE processed_at
+                    END
+             WHERE id = ?
+               AND status = ?`,
+            [
+                normalizedStatus,
+                providerReference || null,
+                serializePayload(providerPayload),
+                processed ? 1 : 0,
+                id,
+                currentStatus
+            ]
+        );
+
+        if (result.affectedRows !== 1) {
+            const error = new Error(
+                "Le remboursement a été modifié entre-temps. Rechargez la page."
+            );
+            error.code = "REFUND_STATUS_CONFLICT";
+            throw error;
+        }
+
+        const [updatedRows] = await connection.execute(
+            `SELECT *
+             FROM payment_refunds
+             WHERE id = ?
+             LIMIT 1`,
+            [id]
+        );
+
+        await connection.commit();
+
+        return {
+            refund: updatedRows[0] || current,
+            updated: true,
+            duplicate: false,
+            conflict: false,
+            previousStatus: currentStatus
+        };
+    }
+    catch (error) {
+        try {
+            await connection.rollback();
+        }
+        catch (rollbackError) {
+            console.error(
+                "Erreur rollback statut remboursement :",
+                rollbackError
+            );
+        }
+
+        throw error;
+    }
+    finally {
+        connection.release();
+    }
+}
+
+
+async function updateProviderResult(data) {
+    const result = await updateProviderResultAtomic(data);
+
+    if (result.conflict) {
+        const error = new Error(
+            `Le remboursement a déjà été traité (${result.previousStatus}).`
+        );
+        error.code = "REFUND_STATUS_CONFLICT";
+        error.currentStatus = result.previousStatus;
+        throw error;
+    }
+
+    return result.refund;
+}
+
+/*
+ * Compatibilité 13.9.4.x :
+ * les services historiques attendent directement la ligne refund.
+ * Ce wrapper conserve cette forme tout en utilisant le verrou 13.9.5.2.
+ */
+async function transitionProviderResult(data) {
+    return updateProviderResultAtomic(data);
+}
+
+
+async function transitionPendingOnce({
+    refundId,
+    status,
+    providerReference = null,
+    providerPayload = null,
+    processed = true
+}) {
+    const result = await updateProviderResultAtomic({
+        refundId,
+        status,
+        providerReference,
+        providerPayload,
+        processed,
+        expectedCurrentStatus: "PENDING"
+    });
+
+    return result;
+}
+
+
+
+/* =========================================================
+   ESPACE CLIENT — 13.9.4.6
+
+   Ces lectures sont volontairement limitées aux informations
+   que le client peut voir. Aucune donnée technique sensible :
+   - pas de provider_payload
+   - pas d'idempotency_key
+   - pas d'identifiant administrateur
+========================================================= */
+
+async function listClientByPaymentId(paymentId) {
+    const id = normalizeId(paymentId);
+
+    if (!id) {
+        return [];
+    }
+
+    const rows = await db.query(
         `
-        UPDATE payment_refunds
-        SET
-            status = ?,
-            provider_reference = COALESCE(?, provider_reference),
-            provider_payload = ?,
-            processed_at =
-                CASE
-                    WHEN ?
-                    THEN CURRENT_TIMESTAMP
-                    ELSE processed_at
-                END
-        WHERE id = ?
+        SELECT
+            id,
+            payment_id,
+            refund_type,
+            status,
+            amount,
+            currency,
+            reason_code,
+            reason_text,
+            requested_at,
+            processed_at,
+            created_at,
+            updated_at
+        FROM payment_refunds
+        WHERE payment_id = ?
+        ORDER BY created_at ASC, id ASC
         `,
-        [
-            normalizedStatus,
-            providerReference || null,
-            serializePayload(providerPayload),
-            processed ? 1 : 0,
-            id
-        ]
+        [id]
     );
 
-    return findById(id);
+    return Array.isArray(rows)
+        ? rows
+        : [];
 }
+
+
+async function getClientSummaryByPaymentId(paymentId) {
+    const id = normalizeId(paymentId);
+
+    if (!id) {
+        return {
+            total_refunded: 0,
+            total_pending: 0,
+            total_failed: 0,
+            total_cancelled: 0,
+            refund_count: 0
+        };
+    }
+
+    const rows = await db.query(
+        `
+        SELECT
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN status = 'SUCCEEDED'
+                        THEN amount
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS total_refunded,
+
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN status = 'PENDING'
+                        THEN amount
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS total_pending,
+
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN status = 'FAILED'
+                        THEN amount
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS total_failed,
+
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN status = 'CANCELLED'
+                        THEN amount
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS total_cancelled,
+
+            COUNT(*) AS refund_count
+
+        FROM payment_refunds
+        WHERE payment_id = ?
+        `,
+        [id]
+    );
+
+    return rows[0] || {
+        total_refunded: 0,
+        total_pending: 0,
+        total_failed: 0,
+        total_cancelled: 0,
+        refund_count: 0
+    };
+}
+
 
 module.exports = {
     listByPaymentId,
     getSummaryByPaymentId,
+    listClientByPaymentId,
+    getClientSummaryByPaymentId,
     findById,
     findByIdempotencyKey,
     createPendingValidated,
-    updateProviderResult
+    updateProviderResult,
+    transitionProviderResult,
+    transitionPendingOnce
 };

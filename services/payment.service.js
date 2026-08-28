@@ -52,8 +52,13 @@ async function markPaid(
 
 
     if (
-        payment.status ===
-        Payment.STATUSES.PAID
+        [
+            Payment.STATUSES.PAID,
+            Payment.STATUSES.PARTIAL,
+            Payment.STATUSES.REFUNDED
+        ].includes(
+            payment.status
+        )
     ) {
 
         return payment;
@@ -115,6 +120,21 @@ async function markAuthorized(
     }
 
 
+    if (
+        [
+            Payment.STATUSES.PAID,
+            Payment.STATUSES.PARTIAL,
+            Payment.STATUSES.REFUNDED,
+            Payment.STATUSES.CANCELLED
+        ].includes(
+            payment.status
+        )
+    ) {
+
+        return payment;
+    }
+
+
     const updated =
         await Payment.updateStatus(
             paymentId,
@@ -144,7 +164,7 @@ async function markAuthorized(
 async function markPending(paymentId, metadata = null) {
     const payment = await Payment.findById(paymentId);
     if (!payment) throw new Error("Paiement introuvable.");
-    if ([Payment.STATUSES.PAID,Payment.STATUSES.CANCELLED,Payment.STATUSES.REFUNDED].includes(payment.status)) return payment;
+    if ([Payment.STATUSES.PAID,Payment.STATUSES.PARTIAL,Payment.STATUSES.CANCELLED,Payment.STATUSES.REFUNDED].includes(payment.status)) return payment;
     if (payment.status===Payment.STATUSES.PENDING) return payment;
     const updated=await Payment.updateStatus(payment.id,Payment.STATUSES.PENDING);
     await Payment.addEvent({paymentId:payment.id,eventType:"PAYMENT_PENDING",description:"Paiement remis en attente.",payload:metadata});
@@ -183,6 +203,7 @@ async function markFailed(
     if (
         [
             Payment.STATUSES.PAID,
+            Payment.STATUSES.PARTIAL,
             Payment.STATUSES.CANCELLED,
             Payment.STATUSES.REFUNDED
         ].includes(payment.status)
@@ -237,12 +258,17 @@ async function cancel(
 
 
     if (
-        payment.status ===
-        Payment.STATUSES.PAID
+        [
+            Payment.STATUSES.PAID,
+            Payment.STATUSES.PARTIAL,
+            Payment.STATUSES.REFUNDED
+        ].includes(
+            payment.status
+        )
     ) {
 
         throw new Error(
-            "Un paiement payé doit passer par un remboursement."
+            "Un paiement encaissé ou remboursé ne peut plus être annulé."
         );
     }
 
@@ -1078,6 +1104,9 @@ async function reconcilePendingMtnMomo({
         pending:
             0,
 
+        notFound:
+            0,
+
         errors:
             0
     };
@@ -1130,8 +1159,25 @@ async function reconcilePendingMtnMomo({
         }
         catch (error) {
 
-            summary.errors++;
+            /*
+             * 13.9.5.3 FIX
+             * Un 404 du provider signifie que la référence n'est plus
+             * retrouvée côté MTN (souvent ancienne donnée Sandbox).
+             * On NE transforme pas automatiquement le paiement en FAILED :
+             * l'absence de ressource ne prouve pas un échec financier.
+             * On le classe séparément comme "notFound" pour intervention.
+             */
+            if (Number(error?.httpStatus) === 404) {
+                summary.notFound++;
 
+                console.warn(
+                    `[MTN MoMo] Réconciliation payment ${payment.id} : référence provider introuvable (404), paiement local conservé ${payment.status}.`
+                );
+
+                continue;
+            }
+
+            summary.errors++;
 
             console.error(
                 `[MTN MoMo] Réconciliation payment ${payment.id} :`,
@@ -1454,21 +1500,59 @@ async function handleStripeWebhookEvent(stripeEvent) {
     return {handled:true,duplicate:false,eventId:stripeEvent.id,eventType,payment:updated};
 }
 
-async function auditStripeCardPayments({limit=50}={}) {
+async function auditStripeCardPayments({limit=50, repair=false}={}) {
     const payments=await Payment.findRecentStripeCardPayments(limit);
     const results=[];
     for (const payment of payments) {
-        const row={paymentId:payment.id,orderReference:payment.order_reference,providerReference:payment.provider_reference,localStatus:payment.status,stripeStatus:null,expectedLocalStatus:null,consistent:false,error:null};
+        const row={paymentId:payment.id,orderReference:payment.order_reference,providerReference:payment.provider_reference,localStatus:payment.status,stripeStatus:null,expectedLocalStatus:null,consistent:false,repaired:false,error:null};
         try {
             const intent=await StripeService.retrievePaymentIntent(payment.provider_reference);
             row.stripeStatus=intent.status;
             row.expectedLocalStatus=expectedLocalStripeStatus(intent);
             assertStripePaymentConsistency(payment,intent);
-            row.consistent=row.expectedLocalStatus===null || row.expectedLocalStatus===payment.status;
+            /*
+             * 13.9.5.3 FIX — un PaymentIntent Stripe "succeeded"
+             * reste succeeded même après un remboursement.
+             * Les statuts locaux PARTIAL/REFUNDED sont donc cohérents
+             * avec un PaymentIntent Stripe succeeded.
+             */
+            const refundAwareSucceeded =
+                row.expectedLocalStatus === Payment.STATUSES.PAID
+                &&
+                [
+                    Payment.STATUSES.PARTIAL,
+                    Payment.STATUSES.REFUNDED
+                ].includes(payment.status);
+
+            row.consistent =
+                row.expectedLocalStatus === null
+                ||
+                row.expectedLocalStatus === payment.status
+                ||
+                refundAwareSucceeded;
+
+            if (repair && !row.consistent && row.expectedLocalStatus) {
+                const updated=await applyStripeIntentState(payment,intent,{source:"AUTOMATIC_RECONCILIATION"});
+                row.localStatus=updated?.status || payment.status;
+                row.repaired=row.localStatus===row.expectedLocalStatus;
+                row.consistent=row.repaired;
+                await Payment.addEvent({paymentId:payment.id,eventType:"STRIPE_RECONCILIATION_REPAIRED",description:"Statut local réparé depuis Stripe après contrôle serveur.",payload:{providerReference:intent.id,stripeStatus:intent.status,previousLocalStatus:payment.status,newLocalStatus:row.localStatus}});
+            }
         } catch (error) { row.error=error.message; }
         results.push(row);
     }
     return results;
+}
+
+async function reconcileStripeCardPayments({limit=50}={}) {
+    const rows=await auditStripeCardPayments({limit,repair:true});
+    return {
+        checked:rows.length,
+        consistent:rows.filter(r=>r.consistent && !r.repaired).length,
+        repaired:rows.filter(r=>r.repaired).length,
+        errors:rows.filter(r=>Boolean(r.error)).length,
+        rows
+    };
 }
 
 /* =========================================================
@@ -1499,5 +1583,6 @@ module.exports = {
     expectedLocalStripeStatus,
     assertStripePaymentConsistency,
     applyStripeIntentState,
-    auditStripeCardPayments
+    auditStripeCardPayments,
+    reconcileStripeCardPayments
 };

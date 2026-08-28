@@ -356,7 +356,7 @@
 
 
         <a
-            href="/commande/confirmation/<%= encodeURIComponent(order.reference) %>"
+            href="<%= typeof backUrl !== 'undefined' ? backUrl : '/commande/confirmation/' + encodeURIComponent(order.reference) %>"
             class="stripe-back"
         >
             ← Retour à la commande
@@ -417,6 +417,10 @@ document.addEventListener(
 
         const orderReference =
             <%- JSON.stringify(order.reference) %>;
+
+        const paymentSyncUrl = <%- JSON.stringify(typeof syncUrl !== "undefined" ? syncUrl : "/checkout/carte/" + encodeURIComponent(order.reference) + "/sync") %>;
+        const paymentReturnUrl = <%- JSON.stringify(typeof returnUrl !== "undefined" ? returnUrl : "/checkout/carte/" + encodeURIComponent(order.reference) + "/retour") %>;
+        const paymentSuccessUrl = <%- JSON.stringify(typeof successUrl !== "undefined" ? successUrl : "/commande/confirmation/" + encodeURIComponent(order.reference) + "?payment=card-paid") %>;
 
 
         const stripe =
@@ -517,13 +521,7 @@ document.addEventListener(
 
             const response =
                 await fetch(
-                    "/checkout/carte/"
-                    +
-                    encodeURIComponent(
-                        orderReference
-                    )
-                    +
-                    "/sync",
+                    paymentSyncUrl,
                     {
                         method:
                             "POST",
@@ -600,15 +598,7 @@ document.addEventListener(
                 try {
 
                     const returnUrl =
-                        window.location.origin
-                        +
-                        "/checkout/carte/"
-                        +
-                        encodeURIComponent(
-                            orderReference
-                        )
-                        +
-                        "/retour";
+                        window.location.origin + paymentReturnUrl;
 
 
                     const result =
@@ -678,14 +668,7 @@ document.addEventListener(
                         "PAID"
                     ) {
 
-                        window.location.href =
-                            "/commande/confirmation/"
-                            +
-                            encodeURIComponent(
-                                orderReference
-                            )
-                            +
-                            "?payment=card-paid";
+                        window.location.href = paymentSuccessUrl;
 
 
                         return;

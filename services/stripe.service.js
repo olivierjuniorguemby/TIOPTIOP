@@ -241,4 +241,23 @@ async function retrieveRefund(refundId) {
 }
 
 
-module.exports={getConfig,getClient,maskKey,assertStripeObjectMode,testConnection,createPaymentIntent,retrievePaymentIntent,retrieveEvent,getWebhookSecret,constructWebhookEvent,createRefund,retrieveRefund};
+async function findRefundForRecovery({paymentIntentId, refundPublicId}) {
+    const intentId = String(paymentIntentId || "").trim();
+    const publicId = String(refundPublicId || "").trim();
+    if (!intentId.startsWith("pi_") || !publicId) return null;
+
+    const refunds = await getClient().refunds.list({
+        payment_intent: intentId,
+        limit: 100
+    });
+
+    for (const refund of refunds.data || []) {
+        assertStripeObjectMode(refund.livemode);
+        if (String(refund.metadata?.tioptiopRefundPublicId || "") === publicId) {
+            return refund;
+        }
+    }
+    return null;
+}
+
+module.exports={getConfig,getClient,maskKey,assertStripeObjectMode,testConnection,createPaymentIntent,retrievePaymentIntent,retrieveEvent,getWebhookSecret,constructWebhookEvent,createRefund,retrieveRefund,findRefundForRecovery};

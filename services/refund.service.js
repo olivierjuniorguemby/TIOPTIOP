@@ -9,6 +9,8 @@ const PaymentRefund =
 const StripeService =
     require("./stripe.service");
 
+const db = require("../config/database");
+
 
 /* =========================================================
    REFUND SERVICE
@@ -514,6 +516,11 @@ async function executeStripeRefund({
                             true
                     });
 
+            assertRefundablePaymentState(
+                payment
+            );
+
+
             const summary =
                 await PaymentRefund
                     .getSummaryByPaymentId(
@@ -810,84 +817,37 @@ async function executeStripeRefund({
         throw error;
     }
     catch (error) {
-        /*
-         * Si le remboursement n'a pas déjà été marqué FAILED
-         * par la branche précédente, on l'enregistre ici.
-         */
-        const current =
-            await PaymentRefund
-                .findById(
-                    localRefund.id
-                );
+        const current = await PaymentRefund.findById(localRefund.id);
 
-        if (
-            current
-            &&
-            current.status ===
-                "PENDING"
-        ) {
-            await PaymentRefund
-                .updateProviderResult({
-                    refundId:
-                        current.id,
+        if (current && current.status === "PENDING") {
+            const terminalTypes = ["StripeInvalidRequestError", "StripeCardError", "StripePermissionError", "StripeAuthenticationError"];
+            const terminal = terminalTypes.includes(String(error.type || ""));
 
-                    status:
-                        "FAILED",
-
-                    providerReference:
-                        current.provider_reference
-                        ||
-                        null,
-
-                    providerPayload: {
-                        code:
-                            error.code
-                            ||
-                            null,
-
-                        type:
-                            error.type
-                            ||
-                            null,
-
-                        message:
-                            error.message
-                    },
-
-                    processed:
-                        true
+            /*
+             * 13.9.5.3 : une erreur réseau/timeout est AMBIGUË. Stripe peut avoir
+             * accepté le remboursement alors que TiopTiop n'a pas reçu la réponse.
+             * On ne marque donc jamais FAILED dans ce cas : PENDING sera réconcilié.
+             */
+            if (terminal) {
+                await PaymentRefund.updateProviderResult({
+                    refundId: current.id,
+                    status: "FAILED",
+                    providerReference: current.provider_reference || null,
+                    providerPayload: {code:error.code || null,type:error.type || null,message:error.message},
+                    processed: true
                 });
-
-            await Payment.addEvent({
-                paymentId:
-                    payment.id,
-
-                eventType:
-                    "STRIPE_REFUND_FAILED",
-
-                description:
-                    "Erreur lors du remboursement Stripe TEST.",
-
-                payload: {
-                    refundId:
-                        current.id,
-
-                    code:
-                        error.code
-                        ||
-                        null,
-
-                    type:
-                        error.type
-                        ||
-                        null,
-
-                    message:
-                        error.message
-                }
-            });
+                await Payment.addEvent({paymentId:payment.id,eventType:"STRIPE_REFUND_FAILED",description:"Remboursement Stripe refusé de manière certaine.",payload:{refundId:current.id,code:error.code || null,type:error.type || null,message:error.message}});
+            } else {
+                await PaymentRefund.updateProviderResult({
+                    refundId: current.id,
+                    status: "PENDING",
+                    providerReference: current.provider_reference || null,
+                    providerPayload: {code:error.code || null,type:error.type || null,message:error.message,reconciliationRequired:true},
+                    processed: false
+                });
+                await Payment.addEvent({paymentId:payment.id,eventType:"STRIPE_REFUND_RECONCILIATION_REQUIRED",description:"Réponse Stripe incertaine : remboursement conservé PENDING pour réconciliation.",payload:{refundId:current.id,refundPublicId:current.public_id,code:error.code || null,type:error.type || null,message:error.message}});
+            }
         }
-
         throw error;
     }
 }
@@ -897,6 +857,57 @@ async function executeStripeRefund({
 /* =========================================================
    13.9.4.5 — OUTILS COMMUNS MTN MOMO / CASH
 ========================================================= */
+
+
+
+function assertRefundablePaymentState(payment) {
+
+    if (!payment) {
+
+        const error =
+            new Error(
+                "Paiement introuvable."
+            );
+
+        error.code =
+            "REFUND_PAYMENT_NOT_FOUND";
+
+        throw error;
+    }
+
+
+    const status =
+        String(
+            payment.status || ""
+        )
+            .trim()
+            .toUpperCase();
+
+
+    if (
+        ![
+            Payment.STATUSES.PAID,
+            Payment.STATUSES.PARTIAL
+        ].includes(
+            status
+        )
+    ) {
+
+        const error =
+            new Error(
+                `Le paiement au statut ${status || "INCONNU"} ne peut pas recevoir un remboursement réussi.`
+            );
+
+        error.code =
+            "REFUND_PAYMENT_STATUS_INVALID";
+
+        throw error;
+    }
+
+
+    return true;
+}
+
 
 function buildManualIdempotencyKey(paymentId, formToken, prefix) {
     const token = String(formToken || "")
@@ -922,6 +933,12 @@ async function applySuccessfulRefundToPayment({
     providerReference = null,
     extraPayload = null
 }) {
+
+    assertRefundablePaymentState(
+        payment
+    );
+
+
     const summary =
         await PaymentRefund.getSummaryByPaymentId(
             payment.id
@@ -1316,9 +1333,9 @@ async function confirmManualMtnRefund({
         throw error;
     }
 
-    const updatedRefund =
+    const transition =
         await PaymentRefund
-            .updateProviderResult({
+            .transitionPendingOnce({
                 refundId:
                     refund.id,
 
@@ -1329,22 +1346,36 @@ async function confirmManualMtnRefund({
                     reference,
 
                 providerPayload: {
-                    manual:
-                        true,
-
+                    manual: true,
                     confirmedByAdminUserId:
-                        confirmedByAdminUserId
-                        || null,
-
+                        confirmedByAdminUserId || null,
                     adminNote:
                         adminNote
-                        ? String(adminNote).slice(0, 500)
-                        : null
+                            ? String(adminNote).slice(0, 500)
+                            : null
                 },
 
                 processed:
                     true
             });
+
+    if (!transition.updated) {
+        if (transition.duplicate && transition.refund.status === "SUCCEEDED") {
+            return {
+                duplicate: true,
+                refund: transition.refund,
+                payment: await Payment.findById(payment.id)
+            };
+        }
+
+        const error = new Error(
+            `Cette demande MTN a déjà été traitée (${transition.refund.status}).`
+        );
+        error.code = "MTN_REFUND_CONCURRENT_ACTION";
+        throw error;
+    }
+
+    const updatedRefund = transition.refund;
 
     const state =
         await applySuccessfulRefundToPayment({
@@ -1445,9 +1476,9 @@ async function cancelManualMtnRefund({
         );
     }
 
-    const updated =
+    const transition =
         await PaymentRefund
-            .updateProviderResult({
+            .transitionPendingOnce({
                 refundId:
                     refund.id,
 
@@ -1455,26 +1486,38 @@ async function cancelManualMtnRefund({
                     "CANCELLED",
 
                 providerReference:
-                    refund.provider_reference
-                    || null,
+                    refund.provider_reference || null,
 
                 providerPayload: {
-                    manual:
-                        true,
-
+                    manual: true,
                     cancelledByAdminUserId:
-                        cancelledByAdminUserId
-                        || null,
-
+                        cancelledByAdminUserId || null,
                     reason:
                         reason
-                        ? String(reason).slice(0, 500)
-                        : null
+                            ? String(reason).slice(0, 500)
+                            : null
                 },
 
                 processed:
                     true
             });
+
+    if (!transition.updated) {
+        if (transition.duplicate && transition.refund.status === "CANCELLED") {
+            return {
+                duplicate: true,
+                refund: transition.refund
+            };
+        }
+
+        const error = new Error(
+            `Cette demande MTN a déjà été traitée (${transition.refund.status}).`
+        );
+        error.code = "MTN_REFUND_CONCURRENT_ACTION";
+        throw error;
+    }
+
+    const updated = transition.refund;
 
     await Payment.addEvent({
         paymentId:
@@ -1717,12 +1760,79 @@ async function executeCashRefund({
     };
 }
 
+
+async function synchronizePaymentFromRefundSummary(payment) {
+    const summary = await PaymentRefund.getSummaryByPaymentId(payment.id);
+    const totalRefunded = Number(summary.total_refunded || 0);
+    const paymentAmount = Number(payment.amount || 0);
+    if (totalRefunded <= 0) return payment;
+    const nextStatus = totalRefunded >= paymentAmount ? Payment.STATUSES.REFUNDED : Payment.STATUSES.PARTIAL;
+    if (String(payment.status) === String(nextStatus)) return payment;
+    return Payment.updateStatus(payment.id, nextStatus);
+}
+
+async function reconcilePendingStripeRefunds({limit = 50} = {}) {
+    const safeLimit = Math.max(1, Math.min(200, Number(limit) || 50));
+    const rows = await db.query(`
+        SELECT pr.*, p.provider_reference AS payment_provider_reference
+        FROM payment_refunds pr
+        INNER JOIN payments p ON p.id = pr.payment_id
+        WHERE pr.provider = 'STRIPE' AND pr.status = 'PENDING'
+        ORDER BY pr.requested_at ASC, pr.id ASC
+        LIMIT ${safeLimit}
+    `);
+
+    const summary = {checked:0,succeeded:0,failed:0,pending:0,errors:0};
+    for (const refund of rows || []) {
+        summary.checked++;
+        try {
+            const payment = await Payment.findById(refund.payment_id);
+            if (!payment) throw new Error(`Paiement ${refund.payment_id} introuvable.`);
+
+            let stripeRefund = null;
+            if (String(refund.provider_reference || "").startsWith("re_")) {
+                stripeRefund = await StripeService.retrieveRefund(refund.provider_reference);
+            } else {
+                stripeRefund = await StripeService.findRefundForRecovery({
+                    paymentIntentId: refund.payment_provider_reference || payment.provider_reference,
+                    refundPublicId: refund.public_id
+                });
+            }
+
+            if (!stripeRefund) {
+                summary.pending++;
+                continue;
+            }
+
+            const providerStatus = String(stripeRefund.status || "").toLowerCase();
+            if (providerStatus === "succeeded") {
+                await PaymentRefund.updateProviderResult({refundId:refund.id,status:"SUCCEEDED",providerReference:stripeRefund.id,providerPayload:{id:stripeRefund.id,status:stripeRefund.status,amount:stripeRefund.amount,currency:stripeRefund.currency,livemode:stripeRefund.livemode,reconciled:true},processed:true});
+                const updatedPayment = await synchronizePaymentFromRefundSummary(payment);
+                await Payment.addEvent({paymentId:payment.id,eventType:"STRIPE_REFUND_RECONCILED",description:"Remboursement Stripe récupéré après incident et réconcilié.",payload:{refundId:refund.id,refundPublicId:refund.public_id,stripeRefundId:stripeRefund.id,providerStatus,paymentStatus:updatedPayment?.status || payment.status}});
+                summary.succeeded++;
+            } else if (["failed","canceled","cancelled"].includes(providerStatus)) {
+                await PaymentRefund.updateProviderResult({refundId:refund.id,status:"FAILED",providerReference:stripeRefund.id,providerPayload:{id:stripeRefund.id,status:stripeRefund.status,failureReason:stripeRefund.failure_reason || null,reconciled:true},processed:true});
+                await Payment.addEvent({paymentId:payment.id,eventType:"STRIPE_REFUND_RECONCILED_FAILED",description:"Remboursement Stripe réconcilié en échec.",payload:{refundId:refund.id,stripeRefundId:stripeRefund.id,providerStatus}});
+                summary.failed++;
+            } else {
+                summary.pending++;
+            }
+        } catch (error) {
+            summary.errors++;
+            console.error(`[Stripe Refund] Réconciliation refund ${refund.id}:`, error.message);
+        }
+    }
+    return summary;
+}
+
 module.exports = {
     buildRefundState,
+    assertRefundablePaymentState,
     executeStripeRefund,
     createManualMtnRefundRequest,
     confirmManualMtnRefund,
     cancelManualMtnRefund,
-    executeCashRefund
+    executeCashRefund,
+    reconcilePendingStripeRefunds
 };
 
