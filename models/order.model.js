@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const db = require("../config/database");
 const Payment = require("./payment.model");
+const Loyalty = require("./loyalty.model");
 
 
 /* =========================================================
@@ -521,7 +522,8 @@ async function createFromCart({
     orderType,
     paymentMethod,
     customerNote,
-    cart
+    cart,
+    loyaltyRedemptionPublicId = null
 }) {
 
     const connection =
@@ -825,17 +827,50 @@ async function createFromCart({
            TOTALS
         ================================================= */
 
-        const discountAmount = 0;
+        let discountAmount = 0;
         const taxAmount = 0;
+        let loyaltyRedemption = null;
+        let loyaltyLabel = null;
 
-        const totalAmount =
-            subtotal
-            -
-            discountAmount
-            +
-            deliveryFee
-            +
-            taxAmount;
+        if (loyaltyRedemptionPublicId) {
+            loyaltyRedemption = await Loyalty.lockCheckoutRedemption(
+                connection, userId, loyaltyRedemptionPublicId
+            );
+
+            const type = String(loyaltyRedemption.reward_type || '').toUpperCase();
+            const value = Math.max(0, toNumber(loyaltyRedemption.reward_value));
+            loyaltyLabel = loyaltyRedemption.name || 'Avantage Tiop+';
+
+            if (type === 'DISCOUNT') {
+                if (value <= 0 || value > 100) {
+                    throw new Error('La réduction Tiop+ est mal configurée.');
+                }
+                discountAmount = Math.min(subtotal, Math.round(subtotal * value / 100));
+            }
+            else if (type === 'COUPON') {
+                if (value <= 0) throw new Error('Le coupon Tiop+ est mal configuré.');
+                discountAmount = Math.min(subtotal, value);
+            }
+            else if (type === 'FREE_DELIVERY') {
+                if (orderType !== 'DELIVERY') {
+                    throw new Error('La livraison offerte Tiop+ nécessite une commande en livraison.');
+                }
+                deliveryFee = 0;
+            }
+            else if (type === 'PRODUCT') {
+                if (!loyaltyRedemption.reward_product_id || Number(loyaltyRedemption.reward_product_active) !== 1) {
+                    throw new Error('Le produit offert Tiop+ n’est pas configuré ou n’est plus disponible.');
+                }
+            }
+            else {
+                throw new Error('Type d’avantage Tiop+ non supporté.');
+            }
+        }
+
+        const totalAmount = subtotal - discountAmount + deliveryFee + taxAmount;
+        if (totalAmount <= 0) {
+            throw new Error('Cette récompense couvre 100 % de la commande. Le paiement à 0 XAF sera géré dans une prochaine évolution.');
+        }
 
 
         /* =================================================
@@ -1039,6 +1074,27 @@ async function createFromCart({
 
 
         /* =================================================
+           16.6 — PRODUIT OFFERT TIOP+
+        ================================================= */
+        if (loyaltyRedemption && loyaltyRedemption.reward_type === 'PRODUCT') {
+            await connection.execute(`
+                INSERT INTO order_items
+                (order_id, product_id, formula_id, product_name, unit_price, quantity, line_total, notes)
+                VALUES (?, ?, NULL, ?, 0, 1, 0, ?)`, [
+                orderId,
+                loyaltyRedemption.reward_product_id,
+                `${loyaltyRedemption.reward_product_name} — OFFERT TIOP+`,
+                `Récompense Tiop+ : ${loyaltyLabel}`
+            ]);
+        }
+
+        if (loyaltyRedemption) {
+            await Loyalty.markRedemptionUsedInTransaction(
+                connection, loyaltyRedemption.id, orderId
+            );
+        }
+
+        /* =================================================
            HISTORIQUE INITIAL
         ================================================= */
 
@@ -1208,6 +1264,9 @@ async function createFromCart({
             subtotal,
             deliveryFee,
             discountAmount,
+            loyaltyRedemptionPublicId: loyaltyRedemption ? loyaltyRedemption.public_id : null,
+            loyaltyRewardType: loyaltyRedemption ? loyaltyRedemption.reward_type : null,
+            loyaltyRewardName: loyaltyLabel,
             taxAmount,
             totalAmount,
             currency:
@@ -3336,6 +3395,29 @@ async function updateStatus({
             }
         }
 
+
+        /* =================================================
+           16.7 — CYCLE DE VIE AVANTAGE TIOP+
+           Une commande annulée libère uniquement un avantage encore RESERVED.
+           Un avantage USED (paiement déjà confirmé) n'est jamais recrédité ici.
+        ================================================= */
+        if (normalizedNextStatus === 'CANCELLED') {
+            const [redemptionRows] = await connection.execute(`
+                SELECT id, status FROM loyalty_redemptions
+                WHERE order_id=? LIMIT 1 FOR UPDATE`, [order.id]);
+            const redemption = redemptionRows[0] || null;
+            if (redemption && redemption.status === 'RESERVED') {
+                await connection.execute(`
+                    UPDATE loyalty_redemptions
+                    SET status='AVAILABLE', used_at=NULL, order_id=NULL
+                    WHERE id=? AND status='RESERVED'`, [redemption.id]);
+                await connection.execute(`
+                    INSERT INTO loyalty_redemption_events
+                    (redemption_id, order_id, event_type, from_status, to_status, note, created_at)
+                    VALUES (?, ?, 'RELEASED', 'RESERVED', 'AVAILABLE', ?, NOW())`,
+                    [redemption.id, order.id, 'Commande annulée avant consommation définitive.']);
+            }
+        }
 
         await connection.commit();
 

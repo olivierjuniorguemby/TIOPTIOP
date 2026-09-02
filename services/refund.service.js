@@ -10,6 +10,7 @@ const StripeService =
     require("./stripe.service");
 
 const db = require("../config/database");
+const Loyalty = require("../models/loyalty.model");
 
 
 /* =========================================================
@@ -556,6 +557,14 @@ async function executeStripeRefund({
                     nextStatus
                 );
 
+            let loyaltyRefund = null;
+            if (fullyRefunded && payment.order_id) {
+                loyaltyRefund = await Loyalty.reverseFullyRefundedOrder(
+                    payment.order_id,
+                    "STRIPE_REFUND_SUCCEEDED"
+                );
+            }
+
             await Payment.addEvent({
                 paymentId:
                     payment.id,
@@ -968,6 +977,16 @@ async function applySuccessfulRefundToPayment({
             nextStatus
         );
 
+    // 16.8 — Les effets fidélité ne sont annulés qu'au remboursement TOTAL.
+    // L'opération est idempotente dans loyalty.model.js.
+    let loyaltyRefund = null;
+    if (fullyRefunded && payment.order_id) {
+        loyaltyRefund = await Loyalty.reverseFullyRefundedOrder(
+            payment.order_id,
+            successEventType || "FULL_REFUND"
+        );
+    }
+
     await Payment.addEvent({
         paymentId:
             payment.id,
@@ -1048,6 +1067,7 @@ async function applySuccessfulRefundToPayment({
             updatedPayment,
 
         totalRefunded,
+        loyaltyRefund,
 
         fullyRefunded
     };
@@ -1767,8 +1787,15 @@ async function synchronizePaymentFromRefundSummary(payment) {
     const paymentAmount = Number(payment.amount || 0);
     if (totalRefunded <= 0) return payment;
     const nextStatus = totalRefunded >= paymentAmount ? Payment.STATUSES.REFUNDED : Payment.STATUSES.PARTIAL;
-    if (String(payment.status) === String(nextStatus)) return payment;
-    return Payment.updateStatus(payment.id, nextStatus);
+    const updated = String(payment.status) === String(nextStatus)
+        ? payment
+        : await Payment.updateStatus(payment.id, nextStatus);
+
+    if (nextStatus === Payment.STATUSES.REFUNDED && payment.order_id) {
+        await Loyalty.reverseFullyRefundedOrder(payment.order_id, "REFUND_RECONCILIATION");
+    }
+
+    return updated;
 }
 
 async function reconcilePendingStripeRefunds({limit = 50} = {}) {

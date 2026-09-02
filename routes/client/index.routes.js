@@ -8,6 +8,9 @@ const router = require("express").Router();
 const page =
     require("../../controllers/client/page.controller");
 
+const loyaltyController =
+    require("../../controllers/client/loyalty.controller");
+
 
 /* ======================================================
    AUTHENTIFICATION CLIENT
@@ -144,10 +147,19 @@ router.get(
 router.get(
     "/tiopplus",
     requireUser,
-    page.staticPage(
-        "client/content/tiopplus",
-        "Tiop+"
-    )
+    loyaltyController.page
+);
+
+router.post(
+    "/tiopplus/subscribe",
+    requireUser,
+    loyaltyController.subscribe
+);
+
+router.post(
+    "/tiopplus/rewards/:id/redeem",
+    requireUser,
+    loyaltyController.redeem
 );
 
 

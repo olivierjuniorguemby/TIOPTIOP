@@ -12,6 +12,9 @@ const MtnMomo =
 const StripeService =
     require("./stripe.service");
 
+const Loyalty =
+    require("../models/loyalty.model");
+
 /* =========================================================
    PAYMENT SERVICE
    TIOPTIOP — 13.8.6
@@ -87,6 +90,28 @@ async function markPaid(
             metadata
     });
 
+    // 16.7 — Le paiement confirmé rend l'avantage réservé définitivement USED.
+    // Une panne fidélité ne doit jamais annuler un paiement provider déjà confirmé.
+    try {
+        await Loyalty.finalizeOrderRedemption(payment.order_id, 'PAYMENT_CONFIRMED');
+    } catch (loyaltyLifecycleError) {
+        console.error('[TIOP+ 16.7] Finalisation avantage impossible :', loyaltyLifecycleError);
+    }
+
+    // 16.2 — Crédit des points gagnés sur la commande payée.
+    try {
+        const loyaltyResult = await Loyalty.awardPaidOrder(payment.id);
+        if (loyaltyResult?.credited) {
+            await Payment.addEvent({
+                paymentId: payment.id,
+                eventType: "LOYALTY_POINTS_EARNED",
+                description: `${loyaltyResult.points} point(s) Tiop+ crédité(s).`,
+                payload: loyaltyResult
+            });
+        }
+    } catch (loyaltyError) {
+        console.error("[TIOP+ 16.2] Crédit des points impossible :", loyaltyError);
+    }
 
     return updated;
 }

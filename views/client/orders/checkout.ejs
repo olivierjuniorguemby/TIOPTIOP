@@ -914,6 +914,9 @@ textarea.checkout-field {
     }
 }
 
+
+/* 16.6 — TIOP+ CHECKOUT */
+.loyalty-options{display:grid;gap:10px}.loyalty-option{display:block;cursor:pointer}.loyalty-option input{position:absolute;opacity:0;pointer-events:none}.loyalty-option-box{display:flex;gap:12px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:16px;background:#fff;transition:.18s}.loyalty-option input:checked+.loyalty-option-box{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,121,0,.09);background:#fffaf4}.loyalty-icon{width:46px;height:46px;border-radius:13px;background:#fff0df;display:grid;place-items:center;overflow:hidden;flex:0 0 46px}.loyalty-icon img{width:100%;height:100%;object-fit:cover}.loyalty-copy{flex:1;min-width:0}.loyalty-copy strong{display:block;font-size:13px}.loyalty-copy small{display:block;color:var(--muted);margin-top:4px;line-height:1.4}.loyalty-badge{font-size:10px;font-weight:900;padding:5px 8px;border-radius:999px;background:#f3eee8}.summary-loyalty{color:#16753c}.summary-loyalty[hidden]{display:none!important}
 </style>
 
 
@@ -1568,6 +1571,33 @@ textarea.checkout-field {
 
                 </section>
 
+
+                <!-- =============================================
+                     16.6 — AVANTAGES TIOP+
+                ============================================== -->
+                <section class="checkout-card">
+                    <h2 class="checkout-card-title">🎁 Mes avantages Tiop+</h2>
+                    <p class="checkout-card-description">Un seul avantage peut être utilisé par commande. La vérification finale est faite côté serveur.</p>
+                    <div class="loyalty-options">
+                        <label class="loyalty-option">
+                            <input type="radio" name="loyalty_redemption_public_id" value="" <%= !values?.loyalty_redemption_public_id ? 'checked' : '' %>>
+                            <span class="loyalty-option-box"><span class="loyalty-icon">✕</span><span class="loyalty-copy"><strong>Ne pas utiliser d’avantage</strong><small>Conserver mes récompenses pour plus tard.</small></span></span>
+                        </label>
+                        <% (availableRedemptions || []).forEach(function(redemption){ %>
+                            <label class="loyalty-option">
+                                <input type="radio" name="loyalty_redemption_public_id" value="<%= redemption.public_id %>"
+                                  data-type="<%= redemption.reward_type %>" data-value="<%= Number(redemption.reward_value || 0) %>"
+                                  data-name="<%= redemption.name %>"
+                                  <%= values?.loyalty_redemption_public_id === redemption.public_id ? 'checked' : '' %>>
+                                <span class="loyalty-option-box">
+                                    <span class="loyalty-icon"><% if(redemption.image_url){ %><img src="<%= redemption.image_url %>" alt=""><% } else { %>🎁<% } %></span>
+                                    <span class="loyalty-copy"><strong><%= redemption.name %></strong><small><%= redemption.description || 'Avantage Tiop+ débloqué' %></small></span>
+                                    <span class="loyalty-badge"><%= redemption.reward_type %></span>
+                                </span>
+                            </label>
+                        <% }) %>
+                    </div>
+                </section>
             </div>
 
 
@@ -1731,6 +1761,12 @@ textarea.checkout-field {
 
                 </div>
 
+
+
+                <div id="loyaltySummaryRow" class="summary-row summary-loyalty" hidden>
+                    <span id="loyaltySummaryLabel">🎁 Avantage Tiop+</span>
+                    <strong id="loyaltySummaryAmount">—</strong>
+                </div>
 
                 <!-- TOTAL -->
 

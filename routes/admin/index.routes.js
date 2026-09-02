@@ -63,6 +63,11 @@ const paymentController =
         "../../controllers/admin/payment.controller"
     );
 
+const loyaltyController =
+    require(
+        "../../controllers/admin/loyalty.controller"
+    );
+
 const deliveryController =
     require(
         "../../controllers/admin/delivery.controller"
@@ -233,6 +238,18 @@ const formulaUpload =
                 5 * 1024 * 1024
         }
     });
+
+
+const rewardUploadDir = path.join(process.cwd(), "public", "uploads", "rewards");
+fs.mkdirSync(rewardUploadDir, { recursive: true });
+const rewardUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, rewardUploadDir),
+    filename: (_req, file, cb) => cb(null, `reward-${Date.now()}-${Math.round(Math.random()*1E9)}${path.extname(file.originalname).toLowerCase()}`)
+  }),
+  limits: { files: 1, fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => cb(null, ['image/jpeg','image/png','image/webp','image/avif'].includes(file.mimetype))
+});
 
 
 /* =========================================================
@@ -756,13 +773,10 @@ router.get(
 );
 
 
-router.get(
-    "/tiopplus",
-    page.render(
-        "admin/catalog/loyalty",
-        "Tiop+"
-    )
-);
+router.get("/tiopplus", loyaltyController.index);
+router.post("/tiopplus", rewardUpload.single("image"), loyaltyController.create);
+router.post("/tiopplus/:id", rewardUpload.single("image"), loyaltyController.update);
+router.post("/tiopplus/:id/delete", loyaltyController.remove);
 
 
 /* =========================================================

@@ -1,3 +1,4 @@
+const Loyalty = require("../../models/loyalty.model");
 const crypto = require("crypto");
 
 const AdminPayment = require("../../models/admin-payment.model");
@@ -592,6 +593,47 @@ exports.collectCash = async function (req, res) {
 
         const collectedAmount = Number(collectedPayment.amount || 0);
         const collectedCurrency = collectedPayment.currency || "XAF";
+
+        // 16.7 FIX — CASH ne passe pas par PaymentService.markPaid().
+        // Il faut donc finaliser ici l'avantage RESERVED -> USED après encaissement.
+        // finalizeOrderRedemption() est idempotent : on l'appelle même si collectCashPayment()
+        // indique un doublon, ce qui permet aussi de réparer une ancienne commande déjà encaissée
+        // dont l'avantage serait resté RESERVED.
+        try {
+            const lifecycleResult = await Loyalty.finalizeOrderRedemption(
+                collectedPayment.order_id,
+                'CASH_PAYMENT_CONFIRMED'
+            );
+
+            if (lifecycleResult?.finalized && !lifecycleResult?.duplicate) {
+                await Payment.addEvent({
+                    paymentId: collectedPayment.id,
+                    eventType: "LOYALTY_REWARD_USED",
+                    description: "Avantage Tiop+ définitivement consommé après encaissement espèces.",
+                    payload: lifecycleResult
+                });
+            }
+        } catch (loyaltyLifecycleError) {
+            // Un paiement espèces déjà encaissé ne doit jamais être annulé à cause d'un souci fidélité.
+            console.error("[TIOP+ 16.7] Finalisation avantage CASH impossible :", loyaltyLifecycleError);
+        }
+
+        // 16.2 — Crédit des points gagnés après paiement.
+        // awardPaidOrder() possède déjà sa propre idempotence SQL : on peut donc l'appeler
+        // même lors d'une nouvelle ouverture/reconfirmation technique sans doubler les points.
+        try {
+            const loyaltyResult = await Loyalty.awardPaidOrder(collectedPayment.id);
+            if (loyaltyResult?.credited) {
+                await Payment.addEvent({
+                    paymentId: collectedPayment.id,
+                    eventType: "LOYALTY_POINTS_EARNED",
+                    description: `${loyaltyResult.points} point(s) Tiop+ crédité(s).`,
+                    payload: loyaltyResult
+                });
+            }
+        } catch (loyaltyError) {
+            console.error("[TIOP+ 16.2] Crédit CASH impossible :", loyaltyError);
+        }
 
         req.session.flashSuccess = result?.duplicate
             ? "Ce paiement en espèces était déjà encaissé."

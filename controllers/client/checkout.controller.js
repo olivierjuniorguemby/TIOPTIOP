@@ -10,6 +10,9 @@ const PaymentService =
 const StripeService =
     require("../../services/stripe.service");
 
+const Loyalty =
+    require("../../models/loyalty.model");
+
 
 /* =========================================================
    CHECKOUT CONTROLLER
@@ -98,7 +101,8 @@ async function (
         const [
             customer,
             addresses,
-            restaurants
+            restaurants,
+            availableRedemptions
         ] =
             await Promise.all([
 
@@ -110,7 +114,9 @@ async function (
                     userId
                 ),
 
-                Order.getRestaurants()
+                Order.getRestaurants(),
+
+                Loyalty.listAvailableRedemptions(userId)
             ]);
 
 
@@ -182,6 +188,7 @@ async function (
                 selectedRestaurant,
 
                 deliveryZones,
+                availableRedemptions,
 
                 currency,
 
@@ -213,6 +220,9 @@ async function (
                         "",
 
                     customer_note:
+                        "",
+
+                    loyalty_redemption_public_id:
                         ""
                 }
             }
@@ -486,6 +496,11 @@ async function (
                     2000
                 );
 
+        const loyaltyRedemptionPublicId =
+            String(req.body.loyalty_redemption_public_id || "")
+                .trim()
+                .slice(0, 36);
+
 
         const values = {
 
@@ -508,7 +523,10 @@ async function (
                 momoMsisdn,
 
             customer_note:
-                customerNote
+                customerNote,
+
+            loyalty_redemption_public_id:
+                loyaltyRedemptionPublicId
         };
 
 
@@ -732,7 +750,9 @@ async function (
 
                 customerNote,
 
-                cart
+                cart,
+
+                loyaltyRedemptionPublicId
             });
 
 
@@ -1575,7 +1595,8 @@ async function renderCheckoutError(
     const [
         customer,
         addresses,
-        restaurants
+        restaurants,
+        availableRedemptions
     ] =
         await Promise.all([
 
@@ -1587,7 +1608,9 @@ async function renderCheckoutError(
                 userId
             ),
 
-            Order.getRestaurants()
+            Order.getRestaurants(),
+
+            Loyalty.listAvailableRedemptions(userId)
         ]);
 
 
@@ -1678,6 +1701,7 @@ async function renderCheckoutError(
             selectedRestaurant,
 
             deliveryZones,
+            availableRedemptions,
 
             currency,
 

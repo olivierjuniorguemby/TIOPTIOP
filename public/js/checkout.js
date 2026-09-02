@@ -83,6 +83,11 @@ document.addEventListener(
             ||
             "XAF";
 
+        const loyaltyRadios = document.querySelectorAll('input[name="loyalty_redemption_public_id"]');
+        const loyaltySummaryRow = document.getElementById('loyaltySummaryRow');
+        const loyaltySummaryLabel = document.getElementById('loyaltySummaryLabel');
+        const loyaltySummaryAmount = document.getElementById('loyaltySummaryAmount');
+
 
         const subtotal =
             Number(
@@ -752,19 +757,41 @@ document.addEventListener(
                 calculateDeliveryFee();
 
 
-            const total =
-                subtotal +
-                fee;
+            const selectedReward = document.querySelector('input[name="loyalty_redemption_public_id"]:checked');
+            const rewardType = String(selectedReward?.dataset.type || '');
+            const rewardValue = Number(selectedReward?.dataset.value || 0);
+            const rewardName = selectedReward?.dataset.name || 'Avantage Tiop+';
+            let previewDiscount = 0;
+            let previewFee = fee;
+
+            if (selectedReward?.value) {
+                if (rewardType === 'DISCOUNT') previewDiscount = Math.min(subtotal, Math.round(subtotal * rewardValue / 100));
+                if (rewardType === 'COUPON') previewDiscount = Math.min(subtotal, rewardValue);
+                if (rewardType === 'FREE_DELIVERY' && getOrderType() === 'DELIVERY') previewFee = 0;
+            }
+
+            const total = Math.max(0, subtotal - previewDiscount + previewFee);
 
 
             if (deliveryFeeElement) {
 
                 deliveryFeeElement.textContent =
-                    fee === 0
+                    previewFee === 0
                         ? "0 " + currency
-                        : money(fee);
+                        : money(previewFee);
             }
 
+
+            if (loyaltySummaryRow) {
+                const active = Boolean(selectedReward?.value);
+                loyaltySummaryRow.hidden = !active;
+                if (active) {
+                    loyaltySummaryLabel.textContent = `🎁 ${rewardName}`;
+                    if (rewardType === 'PRODUCT') loyaltySummaryAmount.textContent = 'Produit offert';
+                    else if (rewardType === 'FREE_DELIVERY') loyaltySummaryAmount.textContent = getOrderType() === 'DELIVERY' ? 'Livraison offerte' : 'Livraison requise';
+                    else loyaltySummaryAmount.textContent = '- ' + money(previewDiscount);
+                }
+            }
 
             if (totalElement) {
 
@@ -1118,6 +1145,8 @@ document.addEventListener(
                 }
             );
 
+
+        loyaltyRadios.forEach(radio => radio.addEventListener('change', updateTotals));
 
         /* =====================================================
            INITIALISATION
