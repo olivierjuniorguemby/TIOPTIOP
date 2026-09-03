@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const db = require("../config/database");
 const Payment = require("./payment.model");
 const Loyalty = require("./loyalty.model");
+const LoyaltyCard = require("./loyalty-card.model");
 
 
 /* =========================================================
@@ -1395,7 +1396,10 @@ async function createFromPos({
     orderType,
     paymentMethod,
     deliverySnapshot = {},
-    cart
+    cart,
+    loyaltyRedemptionPublicId = null,
+    loyaltyCardPublicId = null,
+    loyaltyCardRewardId = null
 }) {
     const key = String(idempotencyKey || "").trim().slice(0, 100);
 
@@ -1420,6 +1424,43 @@ async function createFromPos({
 
     try {
         await connection.beginTransaction();
+
+        // 16.10.5 — carte Tiop+ physique présentée au POS.
+        let physicalLoyaltyCard = null;
+        if (loyaltyCardPublicId) {
+            const [cardRows] = await connection.execute(
+                `SELECT * FROM loyalty_cards WHERE public_id=? LIMIT 1 FOR UPDATE`,
+                [String(loyaltyCardPublicId)]
+            );
+            physicalLoyaltyCard = cardRows[0] || null;
+            if (!physicalLoyaltyCard) {
+                const error = new Error("Carte Tiop+ physique introuvable.");
+                error.code = "POS_LOYALTY_CARD_NOT_FOUND";
+                throw error;
+            }
+            const storedStatus = String(physicalLoyaltyCard.status || "ACTIVE").toUpperCase();
+            const expired = Boolean(physicalLoyaltyCard.expires_at && new Date(physicalLoyaltyCard.expires_at).getTime() < Date.now());
+            if (storedStatus !== "ACTIVE" || expired) {
+                const error = new Error(expired ? "Cette carte Tiop+ est expirée." : `Cette carte Tiop+ est ${storedStatus.toLowerCase()}.`);
+                error.code = expired ? "POS_LOYALTY_CARD_EXPIRED" : "POS_LOYALTY_CARD_NOT_ACTIVE";
+                throw error;
+            }
+        }
+
+        let physicalLoyaltyReward = null;
+        if (loyaltyCardRewardId) {
+            if (!physicalLoyaltyCard) {
+                const error = new Error("Présentez une carte Tiop+ avant de choisir une récompense.");
+                error.code = "POS_LOYALTY_CARD_REQUIRED";
+                throw error;
+            }
+            if (loyaltyRedemptionPublicId) {
+                const error = new Error("Une seule récompense Tiop+ peut être utilisée par commande.");
+                error.code = "POS_LOYALTY_REWARD_CONFLICT";
+                throw error;
+            }
+            physicalLoyaltyReward = await LoyaltyCard.lockRewardForOrder(connection, loyaltyCardPublicId, loyaltyCardRewardId);
+        }
 
         const [existingRows] = await connection.execute(
             `
@@ -1747,14 +1788,56 @@ async function createFromPos({
                 );
         }
 
-        const discountAmount = 0;
+        let discountAmount = 0;
         const taxAmount = 0;
+        let loyaltyRedemption = null;
+        let loyaltyLabel = null;
 
-        const totalAmount =
-            subtotal -
-            discountAmount +
-            deliveryFee +
-            taxAmount;
+        if (loyaltyRedemptionPublicId) {
+            if (normalizedMode !== "ACCOUNT" || !finalUserId) {
+                const error = new Error("Un avantage Tiop+ de compte nécessite un client avec compte.");
+                error.code = "POS_LOYALTY_ACCOUNT_REQUIRED";
+                throw error;
+            }
+            loyaltyRedemption = await Loyalty.lockCheckoutRedemption(connection, finalUserId, loyaltyRedemptionPublicId);
+            const type = String(loyaltyRedemption.reward_type || "").toUpperCase();
+            const value = Math.max(0, toNumber(loyaltyRedemption.reward_value));
+            loyaltyLabel = loyaltyRedemption.name || "Avantage Tiop+";
+            if (type === "DISCOUNT") {
+                if (value <= 0 || value > 100) throw new Error("La réduction Tiop+ est mal configurée.");
+                discountAmount = Math.min(subtotal, Math.round(subtotal * value / 100));
+            } else if (type === "COUPON") {
+                if (value <= 0) throw new Error("Le coupon Tiop+ est mal configuré.");
+                discountAmount = Math.min(subtotal, value);
+            } else if (type === "FREE_DELIVERY") {
+                if (normalizedOrderType !== "DELIVERY") throw new Error("La livraison offerte Tiop+ nécessite une commande en livraison.");
+                deliveryFee = 0;
+            } else if (type === "PRODUCT") {
+                if (!loyaltyRedemption.reward_product_id || Number(loyaltyRedemption.reward_product_active) !== 1) throw new Error("Le produit offert Tiop+ n’est pas configuré ou indisponible.");
+            } else throw new Error("Type d’avantage Tiop+ non supporté.");
+        }
+
+        if (physicalLoyaltyReward) {
+            const reward = physicalLoyaltyReward.reward;
+            const type = String(reward.reward_type || "").toUpperCase();
+            const value = Math.max(0, toNumber(reward.reward_value));
+            loyaltyLabel = reward.name || "Avantage carte Tiop+";
+            if (type === "DISCOUNT") {
+                if (value <= 0 || value > 100) throw new Error("La réduction Tiop+ est mal configurée.");
+                discountAmount = Math.min(subtotal, Math.round(subtotal * value / 100));
+            } else if (type === "COUPON") {
+                if (value <= 0) throw new Error("Le coupon Tiop+ est mal configuré.");
+                discountAmount = Math.min(subtotal, value);
+            } else if (type === "FREE_DELIVERY") {
+                if (normalizedOrderType !== "DELIVERY") throw new Error("La livraison offerte Tiop+ nécessite une commande en livraison.");
+                deliveryFee = 0;
+            } else if (type === "PRODUCT") {
+                if (!reward.reward_product_id || Number(reward.reward_product_active) !== 1) throw new Error("Le produit offert Tiop+ n’est pas configuré ou indisponible.");
+            } else throw new Error("Type d’avantage Tiop+ non supporté.");
+        }
+
+        const totalAmount = subtotal - discountAmount + deliveryFee + taxAmount;
+        if (totalAmount <= 0) throw new Error("Cet avantage couvre 100 % de la commande ; paiement 0 XAF non supporté.");
 
         const publicId = crypto.randomUUID();
         const reference = createReference();
@@ -1875,6 +1958,40 @@ async function createFromPos({
                     ]
                 );
             }
+        }
+
+        if (loyaltyRedemption && loyaltyRedemption.reward_type === "PRODUCT") {
+            await connection.execute(`
+                INSERT INTO order_items
+                (order_id, product_id, formula_id, product_name, unit_price, quantity, line_total, notes)
+                VALUES (?, ?, NULL, ?, 0, 1, 0, ?)`, [
+                orderId, loyaltyRedemption.reward_product_id,
+                `${loyaltyRedemption.reward_product_name} — OFFERT TIOP+`,
+                `Récompense Tiop+ : ${loyaltyLabel}`
+            ]);
+        }
+        if (physicalLoyaltyReward && String(physicalLoyaltyReward.reward.reward_type).toUpperCase() === "PRODUCT") {
+            const reward = physicalLoyaltyReward.reward;
+            await connection.execute(`
+                INSERT INTO order_items
+                (order_id, product_id, formula_id, product_name, unit_price, quantity, line_total, notes)
+                VALUES (?, ?, NULL, ?, 0, 1, 0, ?)`, [
+                orderId, reward.reward_product_id,
+                `${reward.reward_product_name} — OFFERT TIOP+`,
+                `Récompense carte Tiop+ : ${loyaltyLabel}`
+            ]);
+        }
+        if (physicalLoyaltyReward) {
+            await LoyaltyCard.reserveRewardInTransaction(connection, {
+                card: physicalLoyaltyReward.card,
+                reward: physicalLoyaltyReward.reward,
+                cost: physicalLoyaltyReward.cost,
+                orderId,
+                adminUserId
+            });
+        }
+        if (loyaltyRedemption) {
+            await Loyalty.reserveRedemptionInTransaction(connection, loyaltyRedemption.id, orderId);
         }
 
         await connection.execute(
@@ -2037,6 +2154,15 @@ async function createFromPos({
                 adminUserId || null
             ]
         );
+
+        if (physicalLoyaltyCard) {
+            await connection.execute(
+                `INSERT INTO loyalty_card_order_links (order_id,card_id,created_by_admin_user_id)
+                 VALUES (?,?,?)
+                 ON DUPLICATE KEY UPDATE card_id=VALUES(card_id)`,
+                [orderId, Number(physicalLoyaltyCard.id), adminUserId || null]
+            );
+        }
 
         await connection.commit();
 
@@ -3416,6 +3542,23 @@ async function updateStatus({
                     (redemption_id, order_id, event_type, from_status, to_status, note, created_at)
                     VALUES (?, ?, 'RELEASED', 'RESERVED', 'AVAILABLE', ?, NOW())`,
                     [redemption.id, order.id, 'Commande annulée avant consommation définitive.']);
+            }
+        }
+
+        if (normalizedNextStatus === 'CANCELLED') {
+            const [cardRedemptionRows] = await connection.execute(`
+                SELECT id, card_id, points_cost, status FROM loyalty_card_redemptions
+                WHERE order_id=? LIMIT 1 FOR UPDATE`, [order.id]);
+            const cardRedemption = cardRedemptionRows[0] || null;
+            if (cardRedemption && cardRedemption.status === 'RESERVED') {
+                await connection.execute(`UPDATE loyalty_cards SET points_balance=points_balance+?,updated_at=CURRENT_TIMESTAMP WHERE id=?`,
+                    [cardRedemption.points_cost, cardRedemption.card_id]);
+                await connection.execute(`UPDATE loyalty_card_redemptions SET status='RESTORED',restored_at=NOW() WHERE id=? AND status='RESERVED'`,
+                    [cardRedemption.id]);
+                await connection.execute(`
+                    INSERT INTO loyalty_card_transactions(card_id,order_id,transaction_type,points,description,created_by_admin_user_id)
+                    VALUES (?,?,'REVERSAL',?,?,NULL)`,
+                    [cardRedemption.card_id,order.id,cardRedemption.points_cost,'Récompense Tiop+ restituée après annulation de commande.']);
             }
         }
 

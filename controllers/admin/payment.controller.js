@@ -1,4 +1,5 @@
 const Loyalty = require("../../models/loyalty.model");
+const LoyaltyCard = require("../../models/loyalty-card.model");
 const crypto = require("crypto");
 
 const AdminPayment = require("../../models/admin-payment.model");
@@ -604,6 +605,7 @@ exports.collectCash = async function (req, res) {
                 collectedPayment.order_id,
                 'CASH_PAYMENT_CONFIRMED'
             );
+            const physicalLifecycleResult = await LoyaltyCard.finalizeOrderRedemption(collectedPayment.order_id);
 
             if (lifecycleResult?.finalized && !lifecycleResult?.duplicate) {
                 await Payment.addEvent({
@@ -622,7 +624,10 @@ exports.collectCash = async function (req, res) {
         // awardPaidOrder() possède déjà sa propre idempotence SQL : on peut donc l'appeler
         // même lors d'une nouvelle ouverture/reconfirmation technique sans doubler les points.
         try {
-            const loyaltyResult = await Loyalty.awardPaidOrder(collectedPayment.id);
+            const cardResult = await LoyaltyCard.awardPaidOrder(collectedPayment.id);
+            const loyaltyResult = cardResult?.reason === "NO_PHYSICAL_CARD"
+                ? await Loyalty.awardPaidOrder(collectedPayment.id)
+                : cardResult;
             if (loyaltyResult?.credited) {
                 await Payment.addEvent({
                     paymentId: collectedPayment.id,
@@ -632,7 +637,7 @@ exports.collectCash = async function (req, res) {
                 });
             }
         } catch (loyaltyError) {
-            console.error("[TIOP+ 16.2] Crédit CASH impossible :", loyaltyError);
+            console.error("[TIOP+ 16.10.5] Crédit CASH impossible :", loyaltyError);
         }
 
         req.session.flashSuccess = result?.duplicate

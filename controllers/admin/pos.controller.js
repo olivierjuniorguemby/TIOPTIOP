@@ -6,6 +6,9 @@ const Order = require("../../models/order.model");
 const ProductOption = require("../../models/product-option.model");
 const PaymentService = require("../../services/payment.service");
 const StripeService = require("../../services/stripe.service");
+const Loyalty = require("../../models/loyalty.model");
+const LoyaltyCard = require("../../models/loyalty-card.model");
+const LoyaltyCardQr = require("../../services/loyalty-card-qr.service");
 
 function normalizeImage(value) {
     if (!value) return null;
@@ -378,6 +381,20 @@ async function buildPosPricedCart(payload = {}) {
 async function calculateCart(req, res) {
     try {
         const cart = await buildPosPricedCart(req.body || {});
+        const cardPublicId=normalizePosText(req.body?.loyaltyCardPublicId,36);
+        const rewardId=Number(req.body?.loyaltyCardRewardId)||null;
+        if(cardPublicId&&rewardId){
+            const rewards=await LoyaltyCard.listEligibleRewardsForPos(cardPublicId);
+            const reward=rewards.find(x=>Number(x.id)===rewardId);
+            if(!reward||!reward.eligible)throw Object.assign(new Error("Récompense carte Tiop+ indisponible ou solde insuffisant."),{code:"POS_LOYALTY_REWARD_UNAVAILABLE"});
+            const type=String(reward.reward_type||"").toUpperCase(),value=Math.max(0,Number(reward.reward_value||0));
+            if(type==="DISCOUNT")cart.discountAmount=Math.min(cart.subtotal,Math.round(cart.subtotal*value/100));
+            else if(type==="COUPON")cart.discountAmount=Math.min(cart.subtotal,value);
+            else if(type==="FREE_DELIVERY"){if(cart.orderType!=="DELIVERY")throw new Error("La livraison offerte nécessite une commande en livraison.");cart.deliveryFee=0;}
+            else if(type==="PRODUCT"){if(!reward.reward_product_id||Number(reward.reward_product_active)!==1)throw new Error("Produit offert Tiop+ indisponible.");}
+            cart.total=cart.subtotal-cart.discountAmount+cart.deliveryFee+cart.taxAmount;
+            cart.loyaltyReward={id:Number(reward.id),name:reward.name,pointsCost:Number(reward.points_cost),rewardType:type,rewardValue:value,rewardProductId:reward.reward_product_id?Number(reward.reward_product_id):null,rewardProductName:reward.reward_product_name||null};
+        }
         return res.json({ ok: true, cart });
     }
     catch (error) {
@@ -600,7 +617,12 @@ async function createOrder(req, res) {
             orderType: cart.orderType,
             paymentMethod,
             deliverySnapshot: delivery,
-            cart
+            cart,
+            loyaltyRedemptionPublicId: customer.mode === "ACCOUNT"
+                ? normalizePosText(req.body?.loyaltyRedemptionPublicId, 36) || null
+                : null,
+            loyaltyCardPublicId: normalizePosText(req.body?.loyaltyCardPublicId, 36) || null,
+            loyaltyCardRewardId: Number(req.body?.loyaltyCardRewardId) > 0 ? Number(req.body.loyaltyCardRewardId) : null
         });
 
         let cardPayment = null;
@@ -709,6 +731,84 @@ async function searchCustomers(req, res) {
         console.error("[ADMIN POS] Recherche client :", error);
         return res.status(500).json({ ok: false, message: "Impossible de rechercher les clients." });
     }
+}
+
+
+async function customerLoyalty(req, res) {
+    try {
+        const userId = Number(req.params.userId);
+        if (!Number.isInteger(userId) || userId <= 0) return res.status(400).json({ ok:false, message:"Client invalide." });
+        const [account, redemptions] = await Promise.all([Loyalty.findAccount(userId), Loyalty.listAvailableRedemptions(userId)]);
+        return res.json({ ok:true, subscribed:Boolean(account?.subscribed_at), account: account ? { pointsBalance:Number(account.points_balance||0), tier:account.tier } : null, redemptions:(redemptions||[]).map(r=>({ publicId:r.public_id, name:r.name, description:r.description||'', type:r.reward_type, value:Number(r.reward_value||0), productName:r.reward_product_name||null, expiresAt:r.expires_at||null })) });
+    } catch (error) {
+        console.error("[ADMIN POS] Tiop+ client :", error);
+        return res.status(500).json({ ok:false, message:"Impossible de charger Tiop+." });
+    }
+}
+
+function serializePosLoyaltyCard(card) {
+    if (!card) return null;
+    const expired = Boolean(card.expires_at && new Date(card.expires_at).getTime() < Date.now());
+    const storedStatus = String(card.status || 'ACTIVE').toUpperCase();
+    const effectiveStatus = expired && storedStatus === 'ACTIVE' ? 'EXPIRED' : storedStatus;
+    return {
+        id: Number(card.id), publicId: card.public_id, cardNumber: card.card_number,
+        displayName: card.display_name || [card.first_name, card.last_name].filter(Boolean).join(' ') || card.card_number,
+        firstName: card.first_name || '', lastName: card.last_name || '', phone: card.phone || '', email: card.email || '',
+        cardType: card.card_type || 'VIP', pointsBalance: Number(card.points_balance || 0),
+        expiresAt: card.expires_at || null, status: effectiveStatus, usable: effectiveStatus === 'ACTIVE', linkedUserId: card.user_id ? Number(card.user_id) : null
+    };
+}
+
+async function searchLoyaltyCards(req, res) {
+    try {
+        const query = String(req.query?.q || '').trim();
+        if (query.length < 2) return res.json({ ok:true, cards:[] });
+        const rows = await LoyaltyCard.searchForPos(query, 12);
+        return res.json({ ok:true, cards:(rows||[]).map(serializePosLoyaltyCard) });
+    } catch (error) {
+        console.error('[ADMIN POS] Recherche carte Tiop+ :', error);
+        return res.status(500).json({ ok:false, message:'Impossible de rechercher la carte Tiop+.' });
+    }
+}
+
+async function verifyLoyaltyCard(req, res) {
+    try {
+        const value=String(req.body?.value || '').trim();
+        if (!value) return res.status(400).json({ok:false,message:'QR ou numéro de carte manquant.'});
+        let card=null;
+        if (/^TT-[A-Z0-9-]+$/i.test(value)) {
+            card=await LoyaltyCard.findByCardNumber(value);
+        } else {
+            const qr=LoyaltyCardQr.verifyTokenDetailed(value);
+            if (!qr.ok) {
+                console.warn('[ADMIN POS] QR Tiop+ refusé :', qr.code, LoyaltyCardQr.diagnostics());
+                return res.status(400).json({ok:false,code:qr.code,message:qr.message});
+            }
+            card=await LoyaltyCard.findByPublicId(qr.publicId);
+        }
+        if (!card) return res.status(404).json({ok:false,message:'Carte Tiop+ introuvable.'});
+        const result=serializePosLoyaltyCard(card);
+        if (!result.usable) return res.status(409).json({ok:false,code:`CARD_${result.status}`,message:`Carte Tiop+ ${result.status.toLowerCase()} : utilisation refusée.`,card:result});
+        return res.json({ok:true,card:result});
+    } catch(error) {
+        console.error('[ADMIN POS] Vérification carte Tiop+ :',error);
+        return res.status(500).json({ok:false,message:'Impossible de vérifier la carte Tiop+.'});
+    }
+}
+
+async function physicalLoyaltyCardRewards(req,res){
+ try{
+  const publicId=normalizePosText(req.query?.publicId,36);
+  if(!publicId)return res.status(400).json({ok:false,message:'Carte Tiop+ manquante.'});
+  const rewards=await LoyaltyCard.listEligibleRewardsForPos(publicId);
+  return res.json({ok:true,rewards:rewards.map(r=>({
+   id:Number(r.id),name:r.name,description:r.description||'',pointsCost:Number(r.points_cost||0),
+   rewardType:r.reward_type,rewardValue:r.reward_value==null?null:Number(r.reward_value),
+   rewardProductId:r.reward_product_id?Number(r.reward_product_id):null,rewardProductName:r.reward_product_name||null,
+   eligible:Boolean(r.eligible)
+  }))});
+ }catch(error){console.error('[ADMIN POS] Récompenses carte :',error);return res.status(500).json({ok:false,message:'Impossible de charger les récompenses de la carte.'});}
 }
 
 async function customerAddresses(req, res) {
@@ -1001,5 +1101,5 @@ async function syncMobileMoney(req, res) {
     }
 }
 
-module.exports = { index, calculateCart, createOrder, searchCustomers, customerAddresses, deliveryZones, productConfiguration, formulaConfiguration, cardPaymentPage, syncCardPayment, cardReturn, mobileMoneyPage, initiateMobileMoney, syncMobileMoney };
+module.exports = { index, calculateCart, createOrder, searchCustomers, customerLoyalty, searchLoyaltyCards, verifyLoyaltyCard, physicalLoyaltyCardRewards, customerAddresses, deliveryZones, productConfiguration, formulaConfiguration, cardPaymentPage, syncCardPayment, cardReturn, mobileMoneyPage, initiateMobileMoney, syncMobileMoney };
 

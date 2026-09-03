@@ -65,3 +65,9 @@ document.getElementById('rewardModal').addEventListener('click',e=>{if(e.target.
 function refreshRewardFields(){const t=document.getElementById('rwType').value;document.getElementById('rwProductWrap').style.display=t==='PRODUCT'?'block':'none';const l=document.getElementById('rwValueLabel');const v=document.getElementById('rwValue');if(t==='DISCOUNT'){l.textContent='Réduction (%)';v.placeholder='Ex. 20 pour -20%';}else if(t==='COUPON'){l.textContent='Valeur du coupon (XAF)';v.placeholder='Ex. 2000';}else{l.textContent='Valeur (facultatif)';v.placeholder='';}}
 document.getElementById('rwType').addEventListener('change',refreshRewardFields);refreshRewardFields();
 </script>
+
+<section class="tp-card-link">
+  <div><span class="admin-badge">Cartes physiques / VIP</span><h2>🎫 Cartes avantages nominatives</h2><p class="muted">La gestion des cartes, filtres, impression et QR sécurisé dispose maintenant de sa propre page.</p></div>
+  <a class="btn-tiop-add tp-link" href="/admin/tiopplus/carte">Gérer les cartes →</a>
+</section>
+<style>.tp-card-link{margin:24px 0;padding:20px;border:1px solid #eadfd3;border-radius:18px;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:20px}.tp-card-link h2{margin:7px 0 4px}.tp-link{text-decoration:none;white-space:nowrap}@media(max-width:700px){.tp-card-link{align-items:flex-start;flex-direction:column}}</style>

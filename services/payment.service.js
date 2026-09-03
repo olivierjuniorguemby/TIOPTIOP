@@ -15,6 +15,9 @@ const StripeService =
 const Loyalty =
     require("../models/loyalty.model");
 
+const LoyaltyCard =
+    require("../models/loyalty-card.model");
+
 /* =========================================================
    PAYMENT SERVICE
    TIOPTIOP — 13.8.6
@@ -94,13 +97,17 @@ async function markPaid(
     // Une panne fidélité ne doit jamais annuler un paiement provider déjà confirmé.
     try {
         await Loyalty.finalizeOrderRedemption(payment.order_id, 'PAYMENT_CONFIRMED');
+        await LoyaltyCard.finalizeOrderRedemption(payment.order_id);
     } catch (loyaltyLifecycleError) {
         console.error('[TIOP+ 16.7] Finalisation avantage impossible :', loyaltyLifecycleError);
     }
 
-    // 16.2 — Crédit des points gagnés sur la commande payée.
+    // 16.10.5 — carte physique prioritaire; sinon compte Tiop+ classique.
     try {
-        const loyaltyResult = await Loyalty.awardPaidOrder(payment.id);
+        const cardResult = await LoyaltyCard.awardPaidOrder(payment.id);
+        const loyaltyResult = cardResult?.reason === "NO_PHYSICAL_CARD"
+            ? await Loyalty.awardPaidOrder(payment.id)
+            : cardResult;
         if (loyaltyResult?.credited) {
             await Payment.addEvent({
                 paymentId: payment.id,
@@ -110,7 +117,7 @@ async function markPaid(
             });
         }
     } catch (loyaltyError) {
-        console.error("[TIOP+ 16.2] Crédit des points impossible :", loyaltyError);
+        console.error("[TIOP+ 16.10.5] Crédit des points impossible :", loyaltyError);
     }
 
     return updated;

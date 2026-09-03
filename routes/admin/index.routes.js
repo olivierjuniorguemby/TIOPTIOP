@@ -68,6 +68,8 @@ const loyaltyController =
         "../../controllers/admin/loyalty.controller"
     );
 
+const loyaltyCardController = require("../../controllers/admin/loyalty-card.controller");
+
 const deliveryController =
     require(
         "../../controllers/admin/delivery.controller"
@@ -573,9 +575,31 @@ router.get(
 );
 
 
+// 16.10.4.6 — cartes Tiop+ physiques / nominatives dans le POS
+// Ces routes doivent exister AVANT la validation côté navigateur.
+router.get(
+    "/pos/tiopplus/cartes/recherche",
+    posController.searchLoyaltyCards
+);
+
+router.post(
+    "/pos/tiopplus/carte/verifier",
+    posController.verifyLoyaltyCard
+);
+
+router.get(
+    "/pos/tiopplus/carte/recompenses",
+    posController.physicalLoyaltyCardRewards
+);
+
 router.get(
     "/pos/clients/recherche",
     posController.searchCustomers
+);
+
+router.get(
+    "/pos/clients/:userId/tiopplus",
+    posController.customerLoyalty
 );
 
 router.get(
@@ -773,10 +797,21 @@ router.get(
 );
 
 
+// 16.10.3 — cartes Tiop+ nominatives sans compte
+router.get("/tiopplus/carte", loyaltyCardController.index);
+router.get("/tiopplus/cartes", (req,res) => res.redirect("/admin/tiopplus/carte"));
+router.post("/tiopplus/cartes", loyaltyCardController.create);
+router.get("/tiopplus/cartes/:id/modifier", loyaltyCardController.edit);
+router.post("/tiopplus/cartes/:id/modifier", loyaltyCardController.update);
+router.get("/tiopplus/cartes/:id/imprimer", loyaltyCardController.print);
+router.get("/tiopplus/cartes/:id/telecharger", loyaltyCardController.download);
+router.get("/tiopplus/cartes/:id/historique", loyaltyCardController.history);
+
 router.get("/tiopplus", loyaltyController.index);
 router.post("/tiopplus", rewardUpload.single("image"), loyaltyController.create);
 router.post("/tiopplus/:id", rewardUpload.single("image"), loyaltyController.update);
 router.post("/tiopplus/:id/delete", loyaltyController.remove);
+
 
 
 /* =========================================================

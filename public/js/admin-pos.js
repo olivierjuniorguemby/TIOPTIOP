@@ -1,3 +1,8 @@
+let posSelectedLoyaltyRedemption=null;
+let posSelectedPhysicalLoyaltyCard=null;
+let posSelectedPhysicalRewardId=null;
+let posLoyaltyScannerStream=null;
+let posLoyaltyScannerTimer=null;
 let posLastServerCart=null;
 let posReviewIdempotencyKey=null;
 let posOrderCreationInProgress=false;
@@ -18,7 +23,7 @@ async function openPosReview(){
  if(getPosOrderType()==="DELIVERY" && !selectedPosDeliveryZoneId()){alert("Sélectionnez une zone de livraison.");return;}
  const m=document.getElementById("posReviewModal"),err=document.getElementById("posReviewError");if(!m)return;m.hidden=false;if(err){err.hidden=true;err.textContent="";}
  try{
-  const r=await fetch("/admin/pos/calcul",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:posCart.map(i=>({key:i.key,type:i.type,id:i.id,quantity:i.quantity,optionValueIds:i.optionValueIds||[],instructions:i.instructions||""})),orderType:getPosOrderType(),restaurantId:selectedPosRestaurantId(),deliveryZoneId:getPosOrderType()==="DELIVERY"?selectedPosDeliveryZoneId():null})});
+  const r=await fetch("/admin/pos/calcul",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:posCart.map(i=>({key:i.key,type:i.type,id:i.id,quantity:i.quantity,optionValueIds:i.optionValueIds||[],instructions:i.instructions||""})),orderType:getPosOrderType(),restaurantId:selectedPosRestaurantId(),deliveryZoneId:getPosOrderType()==="DELIVERY"?selectedPosDeliveryZoneId():null,loyaltyCardPublicId:posSelectedPhysicalLoyaltyCard?.publicId||null,loyaltyCardRewardId:posSelectedPhysicalRewardId||null})});
   const d=await r.json().catch(()=>null);if(!r.ok||!d?.ok)throw new Error(d?.message||"Vérification serveur impossible.");const c=d.cart;posLastServerCart=c;posReviewIdempotencyKey=createPosIdempotencyKey();
   const mode=document.getElementById("posClientMode")?.value||"GUEST";let title="Client invité",name=[document.getElementById("posGuestFirstName")?.value,document.getElementById("posGuestLastName")?.value].filter(Boolean).join(" "),phone=document.getElementById("posGuestPhone")?.value||"";
   if(mode==="ACCOUNT"){title="Client avec compte";name=posSelectedCustomer?.displayName||"";phone=posSelectedCustomer?.phone||"";}if(mode==="ANONYMOUS"){title="Comptoir / anonyme";name="Aucune identité associée";phone="";}
@@ -31,7 +36,17 @@ async function openPosReview(){
       const instructions=i.instructions?`<span class="pos-review-options">Cuisine : ${escapeHtml(i.instructions)}</span>`:"";
       return `<div class="pos-review-item"><div><strong>${escapeHtml(i.name)}</strong><small>${i.quantity} × ${escapeHtml(formatPosMoney(i.unitPrice,c.currency))}</small>${options?`<span class="pos-review-options">${options}</span>`:""}${instructions}</div><strong>${escapeHtml(formatPosMoney(i.lineTotal,c.currency))}</strong></div>`;
     }).join("");
-  document.getElementById("posReviewTotals").innerHTML=posReviewLine("Sous-total",formatPosMoney(c.subtotal,c.currency))+posReviewLine("Réduction",formatPosMoney(c.discountAmount,c.currency))+posReviewLine("Livraison",formatPosMoney(c.deliveryFee,c.currency))+posReviewLine("Taxes",formatPosMoney(c.taxAmount,c.currency))+posReviewLine("TOTAL",formatPosMoney(c.total,c.currency));
+  {
+    let loyaltyHtml="";
+    if(c.loyaltyReward){
+      const lr=c.loyaltyReward;
+      loyaltyHtml=posReviewLine("Avantage Tiop+",lr.name||"Récompense Tiop+")
+        +posReviewLine("Coût fidélité",`${Number(lr.pointsCost||0)} points`)
+        +(posSelectedPhysicalLoyaltyCard?posReviewLine("Carte",`${posSelectedPhysicalLoyaltyCard.displayName||"Carte Tiop+"} — ${posSelectedPhysicalLoyaltyCard.cardNumber||""}`):"")
+        +(lr.rewardType==="PRODUCT"&&lr.rewardProductName?posReviewLine("Produit offert",lr.rewardProductName):"");
+    }
+    document.getElementById("posReviewTotals").innerHTML=loyaltyHtml+posReviewLine("Sous-total",formatPosMoney(c.subtotal,c.currency))+posReviewLine("Réduction",formatPosMoney(c.discountAmount,c.currency))+posReviewLine("Livraison",formatPosMoney(c.deliveryFee,c.currency))+posReviewLine("Taxes",formatPosMoney(c.taxAmount,c.currency))+posReviewLine("TOTAL",formatPosMoney(c.total,c.currency));
+  }
   document.getElementById("posReviewPayment").innerHTML=posReviewLine("Moyen prévu",posSelectLabel("posPayment"))+posReviewLine("Statut","À traiter après création");
  }catch(e){posLastServerCart=null;if(err){err.hidden=false;err.textContent=e.message;}}
 }
@@ -152,9 +167,10 @@ let posSelectedCustomer=null;
 let posCustomerSearchTimer=null;
 function savePosCustomerContext(){try{const mode=document.getElementById("posClientMode")?.value||"GUEST";localStorage.setItem(POS_CUSTOMER_STORAGE_KEY,JSON.stringify({mode,selectedCustomer:mode==="ACCOUNT"?posSelectedCustomer:null,guest:mode==="GUEST"?{firstName:document.getElementById("posGuestFirstName")?.value||"",lastName:document.getElementById("posGuestLastName")?.value||"",phone:document.getElementById("posGuestPhone")?.value||"",email:document.getElementById("posGuestEmail")?.value||""}:null}));}catch(_){}}
 function loadPosCustomerContext(){try{return JSON.parse(localStorage.getItem(POS_CUSTOMER_STORAGE_KEY)||"null");}catch(_){return null;}}
-function renderSelectedPosCustomer(){const box=document.getElementById("posSelectedCustomer");if(!box)return;if(!posSelectedCustomer){box.style.display="none";box.innerHTML="";return;}box.style.display="block";box.innerHTML=`<div class="pos-selected-customer-head"><div><strong>✓ ${escapeHtml(posSelectedCustomer.displayName)}</strong><small>${escapeHtml(posSelectedCustomer.phone||"Sans téléphone")} · ${escapeHtml(posSelectedCustomer.email||"Sans email")}</small></div><button type="button" id="posRemoveSelectedCustomer">Changer</button></div>`;document.getElementById("posRemoveSelectedCustomer")?.addEventListener("click",()=>{posSelectedCustomer=null;renderSelectedPosCustomer();savePosCustomerContext();});}
+function renderSelectedPosCustomer(){const box=document.getElementById("posSelectedCustomer");if(!box)return;if(!posSelectedCustomer){box.style.display="none";box.innerHTML="";return;}box.style.display="block";box.innerHTML=`<div class="pos-selected-customer-head"><div><strong>✓ ${escapeHtml(posSelectedCustomer.displayName)}</strong><small>${escapeHtml(posSelectedCustomer.phone||"Sans téléphone")} · ${escapeHtml(posSelectedCustomer.email||"Sans email")}</small></div><button type="button" id="posRemoveSelectedCustomer">Changer</button></div>`;document.getElementById("posRemoveSelectedCustomer")?.addEventListener("click",()=>{posSelectedCustomer=null;renderSelectedPosCustomer();savePosCustomerContext();loadPosCustomerLoyalty();});}
 function setPosClientMode(mode){const map={GUEST:"posGuestCustomer",ACCOUNT:"posAccountCustomer",ANONYMOUS:"posAnonymousCustomer"};Object.entries(map).forEach(([key,id])=>{const el=document.getElementById(id);if(el)el.style.display=key===mode?"":"none";});savePosCustomerContext();}
-async function searchPosCustomers(){const input=document.getElementById("posCustomerSearch"),state=document.getElementById("posCustomerSearchState"),results=document.getElementById("posCustomerResults");const q=(input?.value||"").trim();if(!state||!results)return;if(q.length<2){results.innerHTML="";state.textContent="Saisissez au moins 2 caractères.";return;}state.textContent="Recherche…";results.innerHTML="";try{const response=await fetch(`/admin/pos/clients/recherche?q=${encodeURIComponent(q)}`);const data=await response.json().catch(()=>null);if(!response.ok||!data?.ok)throw new Error(data?.message||"Recherche impossible.");if(!data.customers.length){state.textContent="Aucun client trouvé.";return;}state.textContent=`${data.customers.length} client(s) trouvé(s).`;results.innerHTML=data.customers.map(c=>`<button type="button" class="pos-customer-result" data-customer-id="${c.id}"><span><strong>${escapeHtml(c.displayName)}</strong><small>${escapeHtml(c.phone||"Sans téléphone")} · ${escapeHtml(c.email||"Sans email")}</small></span><small>${escapeHtml(c.status)}</small></button>`).join("");results.querySelectorAll("[data-customer-id]").forEach(button=>button.addEventListener("click",()=>{posSelectedCustomer=data.customers.find(c=>c.id===Number(button.dataset.customerId))||null;results.innerHTML="";state.textContent="Client sélectionné.";renderSelectedPosCustomer();savePosCustomerContext();loadPosCustomerAddresses();}));}catch(error){state.innerHTML=`<span class="pos-customer-error">${escapeHtml(error.message)}</span>`;}}
+async function searchPosCustomers(){const input=document.getElementById("posCustomerSearch"),state=document.getElementById("posCustomerSearchState"),results=document.getElementById("posCustomerResults");const q=(input?.value||"").trim();if(!state||!results)return;if(q.length<2){results.innerHTML="";state.textContent="Saisissez au moins 2 caractères.";return;}state.textContent="Recherche…";results.innerHTML="";try{const response=await fetch(`/admin/pos/clients/recherche?q=${encodeURIComponent(q)}`);const data=await response.json().catch(()=>null);if(!response.ok||!data?.ok)throw new Error(data?.message||"Recherche impossible.");if(!data.customers.length){state.textContent="Aucun client trouvé.";return;}state.textContent=`${data.customers.length} client(s) trouvé(s).`;results.innerHTML=data.customers.map(c=>`<button type="button" class="pos-customer-result" data-customer-id="${c.id}"><span><strong>${escapeHtml(c.displayName)}</strong><small>${escapeHtml(c.phone||"Sans téléphone")} · ${escapeHtml(c.email||"Sans email")}</small></span><small>${escapeHtml(c.status)}</small></button>`).join("");results.querySelectorAll("[data-customer-id]").forEach(button=>button.addEventListener("click",()=>{posSelectedCustomer=data.customers.find(c=>c.id===Number(button.dataset.customerId))||null;results.innerHTML="";state.textContent="Client sélectionné.";renderSelectedPosCustomer();savePosCustomerContext();loadPosCustomerAddresses();loadPosCustomerLoyalty();}));}catch(error){state.innerHTML=`<span class="pos-customer-error">${escapeHtml(error.message)}</span>`;}}
+async function loadPosCustomerLoyalty(){const box=document.getElementById("posAccountLoyalty"),sel=document.getElementById("posLoyaltyRedemption"),bal=document.getElementById("posLoyaltyBalance"),help=document.getElementById("posLoyaltyHelp");posSelectedLoyaltyRedemption=null;if(!box||!sel)return;if(!posSelectedCustomer){box.style.display="none";sel.innerHTML='<option value="">Aucun avantage</option>';return;}box.style.display="block";help.textContent="Chargement Tiop+…";try{const r=await fetch(`/admin/pos/clients/${posSelectedCustomer.id}/tiopplus`);const d=await r.json().catch(()=>null);if(!r.ok||!d?.ok)throw new Error(d?.message||"Chargement impossible.");if(!d.subscribed){bal.textContent="Non abonné";sel.innerHTML='<option value="">Aucun avantage</option>';help.textContent="Ce client n’est pas abonné à Tiop+.";return;}bal.textContent=`${Number(d.account?.pointsBalance||0)} points`;sel.innerHTML='<option value="">Aucun avantage</option>'+d.redemptions.map(x=>`<option value="${escapeHtml(x.publicId)}">${escapeHtml(x.name)} — ${escapeHtml(x.type)}</option>`).join("");help.textContent=d.redemptions.length?`${d.redemptions.length} avantage(s) disponible(s).`:"Aucun avantage débloqué disponible.";}catch(e){help.textContent=e.message;}}
 function validatePosCustomerContext(){const mode=document.getElementById("posClientMode")?.value||"GUEST",channel=document.getElementById("posChannel")?.value||"POS";if(mode==="ACCOUNT"&&!posSelectedCustomer)return "Sélectionnez un client existant.";if(mode==="GUEST"){const phone=(document.getElementById("posGuestPhone")?.value||"").trim(),email=(document.getElementById("posGuestEmail")?.value||"").trim();if(["PHONE","WHATSAPP"].includes(channel)&&!phone)return "Le téléphone du client invité est obligatoire pour ce canal.";if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return "L'adresse email du client invité n'est pas valide.";}return null;}
 
 const POS_STORAGE_KEY = "tioptiop_admin_pos_cart_v2";
@@ -221,7 +237,9 @@ async function calculatePosCart(){
             items:posCart.map(i=>({key:i.key,type:i.type,id:i.id,quantity:i.quantity,optionValueIds:i.optionValueIds||[],instructions:i.instructions||""})),
             orderType:getPosOrderType(),
             restaurantId:selectedPosRestaurantId(),
-            deliveryZoneId:getPosOrderType()==="DELIVERY"?selectedPosDeliveryZoneId():null
+            deliveryZoneId:getPosOrderType()==="DELIVERY"?selectedPosDeliveryZoneId():null,
+            loyaltyCardPublicId:posSelectedPhysicalLoyaltyCard?.publicId||null,
+            loyaltyCardRewardId:posSelectedPhysicalRewardId||null
         })});
         const data=await response.json().catch(()=>null); if(seq!==posCalculationSequence)return;
         if(!response.ok||!data?.ok)throw new Error(data?.message||"Impossible de vérifier le panier.");
@@ -399,6 +417,9 @@ function buildPosOrderPayload(){
             city:document.getElementById("posDeliveryCity")?.value||"",
             instructions:document.getElementById("posDeliveryInstructions")?.value||""
         },
+        loyaltyRedemptionPublicId:mode==="ACCOUNT" ? (document.getElementById("posLoyaltyRedemption")?.value||null) : null,
+        loyaltyCardPublicId:posSelectedPhysicalLoyaltyCard?.publicId||null,
+        loyaltyCardRewardId:posSelectedPhysicalRewardId||null,
         items:posCart.map(item=>({
             key:item.key,
             type:item.type,
@@ -497,7 +518,138 @@ function setPosReviewCreationError(message=""){
 }
 
 
+
+
+
+// 16.10.4.9 — POS caisse : scanner USB HID + import QR/SVG + recherche manuelle (webcam retirée)
+let posUsbScannerBuffer='';
+let posUsbScannerLastKeyAt=0;
+let posUsbScannerTimer=null;
+
+function looksLikeTiopQrValue(value){
+ const v=String(value||'').trim();
+ return v.startsWith('TIOPTIOP-TIOPPLUS:') || /^TT-[A-Z0-9-]{5,}$/i.test(v);
+}
+
+function installUsb2DScannerListener(){
+ // Les lecteurs 2D USB en mode HID « clavier » envoient généralement les caractères très vite puis Entrée.
+ document.addEventListener('keydown',event=>{
+  if(event.ctrlKey||event.altKey||event.metaKey)return;
+  const now=performance.now();
+  const active=document.activeElement;
+  const tag=(active?.tagName||'').toLowerCase();
+  const isTyping=tag==='input'||tag==='textarea'||tag==='select'||active?.isContentEditable;
+
+  if(event.key==='Enter'){
+   const value=posUsbScannerBuffer.trim();
+   const fastEnough=now-posUsbScannerLastKeyAt<180;
+   if(value.length>=8&&fastEnough){
+    posUsbScannerBuffer='';
+    clearTimeout(posUsbScannerTimer);posUsbScannerTimer=null;
+    event.preventDefault();
+    const state=document.getElementById('posLoyaltyCardState');
+    if(state)state.textContent='🔎 Lecture scanner USB — vérification Tiop+…';
+    verifyPhysicalLoyaltyCard(value).catch(e=>{if(state)state.textContent=e?.message||'Code scanné non reconnu.';});
+    return;
+   }
+   posUsbScannerBuffer='';
+   return;
+  }
+
+  if(event.key.length===1){
+   const gap=now-posUsbScannerLastKeyAt;
+   // Si l'utilisateur écrit normalement dans un champ, ne détourne pas sa saisie.
+   if(isTyping&&gap>45){posUsbScannerBuffer='';return;}
+   if(gap>180)posUsbScannerBuffer='';
+   posUsbScannerBuffer+=event.key;
+   posUsbScannerLastKeyAt=now;
+   clearTimeout(posUsbScannerTimer);
+   posUsbScannerTimer=setTimeout(()=>{posUsbScannerBuffer='';},350);
+  }
+ },true);
+}
+
+async function loadPhysicalLoyaltyRewards(){
+ const box=document.getElementById('posPhysicalRewardBox'),sel=document.getElementById('posPhysicalLoyaltyReward'),help=document.getElementById('posPhysicalRewardHelp');
+ posSelectedPhysicalRewardId=null;
+ if(!box||!sel)return;
+ sel.innerHTML='<option value="">Ne pas utiliser de récompense</option>';
+ if(!posSelectedPhysicalLoyaltyCard){box.style.display='none';return;}
+ box.style.display='block'; if(help)help.textContent='Chargement des récompenses…';
+ try{
+  const r=await fetch(`/admin/pos/tiopplus/carte/recompenses?publicId=${encodeURIComponent(posSelectedPhysicalLoyaltyCard.publicId)}`);
+  const d=await r.json(); if(!r.ok||!d?.ok)throw new Error(d?.message||'Chargement impossible.');
+  for(const x of d.rewards||[]){
+   const o=document.createElement('option');o.value=String(x.id);
+   o.disabled=!x.eligible;
+   const extra=x.rewardType==='DISCOUNT'?` -${Number(x.rewardValue||0)}%`:x.rewardType==='COUPON'?` -${Number(x.rewardValue||0).toLocaleString('fr-FR')} XAF`:x.rewardType==='FREE_DELIVERY'?' livraison offerte':x.rewardProductName?` ${x.rewardProductName}`:'';
+   o.textContent=`${x.name} — ${x.pointsCost} pts${extra}${x.eligible?'':' (solde insuffisant)'}`;
+   sel.appendChild(o);
+  }
+  if(help)help.textContent=(d.rewards||[]).length?'Une seule récompense peut être utilisée par commande. Les points sont réservés à la création puis consommés après paiement.':'Aucune récompense active.';
+ }catch(e){if(help)help.textContent=e.message;}
+}
+function renderSelectedPhysicalLoyaltyCard(){
+ const box=document.getElementById('posSelectedLoyaltyCard'),state=document.getElementById('posLoyaltyCardState'); if(!box)return;
+ if(!posSelectedPhysicalLoyaltyCard){box.style.display='none';box.innerHTML='';if(state)state.textContent='Aucune carte présentée.';return;}
+ const c=posSelectedPhysicalLoyaltyCard;box.style.display='block';if(state)state.textContent='✓ Carte vérifiée par le serveur.';
+ const exp=c.expiresAt?new Date(c.expiresAt).toLocaleDateString('fr-FR'):'Sans expiration';
+ box.innerHTML=`<div class="pos-card-selected-head"><div><strong>⭐ ${escapeHtml(c.displayName)}</strong><div class="pos-card-selected-meta"><span class="pos-card-badge">${escapeHtml(c.cardNumber)}</span><span class="pos-card-badge">${escapeHtml(c.cardType)}</span><span class="pos-card-badge">${Number(c.pointsBalance||0)} points</span><span class="pos-card-badge">Valide : ${escapeHtml(exp)}</span></div></div><button type="button" class="pos-card-remove" id="posRemoveLoyaltyCard">Retirer</button></div>`;
+ document.getElementById('posRemoveLoyaltyCard')?.addEventListener('click',()=>{posSelectedPhysicalLoyaltyCard=null;posSelectedPhysicalRewardId=null;renderSelectedPhysicalLoyaltyCard();loadPhysicalLoyaltyRewards();});
+}
+async function verifyPhysicalLoyaltyCard(value){
+ const state=document.getElementById('posLoyaltyCardState');if(state)state.textContent='Vérification Tiop+…';
+ const r=await fetch('/admin/pos/tiopplus/carte/verifier',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({value})});
+ const contentType=String(r.headers.get('content-type')||'');
+ const d=contentType.includes('application/json')?await r.json().catch(()=>null):null;
+ if(!r.ok||!d?.ok){
+  posSelectedPhysicalLoyaltyCard=null;renderSelectedPhysicalLoyaltyCard();
+  let message=d?.message||'';
+  if(d?.code)message=`[${d.code}] ${message}`;
+  if(!message){
+   message=r.status===404
+    ?'Endpoint Tiop+ POS introuvable (HTTP 404). Vérifiez les routes /admin/pos/tiopplus/… puis redémarrez Node.js.'
+    :`Réponse serveur Tiop+ invalide (HTTP ${r.status}).`;
+  }
+  if(state)state.textContent=message;throw new Error(message);
+ }
+ posSelectedPhysicalLoyaltyCard=d.card;renderSelectedPhysicalLoyaltyCard();await loadPhysicalLoyaltyRewards();return d.card;
+}
+async function searchPhysicalLoyaltyCards(){
+ const input=document.getElementById('posLoyaltyCardSearch'),results=document.getElementById('posLoyaltyCardResults'),state=document.getElementById('posLoyaltyCardState');const q=(input?.value||'').trim();if(!results||!state)return;
+ if(q.length<2){state.textContent='Saisissez au moins 2 caractères.';results.innerHTML='';return;}
+ state.textContent='Recherche…';results.innerHTML='';try{const r=await fetch(`/admin/pos/tiopplus/cartes/recherche?q=${encodeURIComponent(q)}`);const d=await r.json().catch(()=>null);if(!r.ok||!d?.ok)throw new Error(d?.message||'Recherche impossible.');if(!d.cards.length){state.textContent='Aucune carte trouvée.';return;}state.textContent=`${d.cards.length} carte(s) trouvée(s).`;results.innerHTML=d.cards.map(c=>`<button type="button" class="pos-customer-result" data-pos-loyalty-card="${escapeHtml(c.cardNumber)}"><span><strong>${escapeHtml(c.displayName)}</strong><small>${escapeHtml(c.cardNumber)} · ${escapeHtml(c.cardType)} · ${Number(c.pointsBalance||0)} pts</small></span><small>${escapeHtml(c.status)}</small></button>`).join('');results.querySelectorAll('[data-pos-loyalty-card]').forEach(b=>b.addEventListener('click',async()=>{try{await verifyPhysicalLoyaltyCard(b.dataset.posLoyaltyCard);results.innerHTML='';}catch(_){}}));}catch(e){state.textContent=e.message;}
+}
+function getHtml5QrScanner(){
+ if(window.posHtml5QrScanner)return window.posHtml5QrScanner;
+ if(typeof window.Html5Qrcode!=="function")return null;
+ try{
+  window.posHtml5QrScanner=new Html5Qrcode("posHtml5QrcodeReader",{formatsToSupport:html5QrFormats(),verbose:false});
+  return window.posHtml5QrScanner;
+ }catch(_){return null;}
+}
+
+function html5QrFormats(){
+ const F=window.Html5QrcodeSupportedFormats;
+ if(!F)return undefined;
+ return [F.QR_CODE,F.CODE_128,F.CODE_39,F.CODE_93,F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E,F.DATA_MATRIX].filter(v=>v!==undefined);
+}
+
+async function decodeQrImageFile(file){
+ if(!file)throw new Error("Aucun fichier sélectionné.");
+ if(typeof window.Html5Qrcode!=="function")throw new Error("html5-qrcode n’est pas chargé.");
+ const scanner=getHtml5QrScanner();
+ if(!scanner)throw new Error("Impossible d’initialiser le lecteur d’image.");
+ try{
+  return await scanner.scanFile(file,true);
+ }finally{
+  try{await scanner.clear();}catch(_){}
+  window.posHtml5QrScanner=null;
+ }
+}
+
 document.addEventListener("DOMContentLoaded",()=>{
+    installUsb2DScannerListener();
     loadPosCart();
     const savedCustomerContext=loadPosCustomerContext();
     if(savedCustomerContext?.mode&&["GUEST","ACCOUNT","ANONYMOUS"].includes(savedCustomerContext.mode)){
@@ -512,6 +664,21 @@ document.addEventListener("DOMContentLoaded",()=>{
     renderSelectedPosCustomer();
     document.getElementById("posClientMode")?.addEventListener("change",e=>{setPosClientMode(e.target.value);renderPosAddressMode();if(e.target.value==="ACCOUNT"&&posSelectedCustomer)loadPosCustomerAddresses();});
     ["posGuestFirstName","posGuestLastName","posGuestPhone","posGuestEmail"].forEach(id=>document.getElementById(id)?.addEventListener("input",savePosCustomerContext));
+    document.getElementById("posPhysicalLoyaltyReward")?.addEventListener("change",e=>{posSelectedPhysicalRewardId=Number(e.target.value)||null;invalidatePosReview?.();if(posCart.length)calculatePosCart();});
+        document.getElementById("posLoyaltyCardSearchButton")?.addEventListener("click",searchPhysicalLoyaltyCards);
+    document.getElementById("posLoyaltyCardSearch")?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();searchPhysicalLoyaltyCards();}});
+    document.getElementById("posScannerImageInput")?.addEventListener("change",async e=>{
+        const file=e.target.files?.[0];if(!file)return;
+        const state=document.getElementById('posLoyaltyCardState');
+        try{
+          if(state)state.textContent='🖼 Lecture du QR / SVG importé…';
+          const raw=await decodeQrImageFile(file);
+          await verifyPhysicalLoyaltyCard(raw);
+          if(state)state.textContent='✓ Carte Tiop+ reconnue depuis le fichier importé.';
+        }catch(error){
+          if(state)state.textContent=`Import refusé : ${error?.message||'Impossible de lire cette image.'}`;
+        }finally{e.target.value='';}
+    });
     document.getElementById("posCustomerSearchButton")?.addEventListener("click",searchPosCustomers);
     document.getElementById("posCustomerSearch")?.addEventListener("input",()=>{clearTimeout(posCustomerSearchTimer);posCustomerSearchTimer=setTimeout(searchPosCustomers,350);});
     const savedFulfillment=loadPosFulfillment();
