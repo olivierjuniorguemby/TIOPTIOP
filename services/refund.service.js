@@ -564,6 +564,7 @@ async function executeStripeRefund({
                     payment.order_id,
                     "STRIPE_REFUND_SUCCEEDED"
                 );
+                await LoyaltyCard.reverseFullyRefundedOrderEarn(payment.order_id, 'FULL_REFUND');
                 await LoyaltyCard.restoreOrderRedemption(payment.order_id, 'FULL_REFUND');
             }
 
@@ -987,6 +988,7 @@ async function applySuccessfulRefundToPayment({
             payment.order_id,
             successEventType || "FULL_REFUND"
         );
+                await LoyaltyCard.reverseFullyRefundedOrderEarn(payment.order_id, 'FULL_REFUND');
                 await LoyaltyCard.restoreOrderRedemption(payment.order_id, 'FULL_REFUND');
     }
 
@@ -1796,6 +1798,7 @@ async function synchronizePaymentFromRefundSummary(payment) {
 
     if (nextStatus === Payment.STATUSES.REFUNDED && payment.order_id) {
         await Loyalty.reverseFullyRefundedOrder(payment.order_id, "REFUND_RECONCILIATION");
+        await LoyaltyCard.reverseFullyRefundedOrderEarn(payment.order_id, "REFUND_RECONCILIATION");
         await LoyaltyCard.restoreOrderRedemption(payment.order_id, "REFUND_RECONCILIATION");
     }
 

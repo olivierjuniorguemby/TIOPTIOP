@@ -17,7 +17,7 @@ exports.index=async(req,res,next)=>{try{
   cards=cards.filter(c=>{ const hay=[c.card_number,c.display_name,c.first_name,c.last_name,c.phone,c.email].filter(Boolean).join(' ').toLowerCase(); const exp=c.expires_at?new Date(c.expires_at):null; return (!q||hay.includes(q))&&(!type||c.card_type===type)&&(!status||c.status===status)&&(!Number.isFinite(minPoints)||Number(c.points_balance)>=minPoints)&&(!Number.isFinite(maxPoints)||Number(c.points_balance)<=maxPoints)&&(!expiry||(expiry==='EXPIRED'&&exp&&exp<now)||(expiry==='SOON'&&exp&&exp>=now&&exp<=soon)||(expiry==='NONE'&&!exp)); });
   const cardsWithQr=await Promise.all(cards.map(async c=>({...c,qrDataUrl:await CardQr.dataUrl(c,320)})));
   const all=await Card.listAll(); const stats={total:all.length,active:all.filter(c=>c.status==='ACTIVE').length,suspended:all.filter(c=>c.status==='SUSPENDED').length,expired:all.filter(c=>c.status==='EXPIRED'||(c.expires_at&&new Date(c.expires_at)<now)).length};
-  res.render('admin/catalog/loyalty-cards',{title:'Cartes Tiop+',layout:'layouts/admin',cards:cardsWithQr,stats,filters:{q:req.query.q||'',type,status,expiry,min_points:req.query.min_points||'',max_points:req.query.max_points||''},cardCreated:req.query.cardCreated,cardUpdated:req.query.cardUpdated});
+  res.render('admin/catalog/loyalty-cards',{title:'Cartes Tiop+',layout:'layouts/admin',cards:cardsWithQr,stats,filters:{q:req.query.q||'',type,status,expiry,min_points:req.query.min_points||'',max_points:req.query.max_points||''},cardCreated:req.query.cardCreated,cardUpdated:req.query.cardUpdated,cardReplaced:req.query.cardReplaced,cardLinked:req.query.cardLinked,newCardId:req.query.newCardId});
 }catch(e){next(e)}};
 exports.create=async(req,res,next)=>{try{
   const data=form(req.body); const initial=Math.max(0,points(req.body.points));
@@ -64,3 +64,39 @@ exports.history=async(req,res,next)=>{try{
 }catch(e){next(e)}};
 
 exports.signToken=CardQr.sign;
+
+
+// 16.10.6.1 — cycle de vie : suspension / réactivation / révocation
+exports.changeStatus=async(req,res,next)=>{try{
+ const id=Number(req.params.id),status=clean(req.body.status).toUpperCase(),reason=clean(req.body.reason);
+ await Card.changeStatus(id,status,reason,adminId(req));
+ res.redirect('/admin/tiopplus/carte?cardUpdated=1');
+}catch(e){next(e)}};
+exports.lifecycle=async(req,res,next)=>{try{
+ const id=Number(req.params.id),card=await Card.findById(id);if(!card)return res.status(404).json({ok:false,message:'Carte Tiop+ introuvable.'});
+ const events=await Card.listLifecycleEvents(id);res.json({ok:true,card,events});
+}catch(e){next(e)}};
+
+
+// 16.10.6.2 — remplacement d'une carte perdue / détériorée
+exports.replace=async(req,res,next)=>{try{
+ const id=Number(req.params.id),reason=clean(req.body.reason);
+ if(!reason)return res.status(400).send('Le motif du remplacement est obligatoire.');
+ const newCard=await Card.replaceCard(id,{reason,adminUserId:adminId(req)});
+ res.redirect(`/admin/tiopplus/carte?cardReplaced=1&newCardId=${Number(newCard.id)}`);
+}catch(e){next(e)}};
+
+
+// 16.10.6.3 — rattachement carte physique -> compte client Tiop+
+exports.searchCustomers=async(req,res,next)=>{try{
+ const q=clean(req.query.q); const customers=await Card.searchCustomersForLink(q,12); res.json({ok:true,customers});
+}catch(e){next(e)}};
+exports.linkAccount=async(req,res,next)=>{try{
+ const id=Number(req.params.id),userId=Number(req.body.user_id),reason=clean(req.body.reason);
+ await Card.linkToCustomer(id,userId,{reason,adminUserId:adminId(req)});
+ res.redirect('/admin/tiopplus/carte?cardLinked=1');
+}catch(e){next(e)}};
+exports.linkedAccount=async(req,res,next)=>{try{
+ const card=await Card.findById(req.params.id);if(!card)return res.status(404).json({ok:false,message:'Carte Tiop+ introuvable.'});
+ const customer=await Card.getLinkedCustomer(req.params.id);res.json({ok:true,card,customer});
+}catch(e){next(e)}};

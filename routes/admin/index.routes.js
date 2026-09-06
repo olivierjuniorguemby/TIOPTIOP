@@ -806,6 +806,12 @@ router.post("/tiopplus/cartes/:id/modifier", loyaltyCardController.update);
 router.get("/tiopplus/cartes/:id/imprimer", loyaltyCardController.print);
 router.get("/tiopplus/cartes/:id/telecharger", loyaltyCardController.download);
 router.get("/tiopplus/cartes/:id/historique", loyaltyCardController.history);
+router.post("/tiopplus/cartes/:id/statut", loyaltyCardController.changeStatus);
+router.get("/tiopplus/cartes/:id/cycle-vie", loyaltyCardController.lifecycle);
+router.post("/tiopplus/cartes/:id/remplacer", loyaltyCardController.replace);
+router.get("/tiopplus/cartes/clients/recherche", loyaltyCardController.searchCustomers);
+router.post("/tiopplus/cartes/:id/rattacher-compte", loyaltyCardController.linkAccount);
+router.get("/tiopplus/cartes/:id/compte-rattache", loyaltyCardController.linkedAccount);
 
 router.get("/tiopplus", loyaltyController.index);
 router.post("/tiopplus", rewardUpload.single("image"), loyaltyController.create);
