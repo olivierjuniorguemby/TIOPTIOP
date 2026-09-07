@@ -966,6 +966,7 @@ textarea.checkout-field {
         <input type="hidden" id="checkoutPromoCode" name="promo_code" value="<%= promotionPreview?.valid ? promotionPreview.code : (values?.promo_code || '') %>"
           data-discount="<%= promotionPreview?.valid ? Number(promotionPreview.discountAmount || 0) : 0 %>"
           data-free-delivery="<%= promotionPreview?.valid && promotionPreview.freeDelivery ? '1' : '0' %>"
+          data-points-multiplier="<%= promotionPreview?.valid ? Number(promotionPreview.pointsMultiplier || 1) : 1 %>"
           data-label="<%= promotionPreview?.valid ? promotionPreview.label : '' %>">
 
         <div class="checkout-layout">
@@ -1773,7 +1774,7 @@ textarea.checkout-field {
                         <span>🏷️ <%= promotionPreview.label %> (<%= promotionPreview.code %>)</span>
                         <button type="button" id="checkoutRemovePromoButton" class="promo-summary-remove">Retirer le code promo</button>
                     </span>
-                    <strong id="promoSummaryAmount"><%= promotionPreview.freeDelivery ? 'Livraison offerte' : ('- ' + Number(promotionPreview.discountAmount || 0).toLocaleString('fr-FR') + ' ' + (currency || 'XAF')) %></strong>
+                    <strong id="promoSummaryAmount"><%= Number(promotionPreview.pointsMultiplier || 1) > 1 ? ('Points ×' + Number(promotionPreview.pointsMultiplier)) : (promotionPreview.freeDelivery ? 'Livraison offerte' : ('- ' + Number(promotionPreview.discountAmount || 0).toLocaleString('fr-FR') + ' ' + (currency || 'XAF'))) %></strong>
                 </div>
                 <% } %>
 

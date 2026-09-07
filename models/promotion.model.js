@@ -2,7 +2,16 @@ const db = require('../config/database');
 
 function where(filters = {}, publicOnly = false) {
   const clauses = [], params = [];
-  if (publicOnly) clauses.push('p.is_active = 1');
+  if (publicOnly) {
+    clauses.push('p.is_active = 1');
+    // 17.5 — une promotion SELECTED ne doit être visible que par les clients choisis.
+    if (filters.userId) {
+      clauses.push("(p.audience <> 'SELECTED' OR EXISTS (SELECT 1 FROM promotion_selected_users psu WHERE psu.promotion_id=p.id AND psu.user_id=?))");
+      params.push(Number(filters.userId));
+    } else {
+      clauses.push("p.audience <> 'SELECTED'");
+    }
+  }
   if (filters.q) { clauses.push('(p.name LIKE ? OR p.code LIKE ? OR p.description LIKE ?)'); const q=`%${filters.q}%`; params.push(q,q,q); }
   if (filters.type) { clauses.push('p.discount_type = ?'); params.push(filters.type); }
   if (filters.audience) { clauses.push('p.audience = ?'); params.push(filters.audience); }
@@ -25,6 +34,21 @@ exports.findById = async id => (await db.query('SELECT * FROM promotions WHERE i
 exports.stats = async () => (await db.query(`SELECT COUNT(*) total, SUM(is_active=1 AND (starts_at IS NULL OR starts_at<=NOW()) AND (ends_at IS NULL OR ends_at>=NOW())) active, SUM(is_active=1 AND starts_at>NOW()) upcoming, SUM(is_active=0 OR (ends_at IS NOT NULL AND ends_at<NOW())) expired FROM promotions`))[0];
 exports.categories = async () => db.query('SELECT id,name FROM categories WHERE is_active=1 ORDER BY name');
 exports.categoryIds = async id => (await db.query('SELECT category_id FROM promotion_categories WHERE promotion_id=?',[id])).map(x=>Number(x.category_id));
+
+// 17.5 — clients ciblés par une promotion SELECTED
+exports.selectedUserIds = async id => (await db.query('SELECT user_id FROM promotion_selected_users WHERE promotion_id=? ORDER BY user_id',[id])).map(x=>Number(x.user_id));
+exports.saveSelectedUsers = async (id, ids=[]) => {
+  await db.query('DELETE FROM promotion_selected_users WHERE promotion_id=?',[id]);
+  for (const uid of [...new Set(ids.map(Number).filter(Number.isInteger))]) {
+    await db.query('INSERT IGNORE INTO promotion_selected_users(promotion_id,user_id) VALUES(?,?)',[id,uid]);
+  }
+};
+exports.customers = async () => db.query(`
+  SELECT u.id,u.email,u.phone,COALESCE(NULLIF(up.display_name,''),NULLIF(CONCAT_WS(' ',up.first_name,up.last_name),''),u.email,u.phone,CONCAT('Client #',u.id)) AS name
+  FROM users u LEFT JOIN user_profiles up ON up.user_id=u.id
+  WHERE u.account_type='CUSTOMER' AND u.status<>'DELETED'
+  ORDER BY name,u.id
+`);
 exports.saveCategories = async (id, ids=[]) => { await db.query('DELETE FROM promotion_categories WHERE promotion_id=?',[id]); for(const cid of ids) await db.query('INSERT IGNORE INTO promotion_categories(promotion_id,category_id) VALUES(?,?)',[id,cid]); };
 exports.create = async d => { const r=await db.query(`INSERT INTO promotions(name,code,description,image_url,discount_type,discount_value,minimum_order,audience,usage_limit,usage_limit_per_user,starts_at,ends_at,is_active) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`,[d.name,d.code,d.description,d.image_url,d.discount_type,d.discount_value,d.minimum_order,d.audience,d.usage_limit,d.usage_limit_per_user,d.starts_at,d.ends_at,d.is_active]); return r.insertId; };
 exports.update = async (id,d) => db.query(`UPDATE promotions SET name=?,code=?,description=?,image_url=?,discount_type=?,discount_value=?,minimum_order=?,audience=?,usage_limit=?,usage_limit_per_user=?,starts_at=?,ends_at=?,is_active=? WHERE id=?`,[d.name,d.code,d.description,d.image_url,d.discount_type,d.discount_value,d.minimum_order,d.audience,d.usage_limit,d.usage_limit_per_user,d.starts_at,d.ends_at,d.is_active,id]);
@@ -73,7 +97,8 @@ async function validateCode({ code, userId = null, cart, connection = null, lock
       const [o] = await executor.execute("SELECT COUNT(*) total FROM orders WHERE user_id=? AND status<>'CANCELLED'",[userId]);
       if (Number(o[0]?.total || 0) > 0) return { valid:false, message:'Ce code est réservé aux nouveaux clients.' };
     } else if (promo.audience === 'SELECTED') {
-      return { valid:false, message:'Cette promotion est réservée à une sélection de clients.' };
+      const [selected] = await executor.execute('SELECT 1 FROM promotion_selected_users WHERE promotion_id=? AND user_id=? LIMIT 1',[promo.id,userId]);
+      if (!selected.length) return { valid:false, message:'Ce code promo est réservé à certains clients.' };
     }
   }
 
@@ -117,7 +142,9 @@ async function validateCode({ code, userId = null, cart, connection = null, lock
   } else if (type === 'FREE_DELIVERY') {
     freeDelivery = true;
   } else if (type === 'POINTS_MULTIPLIER') {
-    return { valid:false, message:'Ce code concerne un bonus de points Tiop+ et non une réduction panier.' };
+    if (value <= 1) return { valid:false, message:'Le multiplicateur de points doit être supérieur à 1.' };
+    // 17.4 — ce type ne réduit pas le panier : il multiplie les points gagnés après paiement.
+    // La promotion reste enregistrée sur la commande afin que le crédit fidélité soit serveur-authoritative.
   } else {
     return { valid:false, message:'Type de promotion non supporté.' };
   }
@@ -128,6 +155,7 @@ async function validateCode({ code, userId = null, cart, connection = null, lock
     code:normalizedCode,
     discountAmount,
     freeDelivery,
+    pointsMultiplier: type === 'POINTS_MULTIPLIER' ? value : 1,
     eligibleSubtotal,
     label:promo.name || normalizedCode
   };

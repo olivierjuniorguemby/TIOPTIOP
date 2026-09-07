@@ -70,11 +70,16 @@ async function awardPaidOrder(paymentId) {
   if(cfg.enabled===0||cfg.enabled===false){await c.rollback();return {credited:false,reason:'LOYALTY_DISABLED'};}
   const rate=Math.max(0,Number(cfg.points_per_1000_xaf||10));
   const amount=Math.max(0,Number(x.amount||0));
-  const points=Math.floor(amount/1000)*rate;
+  // 17.4 — même règle pour une carte Tiop+ physique liée à la commande.
+  const [pointPromos]=await c.execute(`SELECT p.discount_value FROM promotion_usages pu INNER JOIN promotions p ON p.id=pu.promotion_id WHERE pu.order_id=? AND p.discount_type='POINTS_MULTIPLIER' LIMIT 1`,[x.order_id]);
+  const rawMultiplier=Number(pointPromos[0]?.discount_value||1);
+  const pointsMultiplier=Number.isFinite(rawMultiplier)&&rawMultiplier>1?rawMultiplier:1;
+  const basePoints=Math.floor(amount/1000)*rate;
+  const points=Math.floor(basePoints*pointsMultiplier);
   if(!Number.isFinite(points)||points<=0){await c.rollback();return {credited:false,reason:'NO_ELIGIBLE_POINTS'};}
   await c.execute(`UPDATE loyalty_cards SET points_balance=points_balance+?,updated_at=CURRENT_TIMESTAMP WHERE id=?`,[points,x.card_id]);
   await c.execute(`INSERT INTO loyalty_card_transactions (card_id,order_id,transaction_type,points,description,created_by_admin_user_id) VALUES (?,?,'EARN',?,?,NULL)`,
-   [x.card_id,x.order_id,points,`Points Tiop+ gagnés après paiement de la commande ${x.reference}.`]);
+   [x.card_id,x.order_id,points,`Points Tiop+ gagnés après paiement de la commande ${x.reference}${pointsMultiplier>1?` (promo x${pointsMultiplier})`:''}.`]);
   await c.commit();
   return {credited:true,points,cardId:Number(x.card_id),orderId:Number(x.order_id)};
  }catch(e){try{await c.rollback()}catch(_){}throw e}finally{c.release()}

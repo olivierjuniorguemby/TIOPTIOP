@@ -1,0 +1,23 @@
+const fs=require('fs');
+const checks=[]; const add=(n,ok)=>checks.push([n,!!ok]);
+const model=fs.readFileSync('models/promotion.model.js','utf8');
+const admin=fs.readFileSync('controllers/admin/promotion.controller.js','utf8');
+const client=fs.readFileSync('controllers/client/promotion.controller.js','utf8');
+const view=fs.readFileSync('views/admin/catalog/promotions.ejs','utf8');
+const install=fs.readFileSync('scripts/install-promotions-selected-17-5.js','utf8');
+add('A table promotion_selected_users',install.includes('promotion_selected_users'));
+add('B FK promotion',install.includes('REFERENCES promotions(id)'));
+add('C FK client',install.includes('REFERENCES users(id)'));
+add('D lecture clients sélectionnés',model.includes('selectedUserIds'));
+add('E sauvegarde clients sélectionnés',model.includes('saveSelectedUsers'));
+add('F validation SELECTED côté serveur',model.includes("promotion_selected_users WHERE promotion_id=? AND user_id=?"));
+add('G refus client non sélectionné',model.includes('réservé à certains clients'));
+add('H offres privées masquées',model.includes("p.audience <> 'SELECTED'"));
+add('I page offres connaît userId',client.includes('userId:Number(req.session?.user?.id'));
+add('J admin charge clients',admin.includes('Promotion.customers()'));
+add('K UI sélection clients',view.includes('selected_user_ids')&&view.includes('Clients autorisés'));
+add('L recherche clients',view.includes('filterCustomers'));
+let pass=0; for(const [n,ok] of checks){console.log(`${ok?'PASS':'FAIL'} — ${n}`);if(ok)pass++;}
+console.log(`\nRÉSULTAT 17.5 : PASS=${pass} | FAIL=${checks.length-pass}`);
+console.log(pass===checks.length?'✅ 17.5 prête pour validation fonctionnelle.':'❌ Corriger avant validation.');
+process.exit(pass===checks.length?0:1);

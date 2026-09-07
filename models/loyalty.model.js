@@ -93,7 +93,19 @@ async function awardPaidOrder(paymentId) {
 
     const rate = Math.max(0, Number(cfg.points_per_1000_xaf || 10));
     const amount = Math.max(0, Number(payment.amount || 0));
-    const points = Math.floor(amount / 1000) * rate;
+
+    // 17.4 — bonus de points par code promo. On relit la promotion depuis la commande
+    // au moment du paiement : aucune valeur envoyée par le navigateur n'est utilisée.
+    const [pointPromos] = await connection.execute(`
+      SELECT p.discount_value
+      FROM promotion_usages pu
+      INNER JOIN promotions p ON p.id=pu.promotion_id
+      WHERE pu.order_id=? AND p.discount_type='POINTS_MULTIPLIER'
+      LIMIT 1`, [payment.order_id]);
+    const rawMultiplier = Number(pointPromos[0]?.discount_value || 1);
+    const pointsMultiplier = Number.isFinite(rawMultiplier) && rawMultiplier > 1 ? rawMultiplier : 1;
+    const basePoints = Math.floor(amount / 1000) * rate;
+    const points = Math.floor(basePoints * pointsMultiplier);
     if (!Number.isFinite(points) || points <= 0) {
       await connection.rollback();
       return { credited: false, reason: 'NO_ELIGIBLE_POINTS' };
@@ -106,7 +118,7 @@ async function awardPaidOrder(paymentId) {
         payment.user_id,
         payment.order_id,
         points,
-        `Points Tiop+ gagnés après paiement de la commande ${payment.reference}.`
+        `Points Tiop+ gagnés après paiement de la commande ${payment.reference}${pointsMultiplier > 1 ? ` (promo x${pointsMultiplier})` : ''}.`
       ]);
 
     await connection.execute(`

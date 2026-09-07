@@ -450,57 +450,99 @@ document.addEventListener(
     }
 );
 /* =========================================================
-   17.3.2 — CODE PROMO : appliquer / retirer
+   17.3.3 — CODE PROMO : appliquer / retirer
+
+   Bloc autonome : les helpers du premier DOMContentLoaded
+   sont volontairement privés à sa closure. Ce bloc possède
+   donc sa propre lecture JSON et son propre affichage erreur.
 ========================================================= */
-document.addEventListener('DOMContentLoaded', function(){
-    const form = document.getElementById('promoForm');
-    const remove = document.getElementById('removePromoButton');
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("promoForm");
+    const removeButton = document.getElementById("removePromoButton");
+
+    async function promoReadJson(response) {
+        const contentType = response.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
+            const text = await response.text();
+            console.error("Réponse promo non JSON :", text);
+            throw new Error("Le serveur n'a pas retourné une réponse JSON.");
+        }
+        return response.json();
+    }
+
+    function promoShowError(message) {
+        const box = document.getElementById("cartMessage");
+        if (box) {
+            box.textContent = message;
+            box.className = "cart-message show error";
+        } else {
+            window.alert(message);
+        }
+    }
 
     if (form) {
-        form.addEventListener('submit', async function(e){
-            e.preventDefault();
-            const input = document.getElementById('promoCode');
-            const code = String(input?.value || '').trim();
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const input = document.getElementById("promoCode");
+            const code = String(input?.value || "").trim();
             const button = form.querySelector('button[type="submit"]');
-            if (!code) return;
+
+            if (!code) {
+                promoShowError("Saisissez un code promo.");
+                return;
+            }
+
             try {
                 if (button) button.disabled = true;
-                const r = await fetch('/panier/promo', {
-                    method:'POST',
-                    headers:{'Content-Type':'application/json','Accept':'application/json'},
-                    body:JSON.stringify({code}),
-                    cache:'no-store'
+
+                const response = await fetch("/panier/promo", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({ code }),
+                    cache: "no-store"
                 });
-                const data = await readJson(r);
-                if (!r.ok || !data.success) throw new Error(data.message || 'Code promo invalide.');
-                // Le serveur recalcule la promotion ; le reload affiche le montant fiable.
-                window.location.reload();
-            } catch(err) {
-                console.error(err);
-                showMessage(err.message || 'Impossible d’appliquer le code promo.', 'error');
+
+                const result = await promoReadJson(response);
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Code promo invalide.");
+                }
+
+                // Navigation forcée : nouvelle requête GET /panier après
+                // sauvegarde serveur de la session => recalcul fiable.
+                window.location.assign("/panier?promo=applied&_=" + Date.now());
+            } catch (error) {
+                console.error("Erreur application promo :", error);
+                promoShowError(error.message || "Impossible d'appliquer le code promo.");
                 if (button) button.disabled = false;
             }
         });
     }
 
-    if (remove) {
-        remove.addEventListener('click', async function(){
+    if (removeButton) {
+        removeButton.addEventListener("click", async function () {
             try {
-                remove.disabled = true;
-                const r = await fetch('/panier/promo', {
-                    method:'DELETE',
-                    headers:{'Accept':'application/json'},
-                    cache:'no-store'
+                removeButton.disabled = true;
+
+                const response = await fetch("/panier/promo", {
+                    method: "DELETE",
+                    headers: { "Accept": "application/json" },
+                    cache: "no-store"
                 });
-                const data = await readJson(r);
-                if (!r.ok || !data.success) throw new Error(data.message || 'Impossible de retirer le code promo.');
-                window.location.reload();
-            } catch(err) {
-                console.error(err);
-                showMessage(err.message || 'Impossible de retirer le code promo.', 'error');
-                remove.disabled = false;
+
+                const result = await promoReadJson(response);
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Impossible de retirer le code promo.");
+                }
+
+                window.location.assign("/panier?promo=removed&_=" + Date.now());
+            } catch (error) {
+                console.error("Erreur retrait promo :", error);
+                promoShowError(error.message || "Impossible de retirer le code promo.");
+                removeButton.disabled = false;
             }
         });
     }
 });
-

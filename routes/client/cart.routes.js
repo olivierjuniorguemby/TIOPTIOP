@@ -69,6 +69,17 @@ router.post(
 
 
 /* =========================================================
+   17.3.3 — CODE PROMO
+
+   IMPORTANT : /promo doit être déclaré AVANT /:itemId.
+   Sinon DELETE /panier/promo est capturé par /:itemId
+   avec itemId = "promo".
+========================================================= */
+router.post("/promo", cart.applyPromotion);
+router.delete("/promo", cart.removePromotion);
+
+
+/* =========================================================
    SUPPRIMER ARTICLE
 
    DELETE /panier/:itemId
@@ -90,13 +101,6 @@ router.delete(
     "/",
     cart.clear
 );
-
-
-/* =========================================================
-   17.2 — CODE PROMO
-========================================================= */
-router.post("/promo", cart.applyPromotion);
-router.delete("/promo", cart.removePromotion);
 
 
 /* =========================================================

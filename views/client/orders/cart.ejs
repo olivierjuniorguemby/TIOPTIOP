@@ -730,6 +730,7 @@
                             <div class="promo-applied"><span><strong><%= promotionPreview.code %></strong><br><%= promotionPreview.label %></span><button type="button" id="removePromoButton" class="promo-remove">Retirer</button></div>
                             <% if (Number(promotionPreview.discountAmount || 0) > 0) { %><div class="summary-row promo-discount"><span>Réduction promo</span><strong>- <%= Number(promotionPreview.discountAmount).toLocaleString('fr-FR') %> <%= items[0]?.currency || 'XAF' %></strong></div><% } %>
                             <% if (promotionPreview.freeDelivery) { %><div class="summary-row promo-discount"><span>Avantage</span><strong>Livraison offerte</strong></div><% } %>
+                            <% if (Number(promotionPreview.pointsMultiplier || 1) > 1) { %><div class="summary-row promo-discount"><span>Bonus Tiop+</span><strong>Points ×<%= Number(promotionPreview.pointsMultiplier) %> après paiement</strong></div><% } %>
                         <% } else { %>
                             <form id="promoForm" class="promo-form"><input id="promoCode" maxlength="80" placeholder="Ex : BRAISE20"><button type="submit">Appliquer</button></form>
                         <% } %>
