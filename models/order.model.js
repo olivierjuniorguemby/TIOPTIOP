@@ -3,6 +3,7 @@ const db = require("../config/database");
 const Payment = require("./payment.model");
 const Loyalty = require("./loyalty.model");
 const LoyaltyCard = require("./loyalty-card.model");
+const Promotion = require("./promotion.model");
 
 
 /* =========================================================
@@ -524,7 +525,8 @@ async function createFromCart({
     paymentMethod,
     customerNote,
     cart,
-    loyaltyRedemptionPublicId = null
+    loyaltyRedemptionPublicId = null,
+    promoCode = null
 }) {
 
     const connection =
@@ -832,6 +834,19 @@ async function createFromCart({
         const taxAmount = 0;
         let loyaltyRedemption = null;
         let loyaltyLabel = null;
+        let promotion = null;
+        let promotionDiscountAmount = 0;
+
+        if (promoCode) {
+            const promoResult = await Promotion.validateCode({
+                code:promoCode, userId, cart, connection, lock:true
+            });
+            if (!promoResult.valid) throw new Error(promoResult.message);
+            promotion = promoResult.promotion;
+            promotionDiscountAmount = promoResult.discountAmount;
+            discountAmount += promotionDiscountAmount;
+            if (promoResult.freeDelivery && orderType === 'DELIVERY') deliveryFee = 0;
+        }
 
         if (loyaltyRedemptionPublicId) {
             loyaltyRedemption = await Loyalty.lockCheckoutRedemption(
@@ -846,11 +861,11 @@ async function createFromCart({
                 if (value <= 0 || value > 100) {
                     throw new Error('La réduction Tiop+ est mal configurée.');
                 }
-                discountAmount = Math.min(subtotal, Math.round(subtotal * value / 100));
+                discountAmount += Math.min(Math.max(0, subtotal - discountAmount), Math.round(Math.max(0, subtotal - discountAmount) * value / 100));
             }
             else if (type === 'COUPON') {
                 if (value <= 0) throw new Error('Le coupon Tiop+ est mal configuré.');
-                discountAmount = Math.min(subtotal, value);
+                discountAmount += Math.min(Math.max(0, subtotal - discountAmount), value);
             }
             else if (type === 'FREE_DELIVERY') {
                 if (orderType !== 'DELIVERY') {
@@ -927,6 +942,7 @@ async function createFromCart({
                 tax_amount,
                 total_amount,
                 currency,
+                promo_code,
                 customer_note
             )
             VALUES
@@ -936,7 +952,7 @@ async function createFromCart({
                 'RECEIVED',
                 ?, ?, ?, ?, ?,
                 'XAF',
-                ?
+                ?, ?
             )
         `, [
             publicId,
@@ -950,12 +966,20 @@ async function createFromCart({
             deliveryFee,
             taxAmount,
             totalAmount,
+            promotion ? String(promotion.code || promoCode) : null,
             customerNote || null
         ]);
 
 
         const orderId =
             orderResult.insertId;
+
+        if (promotion) {
+            await connection.execute(`
+                INSERT INTO promotion_usages(promotion_id,user_id,order_id,code,discount_amount,created_at)
+                VALUES(?,?,?,?,?,NOW())
+            `,[promotion.id,userId,orderId,String(promotion.code || promoCode),promotionDiscountAmount]);
+        }
 
 
         /* =================================================
@@ -1265,6 +1289,8 @@ async function createFromCart({
             subtotal,
             deliveryFee,
             discountAmount,
+            promoCode: promotion ? String(promotion.code || promoCode) : null,
+            promotionDiscountAmount,
             loyaltyRedemptionPublicId: loyaltyRedemption ? loyaltyRedemption.public_id : null,
             loyaltyRewardType: loyaltyRedemption ? loyaltyRedemption.reward_type : null,
             loyaltyRewardName: loyaltyLabel,

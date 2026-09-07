@@ -12,6 +12,7 @@ const StripeService =
 
 const Loyalty =
     require("../../models/loyalty.model");
+const Promotion = require("../../models/promotion.model");
 
 
 /* =========================================================
@@ -166,6 +167,15 @@ async function (
             "XAF";
 
 
+        let promotionPreview = null;
+        if (req.session?.promoCode) {
+            promotionPreview = await Promotion.validateCode({ code:req.session.promoCode, userId, cart });
+            if (!promotionPreview.valid) {
+                delete req.session.promoCode;
+                promotionPreview = null;
+            }
+        }
+
         return res.render(
             "client/orders/checkout",
             {
@@ -189,6 +199,7 @@ async function (
 
                 deliveryZones,
                 availableRedemptions,
+                promotionPreview,
 
                 currency,
 
@@ -223,7 +234,10 @@ async function (
                         "",
 
                     loyalty_redemption_public_id:
-                        ""
+                        "",
+
+                    promo_code:
+                        promotionPreview?.code || ""
                 }
             }
         );
@@ -501,6 +515,9 @@ async function (
                 .trim()
                 .slice(0, 36);
 
+        const promoCode = String(req.body.promo_code || req.session?.promoCode || "")
+            .trim().toUpperCase().slice(0,80);
+
 
         const values = {
 
@@ -526,7 +543,10 @@ async function (
                 customerNote,
 
             loyalty_redemption_public_id:
-                loyaltyRedemptionPublicId
+                loyaltyRedemptionPublicId,
+
+            promo_code:
+                promoCode
         };
 
 
@@ -752,7 +772,8 @@ async function (
 
                 cart,
 
-                loyaltyRedemptionPublicId
+                loyaltyRedemptionPublicId,
+                promoCode
             });
 
 
@@ -766,6 +787,8 @@ async function (
 
             delete req.session
                 .cartGuestToken;
+
+            delete req.session.promoCode;
 
 
             req.session.lastOrder = {
@@ -1678,6 +1701,11 @@ async function renderCheckoutError(
         "XAF";
 
 
+    let promotionPreview = null;
+    if (values?.promo_code) {
+        promotionPreview = await Promotion.validateCode({ code:values.promo_code, userId, cart });
+    }
+
     return res.status(400).render(
         "client/orders/checkout",
         {
@@ -1702,6 +1730,7 @@ async function renderCheckoutError(
 
             deliveryZones,
             availableRedemptions,
+            promotionPreview,
 
             currency,
 

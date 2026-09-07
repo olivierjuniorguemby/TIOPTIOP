@@ -93,3 +93,10 @@ Ce test vérifie :
 ## node scripts/set-user-password.js "junior@example.com" "TestTiop123!"
 ## node scripts/check-user-password.js "junior@example.com" "TestTiop123!"
 ## node -e "const bcrypt=require('bcryptjs'); bcrypt.compare('Admin@123456789','$2b$12$oZgqdTPVwspwu4MqrTmHyOpxkww2RNr87DkhUg9bcVlQd7P.Q71z6').then(console.log)"
+
+## Pourcentage → réduit le prix d’un pourcentage : Valeur = 10 signifie -10 % ; votre BRAZZA10 doit donc être de ce type.
+## Prix fixe → retire un montant précis : Valeur = 1000 signifie -1 000 XAF sur le panier, sous réserve des conditions définies.
+## Livraison → rend la livraison gratuite ; la valeur monétaire n’est normalement pas utilisée pour calculer une réduction sur les produits.
+## Bonus points → donne des points Tiop+ supplémentaires : Valeur = 200 signifie par exemple +200 points après une commande éligible payée.
+## Audience : Tous / Tiop+ / Nouveaux clients → respectivement tout le monde, uniquement les membres Tiop+, ou uniquement les clients considérés comme nouveaux selon la règle que nous définirons.
+## Sélection → promotion réservée à des clients choisis par l’admin (ex. VIP, partenaire ou clients précis) ; il faudra donc prévoir dans une prochaine sous-étape l’interface permettant de sélectionner ces clients.

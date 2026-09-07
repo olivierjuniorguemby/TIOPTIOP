@@ -449,3 +449,58 @@ document.addEventListener(
 
     }
 );
+/* =========================================================
+   17.3.2 — CODE PROMO : appliquer / retirer
+========================================================= */
+document.addEventListener('DOMContentLoaded', function(){
+    const form = document.getElementById('promoForm');
+    const remove = document.getElementById('removePromoButton');
+
+    if (form) {
+        form.addEventListener('submit', async function(e){
+            e.preventDefault();
+            const input = document.getElementById('promoCode');
+            const code = String(input?.value || '').trim();
+            const button = form.querySelector('button[type="submit"]');
+            if (!code) return;
+            try {
+                if (button) button.disabled = true;
+                const r = await fetch('/panier/promo', {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json','Accept':'application/json'},
+                    body:JSON.stringify({code}),
+                    cache:'no-store'
+                });
+                const data = await readJson(r);
+                if (!r.ok || !data.success) throw new Error(data.message || 'Code promo invalide.');
+                // Le serveur recalcule la promotion ; le reload affiche le montant fiable.
+                window.location.reload();
+            } catch(err) {
+                console.error(err);
+                showMessage(err.message || 'Impossible d’appliquer le code promo.', 'error');
+                if (button) button.disabled = false;
+            }
+        });
+    }
+
+    if (remove) {
+        remove.addEventListener('click', async function(){
+            try {
+                remove.disabled = true;
+                const r = await fetch('/panier/promo', {
+                    method:'DELETE',
+                    headers:{'Accept':'application/json'},
+                    cache:'no-store'
+                });
+                const data = await readJson(r);
+                if (!r.ok || !data.success) throw new Error(data.message || 'Impossible de retirer le code promo.');
+                window.location.reload();
+            } catch(err) {
+                console.error(err);
+                showMessage(err.message || 'Impossible de retirer le code promo.', 'error');
+                remove.disabled = false;
+            }
+        });
+    }
+});
+

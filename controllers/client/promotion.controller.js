@@ -1,0 +1,2 @@
+const Promotion=require('../../models/promotion.model');
+exports.index=async(req,res,next)=>{try{const filters={q:req.query.q||'',type:req.query.type||'',status:req.query.status||'',category:req.query.category||''};const [promotions,categories]=await Promise.all([Promotion.listPublic(filters),Promotion.categories()]);res.render('client/catalog/offers',{title:'Offres',layout:'layouts/client',promotions,categories,filters});}catch(e){next(e)}};

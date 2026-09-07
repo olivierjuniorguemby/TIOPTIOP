@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 
 const Cart = require("../../models/cart.model");
+const Promotion = require("../../models/promotion.model");
 
 
 /* =========================================================
@@ -176,7 +177,12 @@ async function (
                     detailedCart,
 
                 items:
-                    detailedCart.items || []
+                    detailedCart.items || [],
+
+                promotionPreview:
+                    req.session?.promoCode
+                        ? await Promotion.validateCode({ code:req.session.promoCode, userId:getUserId(req), cart:detailedCart })
+                        : null
             }
         );
 
@@ -862,6 +868,16 @@ async function (
                 cart.id
             );
 
+        /* 17.3.1 — un code promo appartient au panier courant.
+           Si le dernier article vient d’être supprimé, il ne doit
+           jamais survivre dans la session pour le panier suivant. */
+        if (
+            Number(detailedCart.total_quantity || 0) === 0 &&
+            req.session
+        ) {
+            delete req.session.promoCode;
+        }
+
 
         return res.json({
 
@@ -917,6 +933,13 @@ async function (
         await Cart.clearCart(
             cart.id
         );
+
+        /* 17.3.1 — vider le panier réinitialise aussi le code promo.
+           Sans cela, req.session.promoCode restait actif et était
+           réappliqué automatiquement au prochain article ajouté. */
+        if (req.session) {
+            delete req.session.promoCode;
+        }
 
 
         return res.json({
@@ -1026,3 +1049,51 @@ exports.getUserId =
 
 exports.getGuestToken =
     getGuestToken;
+
+/* =========================================================
+   17.2 — CODE PROMO PANIER
+========================================================= */
+exports.applyPromotion = async function(req,res) {
+    try {
+        const cart = await getCurrentCart(req);
+        const detailedCart = await buildCartResponse(cart.id);
+        const result = await Promotion.validateCode({
+            code:req.body?.code,
+            userId:getUserId(req),
+            cart:detailedCart
+        });
+        if (!result.valid) return res.status(400).json({success:false,message:result.message});
+        req.session.promoCode = result.code;
+        const payload = {success:true,message:`Code ${result.code} appliqué.`,promotion:{code:result.code,label:result.label,discountAmount:result.discountAmount,freeDelivery:result.freeDelivery}};
+        // 17.3.2 — persister explicitement la session avant de répondre.
+        if (typeof req.session.save === 'function') {
+            return req.session.save((saveError) => {
+                if (saveError) {
+                    console.error('Erreur sauvegarde session code promo :', saveError);
+                    return res.status(500).json({success:false,message:'Impossible de mémoriser le code promo.'});
+                }
+                return res.json(payload);
+            });
+        }
+        return res.json(payload);
+    } catch(error) {
+        console.error('Erreur code promo panier :',error);
+        return res.status(500).json({success:false,message:'Impossible de valider le code promo.'});
+    }
+};
+
+exports.removePromotion = async function(req,res) {
+    if (!req.session) return res.json({success:true,message:'Code promo retiré.'});
+    delete req.session.promoCode;
+    // 17.3.2 — garantir que le DELETE est réellement écrit avant le rechargement navigateur.
+    if (typeof req.session.save === 'function') {
+        return req.session.save((saveError) => {
+            if (saveError) {
+                console.error('Erreur suppression session code promo :', saveError);
+                return res.status(500).json({success:false,message:'Impossible de retirer le code promo.'});
+            }
+            return res.json({success:true,message:'Code promo retiré.'});
+        });
+    }
+    return res.json({success:true,message:'Code promo retiré.'});
+};

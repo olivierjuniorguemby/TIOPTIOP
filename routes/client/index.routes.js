@@ -10,6 +10,7 @@ const page =
 
 const loyaltyController =
     require("../../controllers/client/loyalty.controller");
+const promotionController = require("../../controllers/client/promotion.controller");
 
 
 /* ======================================================
@@ -116,13 +117,7 @@ router.get(
    PUBLIC
 ====================================================== */
 
-router.get(
-    "/offres",
-    page.staticPage(
-        "client/catalog/offers",
-        "Offres"
-    )
-);
+router.get("/offres", promotionController.index);
 
 
 /* ======================================================
@@ -130,13 +125,7 @@ router.get(
    PUBLIC
 ====================================================== */
 
-router.get(
-    "/promotions",
-    page.staticPage(
-        "client/catalog/offers",
-        "Promotions"
-    )
-);
+router.get("/promotions", promotionController.index);
 
 
 /* ======================================================

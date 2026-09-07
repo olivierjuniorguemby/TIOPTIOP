@@ -916,7 +916,7 @@ textarea.checkout-field {
 
 
 /* 16.6 — TIOP+ CHECKOUT */
-.loyalty-options{display:grid;gap:10px}.loyalty-option{display:block;cursor:pointer}.loyalty-option input{position:absolute;opacity:0;pointer-events:none}.loyalty-option-box{display:flex;gap:12px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:16px;background:#fff;transition:.18s}.loyalty-option input:checked+.loyalty-option-box{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,121,0,.09);background:#fffaf4}.loyalty-icon{width:46px;height:46px;border-radius:13px;background:#fff0df;display:grid;place-items:center;overflow:hidden;flex:0 0 46px}.loyalty-icon img{width:100%;height:100%;object-fit:cover}.loyalty-copy{flex:1;min-width:0}.loyalty-copy strong{display:block;font-size:13px}.loyalty-copy small{display:block;color:var(--muted);margin-top:4px;line-height:1.4}.loyalty-badge{font-size:10px;font-weight:900;padding:5px 8px;border-radius:999px;background:#f3eee8}.summary-loyalty{color:#16753c}.summary-loyalty[hidden]{display:none!important}
+.loyalty-options{display:grid;gap:10px}.loyalty-option{display:block;cursor:pointer}.loyalty-option input{position:absolute;opacity:0;pointer-events:none}.loyalty-option-box{display:flex;gap:12px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:16px;background:#fff;transition:.18s}.loyalty-option input:checked+.loyalty-option-box{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,121,0,.09);background:#fffaf4}.loyalty-icon{width:46px;height:46px;border-radius:13px;background:#fff0df;display:grid;place-items:center;overflow:hidden;flex:0 0 46px}.loyalty-icon img{width:100%;height:100%;object-fit:cover}.loyalty-copy{flex:1;min-width:0}.loyalty-copy strong{display:block;font-size:13px}.loyalty-copy small{display:block;color:var(--muted);margin-top:4px;line-height:1.4}.loyalty-badge{font-size:10px;font-weight:900;padding:5px 8px;border-radius:999px;background:#f3eee8}.summary-loyalty{color:#16753c}.summary-loyalty[hidden]{display:none!important}.promo-summary-copy{display:flex;flex-direction:column;gap:3px}.promo-summary-remove{border:0;background:transparent;color:#b53939;font-weight:900;font-size:11px;cursor:pointer;padding:0;text-align:left;width:max-content}.promo-summary-remove:hover{text-decoration:underline}
 </style>
 
 
@@ -963,6 +963,10 @@ textarea.checkout-field {
         action="/checkout"
         method="POST"
     >
+        <input type="hidden" id="checkoutPromoCode" name="promo_code" value="<%= promotionPreview?.valid ? promotionPreview.code : (values?.promo_code || '') %>"
+          data-discount="<%= promotionPreview?.valid ? Number(promotionPreview.discountAmount || 0) : 0 %>"
+          data-free-delivery="<%= promotionPreview?.valid && promotionPreview.freeDelivery ? '1' : '0' %>"
+          data-label="<%= promotionPreview?.valid ? promotionPreview.label : '' %>">
 
         <div class="checkout-layout">
 
@@ -1763,6 +1767,16 @@ textarea.checkout-field {
 
 
 
+                <% if (promotionPreview && promotionPreview.valid) { %>
+                <div class="summary-row summary-loyalty" id="promoSummaryRow">
+                    <span class="promo-summary-copy">
+                        <span>🏷️ <%= promotionPreview.label %> (<%= promotionPreview.code %>)</span>
+                        <button type="button" id="checkoutRemovePromoButton" class="promo-summary-remove">Retirer le code promo</button>
+                    </span>
+                    <strong id="promoSummaryAmount"><%= promotionPreview.freeDelivery ? 'Livraison offerte' : ('- ' + Number(promotionPreview.discountAmount || 0).toLocaleString('fr-FR') + ' ' + (currency || 'XAF')) %></strong>
+                </div>
+                <% } %>
+
                 <div id="loyaltySummaryRow" class="summary-row summary-loyalty" hidden>
                     <span id="loyaltySummaryLabel">🎁 Avantage Tiop+</span>
                     <strong id="loyaltySummaryAmount">—</strong>
@@ -1857,6 +1871,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
-<script src="/js/checkout.js"></script>
+<script src="/js/checkout.js?v=17.3"></script>
 
 </section>

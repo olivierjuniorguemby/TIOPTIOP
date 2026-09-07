@@ -87,6 +87,9 @@ document.addEventListener(
         const loyaltySummaryRow = document.getElementById('loyaltySummaryRow');
         const loyaltySummaryLabel = document.getElementById('loyaltySummaryLabel');
         const loyaltySummaryAmount = document.getElementById('loyaltySummaryAmount');
+        const promoInput = document.getElementById('checkoutPromoCode');
+        const promoDiscount = Number(promoInput?.dataset.discount || 0);
+        const promoFreeDelivery = promoInput?.dataset.freeDelivery === '1';
 
 
         const subtotal =
@@ -761,14 +764,17 @@ document.addEventListener(
             const rewardType = String(selectedReward?.dataset.type || '');
             const rewardValue = Number(selectedReward?.dataset.value || 0);
             const rewardName = selectedReward?.dataset.name || 'Avantage Tiop+';
-            let previewDiscount = 0;
-            let previewFee = fee;
+            let previewDiscount = Math.min(subtotal, Math.max(0, promoDiscount));
+            let previewFee = (promoFreeDelivery && getOrderType() === 'DELIVERY') ? 0 : fee;
+            let loyaltyPreviewDiscount = 0;
+            const remainingSubtotal = Math.max(0, subtotal - previewDiscount);
 
             if (selectedReward?.value) {
-                if (rewardType === 'DISCOUNT') previewDiscount = Math.min(subtotal, Math.round(subtotal * rewardValue / 100));
-                if (rewardType === 'COUPON') previewDiscount = Math.min(subtotal, rewardValue);
+                if (rewardType === 'DISCOUNT') loyaltyPreviewDiscount = Math.min(remainingSubtotal, Math.round(remainingSubtotal * rewardValue / 100));
+                if (rewardType === 'COUPON') loyaltyPreviewDiscount = Math.min(remainingSubtotal, rewardValue);
                 if (rewardType === 'FREE_DELIVERY' && getOrderType() === 'DELIVERY') previewFee = 0;
             }
+            previewDiscount += loyaltyPreviewDiscount;
 
             const total = Math.max(0, subtotal - previewDiscount + previewFee);
 
@@ -789,7 +795,7 @@ document.addEventListener(
                     loyaltySummaryLabel.textContent = `🎁 ${rewardName}`;
                     if (rewardType === 'PRODUCT') loyaltySummaryAmount.textContent = 'Produit offert';
                     else if (rewardType === 'FREE_DELIVERY') loyaltySummaryAmount.textContent = getOrderType() === 'DELIVERY' ? 'Livraison offerte' : 'Livraison requise';
-                    else loyaltySummaryAmount.textContent = '- ' + money(previewDiscount);
+                    else loyaltySummaryAmount.textContent = '- ' + money(loyaltyPreviewDiscount);
                 }
             }
 
@@ -1147,6 +1153,35 @@ document.addEventListener(
 
 
         loyaltyRadios.forEach(radio => radio.addEventListener('change', updateTotals));
+
+        /* =====================================================
+           17.3 — RETRAIT DU CODE PROMO DEPUIS LE CHECKOUT
+           La suppression se fait côté serveur/session puis la page
+           est rechargée afin de recalculer tous les montants.
+        ===================================================== */
+        const checkoutRemovePromoButton = document.getElementById('checkoutRemovePromoButton');
+        if (checkoutRemovePromoButton) {
+            checkoutRemovePromoButton.addEventListener('click', async function () {
+                const originalText = checkoutRemovePromoButton.textContent;
+                checkoutRemovePromoButton.disabled = true;
+                checkoutRemovePromoButton.textContent = 'Retrait...';
+                try {
+                    const response = await fetch('/panier/promo', {
+                        method: 'DELETE',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok || data.success === false) {
+                        throw new Error(data.message || 'Impossible de retirer le code promo.');
+                    }
+                    window.location.reload();
+                } catch (error) {
+                    alert(error.message || 'Impossible de retirer le code promo.');
+                    checkoutRemovePromoButton.disabled = false;
+                    checkoutRemovePromoButton.textContent = originalText;
+                }
+            });
+        }
 
         /* =====================================================
            INITIALISATION

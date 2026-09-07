@@ -69,6 +69,7 @@ const loyaltyController =
     );
 
 const loyaltyCardController = require("../../controllers/admin/loyalty-card.controller");
+const promotionController = require("../../controllers/admin/promotion.controller");
 
 const deliveryController =
     require(
@@ -115,7 +116,8 @@ const productOptionController =
 
 
 const {
-    productUpload
+    productUpload,
+    promotionUpload
 } =
     require(
         "../../config/uploads"
@@ -788,13 +790,10 @@ router.post(
    PROMOTIONS / TIOP+
 ========================================================= */
 
-router.get(
-    "/promotions",
-    page.render(
-        "admin/catalog/promotions",
-        "Promotions"
-    )
-);
+router.get("/promotions", promotionController.index);
+router.post("/promotions", promotionUpload.single("image"), promotionController.create);
+router.post("/promotions/:id", promotionUpload.single("image"), promotionController.update);
+router.post("/promotions/:id/supprimer", promotionController.remove);
 
 
 // 16.10.3 — cartes Tiop+ nominatives sans compte

@@ -228,6 +228,8 @@
             cursor: pointer;
         }
 
+        .promo-box{margin:16px 0;padding:14px;border:1px dashed #ffb36a;border-radius:16px;background:#fffaf4}.promo-box-title{font-size:12px;font-weight:1000;margin-bottom:9px}.promo-form{display:flex;gap:8px}.promo-form input{min-width:0;flex:1;height:40px;border:1px solid var(--line);border-radius:12px;padding:0 12px;text-transform:uppercase}.promo-form button{border:0;border-radius:12px;background:var(--orange);color:#fff;font-weight:900;padding:0 14px;cursor:pointer}.promo-applied{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:11px}.promo-applied strong{color:#16753c}.promo-remove{border:0;background:transparent;color:#b53939;font-weight:900;cursor:pointer}.promo-discount{color:#16753c!important}
+
         .cart-summary {
             position: sticky;
             top: 90px;
@@ -722,29 +724,32 @@
                     </div>
 
 
-                    <div class="summary-row summary-total">
-
-                        <span>
-                            Sous-total
-                        </span>
-
-                        <strong id="summarySubtotal">
-
-                            <%= Number(
-                                cart.subtotal || 0
-                            ).toLocaleString(
-                                "fr-FR",
-                                {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2
-                                }
-                            ) %>
-
-                            <%= items[0]?.currency || "XAF" %>
-
-                        </strong>
-
+                    <div class="promo-box">
+                        <div class="promo-box-title">🏷️ Code promo</div>
+                        <% if (promotionPreview && promotionPreview.valid) { %>
+                            <div class="promo-applied"><span><strong><%= promotionPreview.code %></strong><br><%= promotionPreview.label %></span><button type="button" id="removePromoButton" class="promo-remove">Retirer</button></div>
+                            <% if (Number(promotionPreview.discountAmount || 0) > 0) { %><div class="summary-row promo-discount"><span>Réduction promo</span><strong>- <%= Number(promotionPreview.discountAmount).toLocaleString('fr-FR') %> <%= items[0]?.currency || 'XAF' %></strong></div><% } %>
+                            <% if (promotionPreview.freeDelivery) { %><div class="summary-row promo-discount"><span>Avantage</span><strong>Livraison offerte</strong></div><% } %>
+                        <% } else { %>
+                            <form id="promoForm" class="promo-form"><input id="promoCode" maxlength="80" placeholder="Ex : BRAISE20"><button type="submit">Appliquer</button></form>
+                        <% } %>
                     </div>
+
+                    <div class="summary-row<%= promotionPreview?.valid && Number(promotionPreview.discountAmount || 0) > 0 ? '' : ' summary-total' %>">
+                        <span>Sous-total</span>
+                        <strong id="summarySubtotal"><%= Number(cart.subtotal || 0).toLocaleString("fr-FR", {minimumFractionDigits:2,maximumFractionDigits:2}) %> <%= items[0]?.currency || "XAF" %></strong>
+                    </div>
+
+                    <% if (promotionPreview?.valid && Number(promotionPreview.discountAmount || 0) > 0) { %>
+                    <div class="summary-row">
+                        <span>Réduction code <strong><%= promotionPreview.code %></strong></span>
+                        <strong class="promo-discount">- <%= Number(promotionPreview.discountAmount || 0).toLocaleString('fr-FR') %> <%= items[0]?.currency || 'XAF' %></strong>
+                    </div>
+                    <div class="summary-row summary-total">
+                        <span>Total après promo</span>
+                        <strong id="summaryAfterPromo"><%= Math.max(0, Number(cart.subtotal || 0) - Number(promotionPreview.discountAmount || 0)).toLocaleString('fr-FR', {minimumFractionDigits:2,maximumFractionDigits:2}) %> <%= items[0]?.currency || 'XAF' %></strong>
+                    </div>
+                    <% } %>
 
 
                     <a
@@ -782,4 +787,4 @@
 </section>
 
 
-<script src="/js/cart.js"></script>
+<script src="/js/cart.js?v=17.3.2"></script>
