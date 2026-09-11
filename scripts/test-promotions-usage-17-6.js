@@ -1,0 +1,17 @@
+const fs=require('fs'); const path=require('path');
+let pass=0,fail=0; const test=(n,ok)=>{console.log(`${ok?'PASS':'FAIL'} — ${n}`);ok?pass++:fail++};
+const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
+const promo=read('models/promotion.model.js'), order=read('models/order.model.js'), pay=read('services/payment.service.js'), refund=read('services/refund.service.js'), admin=read('views/admin/catalog/promotions.ejs');
+test('A limite globale supportée',promo.includes('promo.usage_limit'));
+test('B limite par client supportée',promo.includes('promo.usage_limit_per_user'));
+test('C seules RESERVED/USED comptent',promo.includes("IN ('RESERVED','USED')"));
+test('D commande réserve utilisation',order.includes("'RESERVED',NOW()"));
+test('E paiement passe utilisation USED',pay.includes('markOrderUsageUsed'));
+test('F annulation libère RESERVED',order.includes("release_reason='ORDER_CANCELLED'"));
+test('G remboursement total libère usage',refund.includes('releaseOrderUsage'));
+test('H remboursement partiel ne libère pas explicitement',!refund.includes("'PARTIAL_REFUND'"));
+test('I admin limite globale',admin.includes('name="usage_limit"'));
+test('J admin limite par client',admin.includes('name="usage_limit_per_user"'));
+test('K modification recharge les limites',admin.includes("'usage_limit','usage_limit_per_user'"));
+test('L idempotence transition USED',promo.includes("status='RESERVED'"));
+console.log(`\nRÉSULTAT 17.6 : PASS=${pass} | FAIL=${fail}`); if(fail)process.exit(1); console.log('✅ 17.6 prête pour validation fonctionnelle.');

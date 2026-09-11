@@ -70,6 +70,7 @@ const loyaltyController =
 
 const loyaltyCardController = require("../../controllers/admin/loyalty-card.controller");
 const promotionController = require("../../controllers/admin/promotion.controller");
+const supportController = require("../../controllers/admin/support.controller");
 
 const deliveryController =
     require(
@@ -117,7 +118,8 @@ const productOptionController =
 
 const {
     productUpload,
-    promotionUpload
+    promotionUpload,
+    supportUpload
 } =
     require(
         "../../config/uploads"
@@ -876,13 +878,8 @@ router.post(
    CONTENU
 ========================================================= */
 
-router.get(
-    "/support",
-    page.render(
-        "admin/content/support",
-        "Support"
-    )
-);
+router.get("/support", supportController.index);
+router.post("/support/:id/reply", supportUpload.single("attachment"), supportController.reply);
 
 
 router.get(

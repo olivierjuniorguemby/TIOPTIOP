@@ -90,6 +90,7 @@ document.addEventListener(
         const promoInput = document.getElementById('checkoutPromoCode');
         const promoDiscount = Number(promoInput?.dataset.discount || 0);
         const promoFreeDelivery = promoInput?.dataset.freeDelivery === '1';
+        const promoAllowsLoyaltyStack = promoInput?.dataset.allowLoyaltyStack === '1';
 
 
         const subtotal =
@@ -749,6 +750,20 @@ document.addEventListener(
             return true;
         }
 
+
+        // 17.7 — UX : si la promotion interdit le cumul, les récompenses Tiop+ sont désactivées.
+        if (promoInput?.value && !promoAllowsLoyaltyStack) {
+            document.querySelectorAll('input[name="loyalty_redemption_public_id"]').forEach(function (radio) {
+                if (radio.value) {
+                    radio.checked = false;
+                    radio.disabled = true;
+                    const box = radio.closest('.loyalty-option');
+                    if (box) { box.style.opacity = '0.55'; box.title = 'Non cumulable avec le code promo actif'; }
+                } else {
+                    radio.checked = true;
+                }
+            });
+        }
 
         /* =====================================================
            TOTAL

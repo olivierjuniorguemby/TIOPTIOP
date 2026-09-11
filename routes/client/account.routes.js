@@ -7,6 +7,9 @@ const account =
         "../../controllers/client/account.controller"
     );
 
+const support = require("../../controllers/client/support.controller");
+const { supportUpload } = require("../../config/uploads");
+
 
 const {
     requireUser
@@ -32,6 +35,24 @@ router.get(
     "/compte",
     requireUser,
     account.dashboard
+);
+
+
+/* =========================================================
+   SUPPORT / MES DEMANDES — 18.3
+========================================================= */
+
+router.get(
+    "/compte/demandes",
+    requireUser,
+    support.account
+);
+
+router.post(
+    "/compte/demandes/:id/repondre",
+    requireUser,
+    supportUpload.single("attachment"),
+    support.replyCustomer
 );
 
 

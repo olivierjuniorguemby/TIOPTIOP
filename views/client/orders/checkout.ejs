@@ -966,8 +966,8 @@ textarea.checkout-field {
         <input type="hidden" id="checkoutPromoCode" name="promo_code" value="<%= promotionPreview?.valid ? promotionPreview.code : (values?.promo_code || '') %>"
           data-discount="<%= promotionPreview?.valid ? Number(promotionPreview.discountAmount || 0) : 0 %>"
           data-free-delivery="<%= promotionPreview?.valid && promotionPreview.freeDelivery ? '1' : '0' %>"
-          data-points-multiplier="<%= promotionPreview?.valid ? Number(promotionPreview.pointsMultiplier || 1) : 1 %>"
-          data-label="<%= promotionPreview?.valid ? promotionPreview.label : '' %>">
+          data-label="<%= promotionPreview?.valid ? promotionPreview.label : '' %>"
+          data-allow-loyalty-stack="<%= promotionPreview?.valid && Number(promotionPreview.promotion?.allow_loyalty_stack) === 1 ? '1' : '0' %>">
 
         <div class="checkout-layout">
 
@@ -1583,6 +1583,9 @@ textarea.checkout-field {
                 <section class="checkout-card">
                     <h2 class="checkout-card-title">🎁 Mes avantages Tiop+</h2>
                     <p class="checkout-card-description">Un seul avantage peut être utilisé par commande. La vérification finale est faite côté serveur.</p>
+                    <% if (promotionPreview?.valid && Number(promotionPreview.promotion?.allow_loyalty_stack) !== 1) { %>
+                      <div class="checkout-error" style="margin:10px 0 14px">🏷️ Le code <strong><%= promotionPreview.code %></strong> n’est pas cumulable avec un avantage Tiop+. Retirez le code promo pour utiliser une récompense.</div>
+                    <% } %>
                     <div class="loyalty-options">
                         <label class="loyalty-option">
                             <input type="radio" name="loyalty_redemption_public_id" value="" <%= !values?.loyalty_redemption_public_id ? 'checked' : '' %>>
@@ -1774,7 +1777,7 @@ textarea.checkout-field {
                         <span>🏷️ <%= promotionPreview.label %> (<%= promotionPreview.code %>)</span>
                         <button type="button" id="checkoutRemovePromoButton" class="promo-summary-remove">Retirer le code promo</button>
                     </span>
-                    <strong id="promoSummaryAmount"><%= Number(promotionPreview.pointsMultiplier || 1) > 1 ? ('Points ×' + Number(promotionPreview.pointsMultiplier)) : (promotionPreview.freeDelivery ? 'Livraison offerte' : ('- ' + Number(promotionPreview.discountAmount || 0).toLocaleString('fr-FR') + ' ' + (currency || 'XAF'))) %></strong>
+                    <strong id="promoSummaryAmount"><%= promotionPreview.freeDelivery ? 'Livraison offerte' : ('- ' + Number(promotionPreview.discountAmount || 0).toLocaleString('fr-FR') + ' ' + (currency || 'XAF')) %></strong>
                 </div>
                 <% } %>
 

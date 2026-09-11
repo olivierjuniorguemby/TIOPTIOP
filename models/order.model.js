@@ -848,6 +848,11 @@ async function createFromCart({
             if (promoResult.freeDelivery && orderType === 'DELIVERY') deliveryFee = 0;
         }
 
+        // 17.7 — le cumul Promo + avantage Tiop+ est décidé par la promotion et revérifié côté serveur.
+        if (loyaltyRedemptionPublicId && promotion && Number(promotion.allow_loyalty_stack) !== 1) {
+            throw new Error('Cette promotion ne peut pas être cumulée avec un avantage Tiop+. Retirez la promotion ou choisissez « Ne pas utiliser d’avantage ».');
+        }
+
         if (loyaltyRedemptionPublicId) {
             loyaltyRedemption = await Loyalty.lockCheckoutRedemption(
                 connection, userId, loyaltyRedemptionPublicId
@@ -976,8 +981,8 @@ async function createFromCart({
 
         if (promotion) {
             await connection.execute(`
-                INSERT INTO promotion_usages(promotion_id,user_id,order_id,code,discount_amount,created_at)
-                VALUES(?,?,?,?,?,NOW())
+                INSERT INTO promotion_usages(promotion_id,user_id,order_id,code,discount_amount,status,created_at)
+                VALUES(?,?,?,?,?,'RESERVED',NOW())
             `,[promotion.id,userId,orderId,String(promotion.code || promoCode),promotionDiscountAmount]);
         }
 
@@ -3554,6 +3559,7 @@ async function updateStatus({
            Un avantage USED (paiement déjà confirmé) n'est jamais recrédité ici.
         ================================================= */
         if (normalizedNextStatus === 'CANCELLED') {
+            await connection.execute(`UPDATE promotion_usages SET status='RELEASED', released_at=COALESCE(released_at,NOW()), release_reason='ORDER_CANCELLED' WHERE order_id=? AND status='RESERVED'`, [order.id]);
             const [redemptionRows] = await connection.execute(`
                 SELECT id, status FROM loyalty_redemptions
                 WHERE order_id=? LIMIT 1 FOR UPDATE`, [order.id]);

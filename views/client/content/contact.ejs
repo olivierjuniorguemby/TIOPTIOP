@@ -114,6 +114,8 @@
     line-height: 1.5;
   }
 
+  .contact-tools{position:relative;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.contact-emoji-toggle,.contact-attach{border:1px solid var(--border);background:#fff;border-radius:10px;padding:8px 10px;font-size:12px;font-weight:800;cursor:pointer}.contact-file-name{font-size:11px;color:var(--muted)}.contact-emoji-panel{position:absolute;left:0;bottom:42px;width:230px;background:#fff;border:1px solid var(--border);border-radius:13px;padding:9px;box-shadow:0 12px 30px rgba(0,0,0,.12);display:grid;grid-template-columns:repeat(7,1fr);z-index:20}.contact-emoji-panel[hidden]{display:none}.contact-emoji-panel button{border:0;background:transparent;font-size:19px;padding:4px;cursor:pointer}.contact-emoji-panel button:hover{background:#f5f5f5;border-radius:7px}
+
   /* =========================
      BOUTON ENVOYER
   ========================== */
@@ -269,6 +271,9 @@
 ========================================================= -->
 
 <section class="tiop-contact">
+  <% if (created) { %><div style="max-width:1180px;margin:0 auto 18px;padding:14px 18px;border-radius:14px;background:#ecf9ef;color:#176b2c;font-weight:800">✓ Votre demande a été envoyée. Ticket <%= created %>.</div><% } %>
+  <% if (error === 'order') { %><div style="max-width:1180px;margin:0 auto 18px;padding:14px 18px;border-radius:14px;background:#fff0df;color:#8a4b00;font-weight:800">Cette commande est introuvable ou ne vous appartient pas.</div><% } %>
+  <% if (error === 'message') { %><div style="max-width:1180px;margin:0 auto 18px;padding:14px 18px;border-radius:14px;background:#fff0df;color:#8a4b00;font-weight:800">Veuillez saisir votre message.</div><% } %>
 
   <div class="contact-grid">
 
@@ -283,6 +288,7 @@
         class="contact-form"
         action="/contact"
         method="POST"
+        enctype="multipart/form-data"
       >
 
         <!-- NOM -->
@@ -292,6 +298,7 @@
           name="name"
           class="contact-field"
           placeholder="Nom"
+          value="<%= formUser ? (formUser.displayName || formUser.firstName || '') : '' %>"
           required
         >
 
@@ -303,6 +310,7 @@
           name="email"
           class="contact-field"
           placeholder="Email"
+          value="<%= formUser ? (formUser.email || '') : '' %>"
           required
         >
 
@@ -369,6 +377,13 @@
           required
         ></textarea>
 
+        <div class="contact-tools">
+          <button type="button" class="contact-emoji-toggle" title="Ajouter un emoji">😊 Emoji</button>
+          <label class="contact-attach">📎 Pièce jointe<input type="file" name="attachment" accept="image/jpeg,image/png,image/webp,image/avif,application/pdf,.doc,.docx,.txt" hidden></label>
+          <span class="contact-file-name"></span>
+          <div class="contact-emoji-panel" hidden></div>
+        </div>
+
 
         <!-- ENVOYER -->
 
@@ -406,7 +421,7 @@
         href="/admin/support"
         class="support-admin-btn"
       >
-        Voir la démo Admin Support
+        Administration Support
       </a>
 
     </aside>
@@ -415,3 +430,7 @@
 
 </section>
   </div>
+
+<script>
+(()=>{const form=document.querySelector('.contact-form');if(!form)return;const ta=form.querySelector('textarea[name="message"]'),toggle=form.querySelector('.contact-emoji-toggle'),panel=form.querySelector('.contact-emoji-panel'),file=form.querySelector('input[name="attachment"]'),name=form.querySelector('.contact-file-name');const emojis=['😀','😂','😊','😍','🥰','😅','😢','😭','👍','🙏','👏','❤️','🔥','✅','🎉','🤝','📦','🚚','💳','⭐','🍽️','👌','😉','🙂'];emojis.forEach(e=>{const b=document.createElement('button');b.type='button';b.textContent=e;b.onclick=()=>{const a=ta.selectionStart||ta.value.length,c=ta.selectionEnd||a;ta.value=ta.value.slice(0,a)+e+ta.value.slice(c);ta.focus();ta.selectionStart=ta.selectionEnd=a+e.length;panel.hidden=true};panel.appendChild(b)});toggle?.addEventListener('click',()=>panel.hidden=!panel.hidden);file?.addEventListener('change',()=>name.textContent=file.files?.[0]?file.files[0].name:'');})();
+</script>

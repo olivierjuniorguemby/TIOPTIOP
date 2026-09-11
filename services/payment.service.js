@@ -18,6 +18,8 @@ const Loyalty =
 const LoyaltyCard =
     require("../models/loyalty-card.model");
 
+const Promotion = require("../models/promotion.model");
+
 /* =========================================================
    PAYMENT SERVICE
    TIOPTIOP — 13.8.6
@@ -92,6 +94,10 @@ async function markPaid(
         payload:
             metadata
     });
+
+    // 17.6 — une utilisation promo réservée devient consommée uniquement au paiement confirmé.
+    try { await Promotion.markOrderUsageUsed(payment.order_id); }
+    catch (promoUsageError) { console.error('[PROMO 17.6] Finalisation utilisation impossible :', promoUsageError); }
 
     // 16.7 — Le paiement confirmé rend l'avantage réservé définitivement USED.
     // Une panne fidélité ne doit jamais annuler un paiement provider déjà confirmé.

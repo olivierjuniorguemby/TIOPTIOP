@@ -11,6 +11,8 @@ const page =
 const loyaltyController =
     require("../../controllers/client/loyalty.controller");
 const promotionController = require("../../controllers/client/promotion.controller");
+const supportController = require("../../controllers/client/support.controller");
+const { supportUpload } = require("../../config/uploads");
 
 
 /* ======================================================
@@ -199,13 +201,8 @@ router.get(
    PUBLIC
 ====================================================== */
 
-router.get(
-    "/contact",
-    page.staticPage(
-        "client/content/contact",
-        "Contact"
-    )
-);
+router.get("/contact", supportController.contact);
+router.post("/contact", supportUpload.single("attachment"), supportController.create);
 
 
 /* ======================================================

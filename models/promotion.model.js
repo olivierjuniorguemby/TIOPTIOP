@@ -50,8 +50,8 @@ exports.customers = async () => db.query(`
   ORDER BY name,u.id
 `);
 exports.saveCategories = async (id, ids=[]) => { await db.query('DELETE FROM promotion_categories WHERE promotion_id=?',[id]); for(const cid of ids) await db.query('INSERT IGNORE INTO promotion_categories(promotion_id,category_id) VALUES(?,?)',[id,cid]); };
-exports.create = async d => { const r=await db.query(`INSERT INTO promotions(name,code,description,image_url,discount_type,discount_value,minimum_order,audience,usage_limit,usage_limit_per_user,starts_at,ends_at,is_active) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`,[d.name,d.code,d.description,d.image_url,d.discount_type,d.discount_value,d.minimum_order,d.audience,d.usage_limit,d.usage_limit_per_user,d.starts_at,d.ends_at,d.is_active]); return r.insertId; };
-exports.update = async (id,d) => db.query(`UPDATE promotions SET name=?,code=?,description=?,image_url=?,discount_type=?,discount_value=?,minimum_order=?,audience=?,usage_limit=?,usage_limit_per_user=?,starts_at=?,ends_at=?,is_active=? WHERE id=?`,[d.name,d.code,d.description,d.image_url,d.discount_type,d.discount_value,d.minimum_order,d.audience,d.usage_limit,d.usage_limit_per_user,d.starts_at,d.ends_at,d.is_active,id]);
+exports.create = async d => { const r=await db.query(`INSERT INTO promotions(name,code,description,image_url,discount_type,discount_value,minimum_order,audience,usage_limit,usage_limit_per_user,allow_loyalty_stack,starts_at,ends_at,is_active) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,[d.name,d.code,d.description,d.image_url,d.discount_type,d.discount_value,d.minimum_order,d.audience,d.usage_limit,d.usage_limit_per_user,d.allow_loyalty_stack,d.starts_at,d.ends_at,d.is_active]); return r.insertId; };
+exports.update = async (id,d) => db.query(`UPDATE promotions SET name=?,code=?,description=?,image_url=?,discount_type=?,discount_value=?,minimum_order=?,audience=?,usage_limit=?,usage_limit_per_user=?,allow_loyalty_stack=?,starts_at=?,ends_at=?,is_active=? WHERE id=?`,[d.name,d.code,d.description,d.image_url,d.discount_type,d.discount_value,d.minimum_order,d.audience,d.usage_limit,d.usage_limit_per_user,d.allow_loyalty_stack,d.starts_at,d.ends_at,d.is_active,id]);
 exports.remove = async id => db.query('DELETE FROM promotions WHERE id=?',[id]);
 
 
@@ -103,11 +103,11 @@ async function validateCode({ code, userId = null, cart, connection = null, lock
   }
 
   if (promo.usage_limit != null) {
-    const [u] = await executor.execute('SELECT COUNT(*) total FROM promotion_usages WHERE promotion_id=?',[promo.id]);
+    const [u] = await executor.execute("SELECT COUNT(*) total FROM promotion_usages WHERE promotion_id=? AND COALESCE(status,'USED') IN ('RESERVED','USED')",[promo.id]);
     if (Number(u[0]?.total || 0) >= Number(promo.usage_limit)) return { valid:false, message:'La limite d’utilisation de ce code a été atteinte.' };
   }
   if (promo.usage_limit_per_user != null && userId) {
-    const [u] = await executor.execute('SELECT COUNT(*) total FROM promotion_usages WHERE promotion_id=? AND user_id=?',[promo.id,userId]);
+    const [u] = await executor.execute("SELECT COUNT(*) total FROM promotion_usages WHERE promotion_id=? AND user_id=? AND COALESCE(status,'USED') IN ('RESERVED','USED')",[promo.id,userId]);
     if (Number(u[0]?.total || 0) >= Number(promo.usage_limit_per_user)) return { valid:false, message:'Vous avez déjà utilisé ce code le nombre maximum de fois.' };
   }
 
@@ -162,3 +162,21 @@ async function validateCode({ code, userId = null, cart, connection = null, lock
 }
 
 exports.validateCode = validateCode;
+
+
+/* =========================================================
+   17.6 — CYCLE DE VIE DES UTILISATIONS PROMO
+   RESERVED à la création, USED au paiement, RELEASED si annulation/remboursement total.
+========================================================= */
+exports.markOrderUsageUsed = async (orderId) => {
+  if (!orderId) return;
+  await db.query(`UPDATE promotion_usages SET status='USED', used_at=COALESCE(used_at,NOW()), released_at=NULL WHERE order_id=? AND status='RESERVED'`,[orderId]);
+};
+exports.releaseOrderUsage = async (orderId, reason='ORDER_RELEASED') => {
+  if (!orderId) return;
+  await db.query(`UPDATE promotion_usages SET status='RELEASED', released_at=COALESCE(released_at,NOW()), release_reason=? WHERE order_id=? AND status IN ('RESERVED','USED')`,[String(reason).slice(0,80),orderId]);
+};
+exports.usageStats = async (promotionId) => {
+  const rows=await db.query(`SELECT COUNT(*) total_rows, SUM(COALESCE(status,'USED')='RESERVED') reserved_count, SUM(COALESCE(status,'USED')='USED') used_count, SUM(COALESCE(status,'USED')='RELEASED') released_count FROM promotion_usages WHERE promotion_id=?`,[promotionId]);
+  return rows[0]||{};
+};

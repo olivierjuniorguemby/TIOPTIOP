@@ -12,6 +12,7 @@ const StripeService =
 const db = require("../config/database");
 const Loyalty = require("../models/loyalty.model");
 const LoyaltyCard = require("../models/loyalty-card.model");
+const Promotion = require("../models/promotion.model");
 
 
 /* =========================================================
@@ -565,6 +566,7 @@ async function executeStripeRefund({
                     "STRIPE_REFUND_SUCCEEDED"
                 );
                 await LoyaltyCard.reverseFullyRefundedOrderEarn(payment.order_id, 'FULL_REFUND');
+                await Promotion.releaseOrderUsage(payment.order_id, 'FULL_REFUND');
                 await LoyaltyCard.restoreOrderRedemption(payment.order_id, 'FULL_REFUND');
             }
 
@@ -989,6 +991,7 @@ async function applySuccessfulRefundToPayment({
             successEventType || "FULL_REFUND"
         );
                 await LoyaltyCard.reverseFullyRefundedOrderEarn(payment.order_id, 'FULL_REFUND');
+                await Promotion.releaseOrderUsage(payment.order_id, 'FULL_REFUND');
                 await LoyaltyCard.restoreOrderRedemption(payment.order_id, 'FULL_REFUND');
     }
 
@@ -1799,6 +1802,7 @@ async function synchronizePaymentFromRefundSummary(payment) {
     if (nextStatus === Payment.STATUSES.REFUNDED && payment.order_id) {
         await Loyalty.reverseFullyRefundedOrder(payment.order_id, "REFUND_RECONCILIATION");
         await LoyaltyCard.reverseFullyRefundedOrderEarn(payment.order_id, "REFUND_RECONCILIATION");
+        await Promotion.releaseOrderUsage(payment.order_id, "FULL_REFUND");
         await LoyaltyCard.restoreOrderRedemption(payment.order_id, "REFUND_RECONCILIATION");
     }
 

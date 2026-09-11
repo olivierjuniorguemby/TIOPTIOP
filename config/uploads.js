@@ -11,6 +11,7 @@ const folders = {
   cms: path.join(root, "cms"),
   promotions: path.join(root, "promotions"),
   formulas: path.join(root, "formulas"),
+  support: path.join(root, "support"),
   temp: path.join(root, "temp")
 };
 
@@ -54,6 +55,12 @@ const documentTypes = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 ];
 
+const supportTypes = [
+  ...imageTypes,
+  ...documentTypes,
+  "text/plain"
+];
+
 module.exports = {
   folders,
   productUpload: createUpload("products", imageTypes),
@@ -62,5 +69,6 @@ module.exports = {
   careerUpload: createUpload("careers", documentTypes),
   cmsUpload: createUpload("cms", imageTypes),
   promotionUpload: createUpload("promotions", imageTypes),
-  formulaUpload: createUpload("formulas", imageTypes)
+  formulaUpload: createUpload("formulas", imageTypes),
+  supportUpload: createUpload("support", supportTypes)
 };
