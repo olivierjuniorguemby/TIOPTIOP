@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
+const crypto = require("crypto");
 
 const root = path.join(__dirname, "..", "uploads");
 const folders = {
@@ -28,16 +29,17 @@ function safeName(value) {
     .toLowerCase();
 }
 
-function createUpload(folder, allowedTypes) {
+function createUpload(folder, allowedTypes, maxMb = Number(process.env.UPLOAD_MAX_MB || 12)) {
   return multer({
     storage: multer.diskStorage({
       destination: (_req, _file, callback) => callback(null, folders[folder]),
       filename: (_req, file, callback) => {
-        callback(null, `${Date.now()}-${safeName(file.originalname)}`);
+        const ext = path.extname(file.originalname || "").toLowerCase();
+        callback(null, `${Date.now()}-${crypto.randomBytes(12).toString("hex")}${ext}`);
       }
     }),
     limits: {
-      fileSize: Number(process.env.UPLOAD_MAX_MB || 12) * 1024 * 1024
+      fileSize: maxMb * 1024 * 1024
     },
     fileFilter: (_req, file, callback) => {
       if (!allowedTypes.includes(file.mimetype)) {
@@ -60,6 +62,7 @@ const supportTypes = [
   ...documentTypes,
   "text/plain"
 ];
+const supportAdminTypes = [...supportTypes, "video/mp4"];
 
 module.exports = {
   folders,
@@ -70,5 +73,6 @@ module.exports = {
   cmsUpload: createUpload("cms", imageTypes),
   promotionUpload: createUpload("promotions", imageTypes),
   formulaUpload: createUpload("formulas", imageTypes),
-  supportUpload: createUpload("support", supportTypes)
+  supportUpload: createUpload("support", supportTypes),
+  supportAdminUpload: createUpload("support", supportAdminTypes, Number(process.env.SUPPORT_VIDEO_MAX_MB || 80))
 };

@@ -1,0 +1,23 @@
+const fs=require('fs');
+const path=require('path');
+const root=path.resolve(__dirname,'..');
+const read=f=>fs.readFileSync(path.join(root,f),'utf8');
+const client=read('views/client/account/support.ejs');
+const admin=read('views/admin/content/support.ejs');
+const cc=read('controllers/client/support.controller.js');
+const ac=read('controllers/admin/support.controller.js');
+const model=read('models/support.model.js');
+let pass=0,fail=0;
+function test(name,ok){if(ok){pass++;console.log('PASS - '+name)}else{fail++;console.log('FAIL - '+name)}}
+test('Aucun location.reload côté client/admin',!client.includes('location.reload')&&!admin.includes('location.reload'));
+test('Aucun polling setInterval côté client/admin',!client.includes('setInterval')&&!admin.includes('setInterval'));
+test('Socket.IO client écoute support:changed',client.includes("socket.on('support:changed'"));
+test('Socket.IO admin écoute support:changed',admin.includes("socket.on('support:changed'"));
+test('Client synchronise via endpoint poll à la demande',client.includes('/compte/demandes/poll?ticket='));
+test('Admin synchronise via endpoint poll à la demande',admin.includes('/admin/support-poll?ticket='));
+test('Envoi client AJAX sans rechargement',client.includes("'X-Requested-With':'XMLHttpRequest'")&&cc.includes('wantsJson(req)'));
+test('Envoi admin AJAX sans rechargement',admin.includes("'X-Requested-With':'XMLHttpRequest'")&&ac.includes('wantsJson(req)'));
+test('Lecture émet seulement si au moins un message change',model.includes('affectedRows')&&cc.includes("if(changed)notify")&&ac.includes("if(changed)await notify"));
+test('Réactions/modification/suppression resynchronisées dans le DOM',client.includes("syncSupport('reaction')")&&admin.includes("syncSupport('reaction'"));
+console.log(`\nRÉSULTAT 18.5.1.2 : PASS=${pass} | FAIL=${fail}`);
+process.exitCode=fail?1:0;

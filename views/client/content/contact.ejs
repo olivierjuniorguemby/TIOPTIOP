@@ -379,7 +379,7 @@
 
         <div class="contact-tools">
           <button type="button" class="contact-emoji-toggle" title="Ajouter un emoji">😊 Emoji</button>
-          <label class="contact-attach">📎 Pièce jointe<input type="file" name="attachment" accept="image/jpeg,image/png,image/webp,image/avif,application/pdf,.doc,.docx,.txt" hidden></label>
+          <label class="contact-attach">📎 Pièces jointes<input type="file" name="attachments" multiple accept="image/jpeg,image/png,image/webp,image/avif,application/pdf,.doc,.docx,.txt" hidden></label>
           <span class="contact-file-name"></span>
           <div class="contact-emoji-panel" hidden></div>
         </div>
@@ -432,5 +432,5 @@
   </div>
 
 <script>
-(()=>{const form=document.querySelector('.contact-form');if(!form)return;const ta=form.querySelector('textarea[name="message"]'),toggle=form.querySelector('.contact-emoji-toggle'),panel=form.querySelector('.contact-emoji-panel'),file=form.querySelector('input[name="attachment"]'),name=form.querySelector('.contact-file-name');const emojis=['😀','😂','😊','😍','🥰','😅','😢','😭','👍','🙏','👏','❤️','🔥','✅','🎉','🤝','📦','🚚','💳','⭐','🍽️','👌','😉','🙂'];emojis.forEach(e=>{const b=document.createElement('button');b.type='button';b.textContent=e;b.onclick=()=>{const a=ta.selectionStart||ta.value.length,c=ta.selectionEnd||a;ta.value=ta.value.slice(0,a)+e+ta.value.slice(c);ta.focus();ta.selectionStart=ta.selectionEnd=a+e.length;panel.hidden=true};panel.appendChild(b)});toggle?.addEventListener('click',()=>panel.hidden=!panel.hidden);file?.addEventListener('change',()=>name.textContent=file.files?.[0]?file.files[0].name:'');})();
+(()=>{const form=document.querySelector('.contact-form');if(!form)return;const ta=form.querySelector('textarea[name="message"]'),toggle=form.querySelector('.contact-emoji-toggle'),panel=form.querySelector('.contact-emoji-panel'),file=form.querySelector('input[name="attachments"]'),name=form.querySelector('.contact-file-name');const emojis=['😀','😂','😊','😍','🥰','😅','😢','😭','👍','🙏','👏','❤️','🔥','✅','🎉','🤝','📦','🚚','💳','⭐','🍽️','👌','😉','🙂'];emojis.forEach(e=>{const b=document.createElement('button');b.type='button';b.textContent=e;b.onclick=()=>{const a=ta.selectionStart||ta.value.length,c=ta.selectionEnd||a;ta.value=ta.value.slice(0,a)+e+ta.value.slice(c);ta.focus();ta.selectionStart=ta.selectionEnd=a+e.length;panel.hidden=true};panel.appendChild(b)});toggle?.addEventListener('click',()=>panel.hidden=!panel.hidden);file?.addEventListener('change',()=>{const n=[...(file.files||[])].map(f=>f.name);name.textContent=n.length?`${n.length} fichier(s) : ${n.join(', ')}`:''});})();
 </script>

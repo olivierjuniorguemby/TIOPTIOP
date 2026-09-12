@@ -119,7 +119,8 @@ const productOptionController =
 const {
     productUpload,
     promotionUpload,
-    supportUpload
+    supportUpload,
+    supportAdminUpload
 } =
     require(
         "../../config/uploads"
@@ -879,7 +880,13 @@ router.post(
 ========================================================= */
 
 router.get("/support", supportController.index);
-router.post("/support/:id/reply", supportUpload.single("attachment"), supportController.reply);
+router.post("/support/:id/reply", supportAdminUpload.array("attachments", 5), supportController.reply);
+router.post("/support/:id/messages/:messageId/edit", supportController.editMessage);
+router.post("/support/:id/messages/:messageId/delete", supportController.deleteMessage);
+router.post("/support/:id/messages/:messageId/react", supportController.react);
+router.post("/support/:id/archiver", supportController.archiveTicket);
+router.get("/support-poll", supportController.poll);
+router.get("/support/fichier/:attachmentId", supportController.downloadAttachment);
 
 
 router.get(

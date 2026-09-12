@@ -35,6 +35,10 @@ const server = http.createServer(app);
 
 const io = new Server(server);
 
+// 18.5.1 — authentification Socket.IO avec la même session Express
+io.engine.use(sessionMiddleware);
+require("./realtime/support-realtime")(io);
+
 app.set("io", io);
 
 app.disable("x-powered-by");
@@ -123,6 +127,12 @@ app.use(
         )
     )
 );
+
+/* Protection des pièces jointes Support — 18.5
+ * Les fichiers Support passent uniquement par les routes authentifiées
+ * /compte/demandes/fichier/:id et /admin/support/fichier/:id.
+ */
+app.use("/uploads/support", (_req, res) => res.status(404).end());
 
 app.use(
     "/uploads",

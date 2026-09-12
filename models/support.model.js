@@ -1,86 +1,31 @@
 const db = require('../config/database');
-
-const STATUS = ['NEW','IN_PROGRESS','WAITING_CUSTOMER','RESOLVED','CLOSED'];
-const CATEGORY = ['ORDER','DELIVERY','PAYMENT','REFUND','TIOP_PLUS','ACCOUNT','RESTAURANT','OTHER'];
-
-function cleanCategory(v){
-  const map={commande:'ORDER',livraison:'DELIVERY',paiement:'PAYMENT',remboursement:'REFUND',tiopplus:'TIOP_PLUS',compte:'ACCOUNT',restaurant:'RESTAURANT',autre:'OTHER'};
-  const c=map[String(v||'').toLowerCase()] || String(v||'').toUpperCase();
-  return CATEGORY.includes(c)?c:'OTHER';
-}
-
-exports.cleanCategory=cleanCategory;
-exports.statuses=STATUS;
-
-exports.findOrderForUser=async(reference,userId)=>{
-  if(!reference) return null;
-  return (await db.query('SELECT id,reference FROM orders WHERE reference=? AND user_id=? LIMIT 1',[String(reference).trim(),userId]))[0]||null;
-};
-
-exports.createTicket=async({userId,orderId,subject,category,message,attachmentUrl=null})=>{
-  const connection=await db.pool.getConnection();
-  try{
-    await connection.beginTransaction();
-    const [r]=await connection.execute(`INSERT INTO support_tickets(reference,user_id,order_id,subject,category,priority,status) VALUES('',?,?,?,?, 'NORMAL','NEW')`,[userId,orderId||null,String(subject).slice(0,180),cleanCategory(category)]);
-    const id=Number(r.insertId);
-    const reference=`SUP-${String(1000+id)}`;
-    await connection.execute('UPDATE support_tickets SET reference=? WHERE id=?',[reference,id]);
-    await connection.execute(`INSERT INTO support_messages(ticket_id,sender_type,sender_user_id,message,attachment_url) VALUES(?,'CUSTOMER',?,?,?)`,[id,userId,String(message).trim(),attachmentUrl||null]);
-    await connection.commit();
-    return {id,reference};
-  }catch(e){await connection.rollback();throw e;}finally{connection.release();}
-};
-
-exports.listAdmin=async()=>db.query(`
- SELECT t.*,u.email AS customer_email,COALESCE(NULLIF(up.display_name,''),NULLIF(CONCAT_WS(' ',up.first_name,up.last_name),''),u.email,CONCAT('Client #',u.id)) AS customer_name,
- o.reference AS order_reference,a.name AS assigned_admin_name,
- (SELECT message FROM support_messages sm WHERE sm.ticket_id=t.id ORDER BY sm.created_at ASC,sm.id ASC LIMIT 1) AS first_message
- FROM support_tickets t
- LEFT JOIN users u ON u.id=t.user_id LEFT JOIN user_profiles up ON up.user_id=u.id
- LEFT JOIN orders o ON o.id=t.order_id LEFT JOIN admin_users a ON a.id=t.assigned_admin_user_id
- ORDER BY FIELD(t.status,'NEW','IN_PROGRESS','WAITING_CUSTOMER','RESOLVED','CLOSED'),t.updated_at DESC,t.id DESC`);
-
+const STATUS=['NEW','IN_PROGRESS','WAITING_CUSTOMER','RESOLVED','CLOSED'];
+const CATEGORY=['ORDER','DELIVERY','PAYMENT','REFUND','TIOP_PLUS','ACCOUNT','RESTAURANT','OTHER'];
+const REACTIONS=['👍','❤️','😂','😮','😢','🙏','🔥','✅'];
+function cleanCategory(v){const map={commande:'ORDER',livraison:'DELIVERY',paiement:'PAYMENT',remboursement:'REFUND',tiopplus:'TIOP_PLUS',compte:'ACCOUNT',restaurant:'RESTAURANT',autre:'OTHER'};const c=map[String(v||'').toLowerCase()]||String(v||'').toUpperCase();return CATEGORY.includes(c)?c:'OTHER';}
+exports.cleanCategory=cleanCategory; exports.statuses=STATUS; exports.reactions=REACTIONS;
+exports.findOrderForUser=async(reference,userId)=>{if(!reference)return null;return (await db.query('SELECT id,reference FROM orders WHERE reference=? AND user_id=? LIMIT 1',[String(reference).trim(),userId]))[0]||null;};
+async function addAttachments(conn,messageId,attachments=[]){for(const a of attachments){await conn.execute(`INSERT INTO support_message_attachments(message_id,original_name,stored_name,mime_type,file_size) VALUES(?,?,?,?,?)`,[messageId,a.originalName,a.storedName,a.mimeType,a.size]);}}
+exports.createTicket=async({userId,orderId,subject,category,message,attachments=[]})=>{const c=await db.pool.getConnection();try{await c.beginTransaction();const [r]=await c.execute(`INSERT INTO support_tickets(reference,user_id,order_id,subject,category,priority,status) VALUES('',?,?,?,?, 'NORMAL','NEW')`,[userId,orderId||null,String(subject).slice(0,180),cleanCategory(category)]);const id=Number(r.insertId),reference=`SUP-${1000+id}`;await c.execute('UPDATE support_tickets SET reference=? WHERE id=?',[reference,id]);const [m]=await c.execute(`INSERT INTO support_messages(ticket_id,sender_type,sender_user_id,message) VALUES(?,'CUSTOMER',?,?)`,[id,userId,String(message||'').trim()]);await addAttachments(c,m.insertId,attachments);await c.commit();return{id,reference};}catch(e){await c.rollback();throw e;}finally{c.release();}};
+const ticketBase=`SELECT t.*,u.email customer_email,COALESCE(NULLIF(up.display_name,''),NULLIF(CONCAT_WS(' ',up.first_name,up.last_name),''),u.email,CONCAT('Client #',u.id)) customer_name,o.reference order_reference,a.name assigned_admin_name,
+ (SELECT sm.message FROM support_messages sm WHERE sm.ticket_id=t.id AND sm.deleted_at IS NULL ORDER BY sm.created_at DESC,sm.id DESC LIMIT 1) last_message,
+ (SELECT sm.created_at FROM support_messages sm WHERE sm.ticket_id=t.id ORDER BY sm.created_at DESC,sm.id DESC LIMIT 1) last_message_at,
+ (SELECT sm.sender_type FROM support_messages sm WHERE sm.ticket_id=t.id ORDER BY sm.created_at DESC,sm.id DESC LIMIT 1) last_sender_type`;
+exports.listAdmin=async()=>db.query(`${ticketBase},(SELECT COUNT(*) FROM support_messages sm WHERE sm.ticket_id=t.id AND sm.sender_type='CUSTOMER' AND sm.read_at IS NULL AND sm.deleted_at IS NULL) unread_count FROM support_tickets t LEFT JOIN users u ON u.id=t.user_id LEFT JOIN user_profiles up ON up.user_id=u.id LEFT JOIN orders o ON o.id=t.order_id LEFT JOIN admin_users a ON a.id=t.assigned_admin_user_id ORDER BY COALESCE(last_message_at,t.updated_at) DESC,t.id DESC`);
+exports.listForUser=async userId=>db.query(`${ticketBase},(SELECT COUNT(*) FROM support_messages sm WHERE sm.ticket_id=t.id AND sm.sender_type='ADMIN' AND sm.read_at IS NULL AND sm.deleted_at IS NULL) unread_count FROM support_tickets t LEFT JOIN users u ON u.id=t.user_id LEFT JOIN user_profiles up ON up.user_id=u.id LEFT JOIN orders o ON o.id=t.order_id LEFT JOIN admin_users a ON a.id=t.assigned_admin_user_id WHERE t.user_id=? AND t.client_archived_at IS NULL ORDER BY COALESCE(last_message_at,t.updated_at) DESC,t.id DESC`,[userId]);
 exports.stats=async()=> (await db.query(`SELECT COUNT(*) total,SUM(status='NEW') new_count,SUM(status='IN_PROGRESS') in_progress_count,SUM(status='WAITING_CUSTOMER') waiting_count,SUM(status='RESOLVED') resolved_count,SUM(status='CLOSED') closed_count FROM support_tickets`))[0];
-exports.messages=async(ticketId)=>db.query(`SELECT sm.*,COALESCE(a.name,COALESCE(NULLIF(up.display_name,''),CONCAT_WS(' ',up.first_name,up.last_name),u.email)) sender_name FROM support_messages sm LEFT JOIN admin_users a ON a.id=sm.sender_admin_user_id LEFT JOIN users u ON u.id=sm.sender_user_id LEFT JOIN user_profiles up ON up.user_id=u.id WHERE sm.ticket_id=? ORDER BY sm.created_at,sm.id`,[ticketId]);
 exports.findById=async id=>(await db.query('SELECT * FROM support_tickets WHERE id=? LIMIT 1',[id]))[0]||null;
-exports.replyAdmin=async({ticketId,adminId,status,message,attachmentUrl=null})=>{
-  if(!STATUS.includes(status)) throw new Error('Statut support invalide.');
-  const connection=await db.pool.getConnection();
-  try{
-    await connection.beginTransaction();
-    const [rows]=await connection.execute('SELECT id FROM support_tickets WHERE id=? FOR UPDATE',[ticketId]);
-    if(!rows.length){const e=new Error('Ticket introuvable.');e.statusCode=404;throw e;}
-    await connection.execute('UPDATE support_tickets SET status=?,assigned_admin_user_id=COALESCE(assigned_admin_user_id,?) WHERE id=?',[status,adminId||null,ticketId]);
-    const text=String(message||'').trim();
-    if(text || attachmentUrl) await connection.execute(`INSERT INTO support_messages(ticket_id,sender_type,sender_admin_user_id,message,attachment_url) VALUES(?,'ADMIN',?,?,?)`,[ticketId,adminId||null,text,attachmentUrl||null]);
-    await connection.commit();
-  }catch(e){await connection.rollback();throw e;}finally{connection.release();}
-};
+exports.findForUser=async(id,userId)=>(await db.query(`SELECT t.*,o.reference order_reference FROM support_tickets t LEFT JOIN orders o ON o.id=t.order_id WHERE t.id=? AND t.user_id=? LIMIT 1`,[id,userId]))[0]||null;
+exports.messages=async ticketId=>{const msgs=await db.query(`SELECT sm.*,COALESCE(a.name,COALESCE(NULLIF(up.display_name,''),CONCAT_WS(' ',up.first_name,up.last_name),u.email)) sender_name FROM support_messages sm LEFT JOIN admin_users a ON a.id=sm.sender_admin_user_id LEFT JOIN users u ON u.id=sm.sender_user_id LEFT JOIN user_profiles up ON up.user_id=u.id WHERE sm.ticket_id=? ORDER BY sm.created_at,sm.id`,[ticketId]);if(!msgs.length)return msgs;const ids=msgs.map(x=>x.id);const ph=ids.map(()=>'?').join(',');const at=await db.query(`SELECT * FROM support_message_attachments WHERE message_id IN (${ph}) ORDER BY id`,ids);const re=await db.query(`SELECT r.*,COALESCE(u.email,a.name) reactor_name FROM support_message_reactions r LEFT JOIN users u ON u.id=r.user_id LEFT JOIN admin_users a ON a.id=r.admin_user_id WHERE message_id IN (${ph}) ORDER BY r.id`,ids);for(const m of msgs){m.attachments=at.filter(x=>Number(x.message_id)===Number(m.id));if(m.attachment_url&&!m.attachments.length)m.attachments=[{id:0,original_name:'Pièce jointe',stored_name:String(m.attachment_url).split('/').pop(),mime_type:'',legacy_url:m.attachment_url}];m.reactions=re.filter(x=>Number(x.message_id)===Number(m.id));}return msgs;};
+exports.markRead=async(ticketId,viewer,userId=null)=>{if(viewer==='CUSTOMER'){const t=await exports.findForUser(ticketId,userId);if(!t)return 0;const r=await db.query(`UPDATE support_messages SET read_at=COALESCE(read_at,NOW()) WHERE ticket_id=? AND sender_type='ADMIN' AND read_at IS NULL`,[ticketId]);return Number(r?.affectedRows||0);}const r=await db.query(`UPDATE support_messages SET read_at=COALESCE(read_at,NOW()) WHERE ticket_id=? AND sender_type='CUSTOMER' AND read_at IS NULL`,[ticketId]);return Number(r?.affectedRows||0);};
+async function addMessage({ticketId,senderType,userId,adminId,text,attachments,status}){const c=await db.pool.getConnection();try{await c.beginTransaction();if(status)await c.execute('UPDATE support_tickets SET status=?,assigned_admin_user_id=COALESCE(assigned_admin_user_id,?),updated_at=NOW() WHERE id=?',[status,adminId||null,ticketId]);else await c.execute('UPDATE support_tickets SET updated_at=NOW() WHERE id=?',[ticketId]);const [m]=await c.execute(`INSERT INTO support_messages(ticket_id,sender_type,sender_user_id,sender_admin_user_id,message) VALUES(?,?,?,?,?)`,[ticketId,senderType,userId||null,adminId||null,text]);await addAttachments(c,m.insertId,attachments);await c.commit();return m.insertId;}catch(e){await c.rollback();throw e;}finally{c.release();}}
+exports.replyCustomer=async({ticketId,userId,message,attachments=[]})=>{const text=String(message||'').trim();if(!text&&!attachments.length)throw Object.assign(new Error('Votre message est vide.'),{statusCode:400});const c=await db.pool.getConnection();try{await c.beginTransaction();const [rows]=await c.execute('SELECT id,status FROM support_tickets WHERE id=? AND user_id=? FOR UPDATE',[ticketId,userId]);if(!rows.length)throw Object.assign(new Error('Ticket introuvable.'),{statusCode:404});if(rows[0].status==='CLOSED')throw Object.assign(new Error('Ce ticket est fermé.'),{statusCode:400});const [m]=await c.execute(`INSERT INTO support_messages(ticket_id,sender_type,sender_user_id,message) VALUES(?,'CUSTOMER',?,?)`,[ticketId,userId,text]);await addAttachments(c,m.insertId,attachments);await c.execute(`UPDATE support_tickets SET status=CASE WHEN status IN ('RESOLVED','WAITING_CUSTOMER') THEN 'IN_PROGRESS' ELSE status END,updated_at=NOW() WHERE id=?`,[ticketId]);await c.commit();}catch(e){await c.rollback();throw e;}finally{c.release();}};
+exports.replyAdmin=async({ticketId,adminId,status,message,attachments=[]})=>{if(!STATUS.includes(status))throw new Error('Statut support invalide.');const t=await exports.findById(ticketId);if(!t)throw Object.assign(new Error('Ticket introuvable.'),{statusCode:404});const text=String(message||'').trim();if(text||attachments.length)await addMessage({ticketId,senderType:'ADMIN',adminId,text,attachments,status});else await db.query('UPDATE support_tickets SET status=?,assigned_admin_user_id=COALESCE(assigned_admin_user_id,?),updated_at=NOW() WHERE id=?',[status,adminId||null,ticketId]);};
+exports.editMessage=async({messageId,ticketId,actorType,actorId,text})=>{text=String(text||'').trim();if(!text)throw Object.assign(new Error('Le message ne peut pas être vide.'),{statusCode:400});let sql=`UPDATE support_messages SET message=?,edited_at=NOW() WHERE id=? AND ticket_id=? AND deleted_at IS NULL AND sender_type=?`;const p=[text,messageId,ticketId,actorType];if(actorType==='CUSTOMER'){sql+=' AND sender_user_id=?';p.push(actorId);}else{sql+=' AND sender_admin_user_id=?';p.push(actorId);}const r=await db.query(sql,p);return r.affectedRows>0;};
+exports.deleteMessage=async({messageId,ticketId,actorType,actorId})=>{let sql=`UPDATE support_messages SET message='',deleted_at=NOW(),edited_at=NOW() WHERE id=? AND ticket_id=? AND deleted_at IS NULL AND sender_type=?`;const p=[messageId,ticketId,actorType];if(actorType==='CUSTOMER'){sql+=' AND sender_user_id=?';p.push(actorId);}else{sql+=' AND sender_admin_user_id=?';p.push(actorId);}const r=await db.query(sql,p);return r.affectedRows>0;};
+exports.react=async({messageId,ticketId,actorType,actorId,emoji})=>{if(!REACTIONS.includes(emoji))throw Object.assign(new Error('Réaction non autorisée.'),{statusCode:400});const m=(await db.query('SELECT id FROM support_messages WHERE id=? AND ticket_id=? AND deleted_at IS NULL LIMIT 1',[messageId,ticketId]))[0];if(!m)throw Object.assign(new Error('Message introuvable.'),{statusCode:404});if(actorType==='CUSTOMER'){await db.query(`INSERT INTO support_message_reactions(message_id,reactor_type,user_id,emoji) VALUES(?,'CUSTOMER',?,?) ON DUPLICATE KEY UPDATE emoji=VALUES(emoji),updated_at=NOW()`,[messageId,actorId,emoji]);}else{await db.query(`INSERT INTO support_message_reactions(message_id,reactor_type,admin_user_id,emoji) VALUES(?,'ADMIN',?,?) ON DUPLICATE KEY UPDATE emoji=VALUES(emoji),updated_at=NOW()`,[messageId,actorId,emoji]);}};
 
-exports.listForUser=async userId=>db.query(`
- SELECT t.*,o.reference AS order_reference,
- (SELECT message FROM support_messages sm WHERE sm.ticket_id=t.id ORDER BY sm.created_at ASC,sm.id ASC LIMIT 1) AS first_message,
- (SELECT created_at FROM support_messages sm WHERE sm.ticket_id=t.id ORDER BY sm.created_at DESC,sm.id DESC LIMIT 1) AS last_message_at,
- (SELECT sender_type FROM support_messages sm WHERE sm.ticket_id=t.id ORDER BY sm.created_at DESC,sm.id DESC LIMIT 1) AS last_sender_type
- FROM support_tickets t LEFT JOIN orders o ON o.id=t.order_id
- WHERE t.user_id=? ORDER BY t.updated_at DESC,t.id DESC`,[userId]);
-
-exports.findForUser=async(id,userId)=>(await db.query(`
- SELECT t.*,o.reference AS order_reference
- FROM support_tickets t LEFT JOIN orders o ON o.id=t.order_id
- WHERE t.id=? AND t.user_id=? LIMIT 1`,[id,userId]))[0]||null;
-
-exports.replyCustomer=async({ticketId,userId,message,attachmentUrl=null})=>{
- const text=String(message||'').trim();
- if(!text && !attachmentUrl){const e=new Error('Votre message est vide.');e.statusCode=400;throw e;}
- const connection=await db.pool.getConnection();
- try{
-  await connection.beginTransaction();
-  const [rows]=await connection.execute('SELECT id,status FROM support_tickets WHERE id=? AND user_id=? FOR UPDATE',[ticketId,userId]);
-  if(!rows.length){const e=new Error('Ticket introuvable.');e.statusCode=404;throw e;}
-  if(rows[0].status==='CLOSED'){const e=new Error('Ce ticket est fermé.');e.statusCode=400;throw e;}
-  await connection.execute(`INSERT INTO support_messages(ticket_id,sender_type,sender_user_id,message,attachment_url) VALUES(?,'CUSTOMER',?,?,?)`,[ticketId,userId,text,attachmentUrl||null]);
-  await connection.execute(`UPDATE support_tickets SET status=CASE WHEN status IN ('RESOLVED','WAITING_CUSTOMER') THEN 'IN_PROGRESS' ELSE status END WHERE id=?`,[ticketId]);
-  await connection.commit();
- }catch(e){await connection.rollback();throw e;}finally{connection.release();}
-};
+exports.archiveForUser=async(id,userId)=>{const r=await db.query('UPDATE support_tickets SET client_archived_at=NOW(),updated_at=NOW() WHERE id=? AND user_id=?',[id,userId]);return r.affectedRows>0;};
+exports.archiveForAdmin=async id=>{const r=await db.query('UPDATE support_tickets SET admin_archived_at=NOW(),updated_at=NOW() WHERE id=?',[id]);return r.affectedRows>0;};
+exports.attachmentForUser=async(attachmentId,userId)=>(await db.query(`SELECT a.* FROM support_message_attachments a JOIN support_messages m ON m.id=a.message_id JOIN support_tickets t ON t.id=m.ticket_id WHERE a.id=? AND t.user_id=? LIMIT 1`,[attachmentId,userId]))[0]||null;
+exports.attachmentForAdmin=async attachmentId=>(await db.query(`SELECT a.* FROM support_message_attachments a JOIN support_messages m ON m.id=a.message_id WHERE a.id=? LIMIT 1`,[attachmentId]))[0]||null;

@@ -202,7 +202,7 @@ router.get(
 ====================================================== */
 
 router.get("/contact", supportController.contact);
-router.post("/contact", supportUpload.single("attachment"), supportController.create);
+router.post("/contact", supportUpload.array("attachments", 5), supportController.create);
 
 
 /* ======================================================

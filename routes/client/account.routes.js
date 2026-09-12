@@ -51,9 +51,16 @@ router.get(
 router.post(
     "/compte/demandes/:id/repondre",
     requireUser,
-    supportUpload.single("attachment"),
+    supportUpload.array("attachments", 5),
     support.replyCustomer
 );
+
+router.post("/compte/demandes/:id/messages/:messageId/edit", requireUser, support.editMessage);
+router.post("/compte/demandes/:id/messages/:messageId/delete", requireUser, support.deleteMessage);
+router.post("/compte/demandes/:id/messages/:messageId/react", requireUser, support.react);
+router.post("/compte/demandes/:id/archiver", requireUser, support.archiveTicket);
+router.get("/compte/demandes/poll", requireUser, support.poll);
+router.get("/compte/demandes/fichier/:attachmentId", requireUser, support.downloadAttachment);
 
 
 /* =========================================================

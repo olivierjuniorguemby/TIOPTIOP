@@ -1,50 +1,17 @@
-const fs = require('fs');
-const Support = require('../../models/support.model');
-
-function attachmentUrl(file){
-  return file ? `/uploads/support/${file.filename}` : null;
-}
-function cleanup(file){
-  if(file?.path) fs.unlink(file.path,()=>{});
-}
-
+const Support=require('../../models/support.model');
+const path=require('path');
+const {folders}=require('../../config/uploads');
+function notify(req,ticketId,userId,type){const io=req.app.get('io');const payload={ticketId:Number(ticketId),type:String(type||'change'),at:Date.now()};io?.to([`support:${ticketId}`,'support:admins',`support:user:${userId}`]).emit('support:changed',payload);}
+const {validateUploadedFiles,cleanupFiles,normalizeFiles}=require('../../config/support-files');
+async function checked(files){files=files||[];try{await validateUploadedFiles(files,{allowVideo:false});return normalizeFiles(files);}catch(e){cleanupFiles(files);throw e;}}
+function wantsJson(req){return String(req.get('x-requested-with')||'').toLowerCase()==='xmlhttprequest'||String(req.get('accept')||'').includes('application/json');}
 exports.contact=(req,res)=>res.render('client/content/contact',{title:'Contact',layout:'layouts/client',created:req.query.created||'',error:req.query.error||'',formUser:req.session?.user||null});
-
-exports.create=async(req,res,next)=>{
- try{
-  const user=req.session?.user;
-  if(!user){cleanup(req.file);return res.redirect('/connexion?returnTo=%2Fcontact');}
-  const message=String(req.body.message||'').trim();
-  if(!message){cleanup(req.file);return res.redirect('/contact?error=message');}
-  const category=Support.cleanCategory(req.body.subject);
-  const labels={ORDER:'Commande',DELIVERY:'Livraison',PAYMENT:'Paiement',REFUND:'Remboursement',TIOP_PLUS:'Tiop+',ACCOUNT:'Mon compte',RESTAURANT:'Restaurant',OTHER:'Autre demande'};
-  let order=null;
-  if(String(req.body.orderReference||'').trim()){
-    order=await Support.findOrderForUser(req.body.orderReference,user.id);
-    if(!order){cleanup(req.file);return res.redirect('/contact?error=order');}
-  }
-  const ticket=await Support.createTicket({userId:Number(user.id),orderId:order?.id||null,subject:labels[category],category,message,attachmentUrl:attachmentUrl(req.file)});
-  return res.redirect('/contact?created='+encodeURIComponent(ticket.reference));
- }catch(e){cleanup(req.file);next(e);}
-};
-
-exports.account=async(req,res,next)=>{
- try{
-  const userId=Number(req.session.user.id);
-  const tickets=await Support.listForUser(userId);
-  for(const t of tickets)t.messages=await Support.messages(t.id);
-  const counts={all:tickets.length,open:0,inProgress:0,resolved:0,closed:0};
-  tickets.forEach(t=>{if(t.status==='NEW')counts.open++;if(['IN_PROGRESS','WAITING_CUSTOMER'].includes(t.status))counts.inProgress++;if(t.status==='RESOLVED')counts.resolved++;if(t.status==='CLOSED')counts.closed++;});
-  res.render('client/account/support',{title:'Mes demandes',layout:'layouts/client',tickets,counts,selectedId:Number(req.query.ticket)||Number(tickets[0]?.id)||0,sent:req.query.sent||''});
- }catch(e){next(e);}
-};
-
-exports.replyCustomer=async(req,res,next)=>{
- try{
-  const ticketId=Number(req.params.id);
-  const ticket=await Support.findForUser(ticketId,Number(req.session.user.id));
-  if(!ticket){cleanup(req.file);const e=new Error('Ticket support introuvable.');e.statusCode=404;throw e;}
-  await Support.replyCustomer({ticketId,userId:Number(req.session.user.id),message:req.body.message,attachmentUrl:attachmentUrl(req.file)});
-  res.redirect('/compte/demandes?ticket='+ticketId+'&sent=1');
- }catch(e){cleanup(req.file);next(e);}
-};
+exports.create=async(req,res,next)=>{const files=req.files||[];try{const user=req.session?.user;if(!user){cleanupFiles(files);return res.redirect('/connexion?returnTo=%2Fcontact');}const message=String(req.body.message||'').trim();if(!message&&!files.length){cleanupFiles(files);return res.redirect('/contact?error=message');}const attachments=await checked(files);const category=Support.cleanCategory(req.body.subject);const labels={ORDER:'Commande',DELIVERY:'Livraison',PAYMENT:'Paiement',REFUND:'Remboursement',TIOP_PLUS:'Tiop+',ACCOUNT:'Mon compte',RESTAURANT:'Restaurant',OTHER:'Autre demande'};let order=null;if(String(req.body.orderReference||'').trim()){order=await Support.findOrderForUser(req.body.orderReference,user.id);if(!order){cleanupFiles(files);return res.redirect('/contact?error=order');}}const ticket=await Support.createTicket({userId:Number(user.id),orderId:order?.id||null,subject:labels[category],category,message,attachments});notify(req,ticket.id,Number(user.id),'ticket:new');res.redirect('/contact?created='+encodeURIComponent(ticket.reference));}catch(e){cleanupFiles(files);next(e);}};
+exports.account=async(req,res,next)=>{try{const userId=Number(req.session.user.id);let tickets=await Support.listForUser(userId);const selectedId=Number(req.query.ticket)||Number(tickets[0]?.id)||0;if(selectedId){const changed=await Support.markRead(selectedId,'CUSTOMER',userId);if(changed)notify(req,selectedId,userId,'read');tickets=await Support.listForUser(userId);}for(const t of tickets)t.messages=await Support.messages(t.id);const counts={all:tickets.length,open:0,inProgress:0,resolved:0,closed:0};tickets.forEach(t=>{if(t.status==='NEW')counts.open++;if(['IN_PROGRESS','WAITING_CUSTOMER'].includes(t.status))counts.inProgress++;if(t.status==='RESOLVED')counts.resolved++;if(t.status==='CLOSED')counts.closed++;});res.render('client/account/support',{title:'Mes demandes',layout:'layouts/client',tickets,counts,selectedId,sent:req.query.sent||''});}catch(e){next(e);}};
+exports.replyCustomer=async(req,res,next)=>{const files=req.files||[];try{const ticketId=Number(req.params.id),userId=Number(req.session.user.id);const ticket=await Support.findForUser(ticketId,userId);if(!ticket){cleanupFiles(files);throw Object.assign(new Error('Ticket support introuvable.'),{statusCode:404});}const attachments=await checked(files);await Support.replyCustomer({ticketId,userId,message:req.body.message,attachments});notify(req,ticketId,userId,'message:new');if(wantsJson(req))return res.json({ok:true,ticketId});res.redirect('/compte/demandes?ticket='+ticketId+'&sent=1');}catch(e){cleanupFiles(files);next(e);}};
+exports.editMessage=async(req,res,next)=>{try{const ok=await Support.editMessage({messageId:Number(req.params.messageId),ticketId:Number(req.params.id),actorType:'CUSTOMER',actorId:Number(req.session.user.id),text:req.body.message});if(!ok)throw Object.assign(new Error('Modification non autorisée.'),{statusCode:403});notify(req,Number(req.params.id),Number(req.session.user.id),'message:edit');res.json({ok:true});}catch(e){next(e);}};
+exports.deleteMessage=async(req,res,next)=>{try{const ok=await Support.deleteMessage({messageId:Number(req.params.messageId),ticketId:Number(req.params.id),actorType:'CUSTOMER',actorId:Number(req.session.user.id)});if(!ok)throw Object.assign(new Error('Suppression non autorisée.'),{statusCode:403});notify(req,Number(req.params.id),Number(req.session.user.id),'message:delete');res.json({ok:true});}catch(e){next(e);}};
+exports.react=async(req,res,next)=>{try{const ticketId=Number(req.params.id),userId=Number(req.session.user.id);if(!await Support.findForUser(ticketId,userId))throw Object.assign(new Error('Ticket introuvable.'),{statusCode:404});await Support.react({messageId:Number(req.params.messageId),ticketId,actorType:'CUSTOMER',actorId:userId,emoji:req.body.emoji});notify(req,ticketId,userId,'reaction');res.json({ok:true});}catch(e){next(e);}};
+exports.poll=async(req,res,next)=>{try{const userId=Number(req.session.user.id),selectedId=Number(req.query.ticket)||0;let changed=0;if(selectedId)changed=await Support.markRead(selectedId,'CUSTOMER',userId);const tickets=await Support.listForUser(userId);const selected=tickets.find(t=>Number(t.id)===selectedId),messages=selected?await Support.messages(selected.id):[];if(changed)notify(req,selectedId,userId,'read');res.json({ok:true,tickets,messages,serverTime:Date.now()});}catch(e){next(e);}};
+exports.downloadAttachment=async(req,res,next)=>{try{const a=await Support.attachmentForUser(Number(req.params.attachmentId),Number(req.session.user.id));if(!a)throw Object.assign(new Error('Pièce jointe introuvable.'),{statusCode:404});const file=path.join(folders.support,path.basename(a.stored_name));return res.download(file,a.original_name);}catch(e){next(e);}};
+exports.archiveTicket=async(req,res,next)=>{try{const ticketId=Number(req.params.id),userId=Number(req.session.user.id);if(!await Support.archiveForUser(ticketId,userId))throw Object.assign(new Error('Demande introuvable.'),{statusCode:404});notify(req,ticketId,userId,'ticket:archive');res.redirect('/compte/demandes');}catch(e){next(e);}};
