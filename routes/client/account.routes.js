@@ -59,6 +59,7 @@ router.post("/compte/demandes/:id/messages/:messageId/edit", requireUser, suppor
 router.post("/compte/demandes/:id/messages/:messageId/delete", requireUser, support.deleteMessage);
 router.post("/compte/demandes/:id/messages/:messageId/react", requireUser, support.react);
 router.post("/compte/demandes/:id/archiver", requireUser, support.archiveTicket);
+router.post("/compte/demandes/:id/reopen", requireUser, support.reopen);
 router.get("/compte/demandes/poll", requireUser, support.poll);
 router.get("/compte/demandes/fichier/:attachmentId", requireUser, support.downloadAttachment);
 
