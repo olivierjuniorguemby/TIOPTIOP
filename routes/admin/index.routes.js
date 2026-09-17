@@ -884,8 +884,12 @@ router.post("/support/:id/reply", supportAdminUpload.array("attachments", 5), su
 router.post("/support/:id/messages/:messageId/edit", supportController.editMessage);
 router.post("/support/:id/messages/:messageId/delete", supportController.deleteMessage);
 router.post("/support/:id/messages/:messageId/react", supportController.react);
+router.post("/support/:id/transfer", supportController.transfer);
+router.post("/support/:id/messages/bulk-delete", supportController.bulkDelete);
+router.post("/support/:id/messages/bulk-transfer", supportController.bulkTransfer);
 router.post("/support/:id/archiver", supportController.archiveTicket);
 router.get("/support-poll", supportController.poll);
+router.post("/support/:id/read-visible", supportController.markVisibleRead);
 router.get("/support/fichier/:attachmentId", supportController.downloadAttachment);
 router.post("/support/:id/assign", supportController.assign);
 router.post("/support/:id/priority", supportController.priority);
