@@ -62,6 +62,7 @@ router.post("/compte/demandes/:id/transfer", requireUser, support.transfer);
 router.post("/compte/demandes/:id/messages/bulk-delete", requireUser, support.bulkDelete);
 router.post("/compte/demandes/:id/messages/bulk-transfer", requireUser, support.bulkTransfer);
 router.post("/compte/demandes/:id/archiver", requireUser, support.archiveTicket);
+router.post("/compte/demandes/:id/restaurer", requireUser, support.restoreTicket);
 router.post("/compte/demandes/:id/reopen", requireUser, support.reopen);
 router.get("/compte/demandes/poll", requireUser, support.poll);
 router.post("/compte/demandes/:id/read-visible", requireUser, support.markVisibleRead);
