@@ -893,6 +893,7 @@ router.post("/support/:id/read-visible", supportController.markVisibleRead);
 router.get("/support/fichier/:attachmentId", supportController.downloadAttachment);
 router.post("/support/:id/assign", supportController.assign);
 router.post("/support/:id/priority", supportController.priority);
+router.post("/support/:id/internal-note", supportController.internalNote);
 router.post("/support/:id/status", supportController.status);
 router.post("/support/:id/reopen", supportController.reopen);
 router.post("/support/initier-commande", supportAdminUpload.array("attachments", 5), supportController.initiateOrderConversation);
