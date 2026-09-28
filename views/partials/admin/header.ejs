@@ -11,7 +11,7 @@
             <a href="/admin/produits">Produits</a>
             <a href="/admin/support">Support</a> &nbsp;&nbsp;&nbsp;
 
-            <a href="/admin/notifications">🔔 </a>
+            <%- include("../notification-bell", { notificationScope: "ADMIN" }) %>
         </nav>
 
         <!-- Profil administrateur -->

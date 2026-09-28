@@ -8,6 +8,7 @@ const account =
     );
 
 const support = require("../../controllers/client/support.controller");
+const notificationController = require("../../controllers/client/notification.controller");
 const { supportUpload } = require("../../config/uploads");
 
 
@@ -37,6 +38,12 @@ router.get(
     account.dashboard
 );
 
+
+/* =========================================================
+   NOTIFICATIONS — 19.2
+========================================================= */
+router.get("/compte/notifications", requireUser, notificationController.page);
+router.post("/compte/notifications/:id/unread", requireUser, notificationController.unread);
 
 /* =========================================================
    SUPPORT / MES DEMANDES — 18.3

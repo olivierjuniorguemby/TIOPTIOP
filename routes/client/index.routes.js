@@ -12,6 +12,7 @@ const loyaltyController =
     require("../../controllers/client/loyalty.controller");
 const promotionController = require("../../controllers/client/promotion.controller");
 const supportController = require("../../controllers/client/support.controller");
+const notificationController = require("../../controllers/client/notification.controller");
 const { supportUpload } = require("../../config/uploads");
 
 
@@ -128,6 +129,14 @@ router.get("/offres", promotionController.index);
 ====================================================== */
 
 router.get("/promotions", promotionController.index);
+
+
+/* ======================================================
+   NOTIFICATIONS — 19.1
+====================================================== */
+router.get("/notifications/feed", requireUser, notificationController.feed);
+router.post("/notifications/:id/read", requireUser, notificationController.read);
+router.post("/notifications/read-all", requireUser, notificationController.readAll);
 
 
 /* ======================================================

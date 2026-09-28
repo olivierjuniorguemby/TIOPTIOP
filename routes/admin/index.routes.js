@@ -71,6 +71,7 @@ const loyaltyController =
 const loyaltyCardController = require("../../controllers/admin/loyalty-card.controller");
 const promotionController = require("../../controllers/admin/promotion.controller");
 const supportController = require("../../controllers/admin/support.controller");
+const notificationController = require("../../controllers/admin/notification.controller");
 
 const deliveryController =
     require(
@@ -459,6 +460,16 @@ router.get(
 router.use(
     requireAdmin
 );
+
+
+/* =========================================================
+   NOTIFICATIONS — 19.1
+========================================================= */
+router.get("/notifications/feed", notificationController.feed);
+router.get("/notifications/list", notificationController.list);
+router.post("/notifications/read-all", notificationController.readAll);
+router.post("/notifications/:id/read", notificationController.read);
+router.post("/notifications/:id/unread", notificationController.unread);
 
 
 /* =========================================================
@@ -966,13 +977,7 @@ router.get(
 );
 
 
-router.get(
-    "/notifications",
-    page.render(
-        "admin/system/notifications",
-        "Notifications"
-    )
-);
+router.get("/notifications", notificationController.page);
 
 
 router.get(

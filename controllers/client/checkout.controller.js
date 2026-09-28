@@ -13,6 +13,7 @@ const StripeService =
 const Loyalty =
     require("../../models/loyalty.model");
 const Promotion = require("../../models/promotion.model");
+const NotificationService = require("../../services/notification.service");
 
 
 /* =========================================================
@@ -776,6 +777,18 @@ async function (
                 promoCode
             });
 
+
+        // 19.4 — nouvelle commande Web : alerte administration en temps réel.
+        try {
+            await NotificationService.admin(req.app.get("io"), {
+                type: "ORDER_NEW",
+                title: "Nouvelle commande",
+                body: `Commande ${result.reference} reçue.`,
+                payload: { orderId: result.orderId, reference: result.reference, url: `/admin/commandes/${encodeURIComponent(result.reference)}` }
+            });
+        } catch (notificationError) {
+            console.error("[NOTIFICATIONS 19.4] Commande admin :", notificationError);
+        }
 
         /* =================================================
            SESSION

@@ -33,7 +33,7 @@
   <h3>SYSTÈME</h3>
   <a href="/admin/utilisateurs">👨‍💼 Utilisateurs</a>
   <a href="/admin/roles">🔐 Rôles & permissions</a>
-  <a href="/admin/notifications">🔔 Notifications</a>
+  <a href="/admin/notifications" class="admin-notif-side-link">🔔 Notifications <span id="adminNotifSideBadge" class="admin-notif-side-badge" hidden>0</span></a>
   <a href="/admin/parametres">⚙️ Paramètres</a>
   <a href="/admin/journaux">📊 Journaux</a>
   <a href="/admin/profil">👤 Profil</a>
@@ -70,4 +70,6 @@
 .admin-logout:hover {
     background: #fff0f0;
 }
+.admin-notif-side-link{display:flex!important;align-items:center;gap:8px}.admin-notif-side-badge{margin-left:auto;min-width:20px;padding:2px 6px;border-radius:999px;background:#ff7900;color:#fff;font-size:10px;font-weight:900;text-align:center}
 </style>
+<script>window.addEventListener('tiop:notifications:summary',e=>{const b=document.getElementById('adminNotifSideBadge');if(!b)return;const n=Number(e.detail?.unread||0);b.textContent=n>99?'99+':n;b.hidden=!n;});</script>

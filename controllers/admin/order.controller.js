@@ -7,6 +7,8 @@ const Delivery =
 const Driver =
     require("../../models/driver.model");
 
+const NotificationService = require("../../services/notification.service");
+
 
 /* =========================================================
    HELPERS
@@ -509,6 +511,20 @@ async function (
                 );
         }
 
+
+        // 19.4 — changement de statut : prévenir le client propriétaire.
+        if (result.userId) {
+            try {
+                await NotificationService.client(req.app.get("io"), result.userId, {
+                    type: "ORDER_STATUS",
+                    title: `Commande ${result.reference}`,
+                    body: `Nouveau statut : ${result.statusLabel}.`,
+                    payload: { orderId: result.id, reference: result.reference, status: result.status, url: `/commande/${encodeURIComponent(result.reference)}/suivi` }
+                });
+            } catch (notificationError) {
+                console.error("[NOTIFICATIONS 19.4] Statut commande client :", notificationError);
+            }
+        }
 
         return res.redirect(
             "/admin/commandes/"

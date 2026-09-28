@@ -38,6 +38,7 @@ const io = new Server(server);
 // 18.5.1 — authentification Socket.IO avec la même session Express
 io.engine.use(sessionMiddleware);
 require("./realtime/support-realtime")(io);
+require("./realtime/notification-realtime")(io);
 
 app.set("io", io);
 
