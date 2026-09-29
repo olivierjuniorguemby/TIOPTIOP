@@ -778,6 +778,19 @@ async function (
             });
 
 
+        // 19.4.1 — promotion réellement réservée sur la commande : confirmation client.
+        if (result.promoCode) {
+            try {
+                await NotificationService.businessClient(Number(userId), {
+                    type: "PROMOTION_APPLIED",
+                    title: "Promotion appliquée 🎁",
+                    body: `Le code ${result.promoCode} a été appliqué à la commande ${result.reference}.`,
+                    payload: { orderId: result.orderId, reference: result.reference, promoCode: result.promoCode, url: `/compte/commandes/${encodeURIComponent(result.reference)}` },
+                    eventKey: `promotion:order:${result.orderId}:applied`
+                }, req.app.get("io"));
+            } catch (notificationError) { console.error("[NOTIFICATIONS 19.4.1] Promotion appliquée :", notificationError); }
+        }
+
         // 19.4 — nouvelle commande Web : alerte administration en temps réel.
         try {
             await NotificationService.admin(req.app.get("io"), {

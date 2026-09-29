@@ -19,6 +19,7 @@ const LoyaltyCard =
     require("../models/loyalty-card.model");
 
 const Promotion = require("../models/promotion.model");
+const NotificationService = require("./notification.service");
 
 /* =========================================================
    PAYMENT SERVICE
@@ -102,8 +103,12 @@ async function markPaid(
     // 16.7 — Le paiement confirmé rend l'avantage réservé définitivement USED.
     // Une panne fidélité ne doit jamais annuler un paiement provider déjà confirmé.
     try {
-        await Loyalty.finalizeOrderRedemption(payment.order_id, 'PAYMENT_CONFIRMED');
-        await LoyaltyCard.finalizeOrderRedemption(payment.order_id);
+        const loyaltyLifecycleResult = await Loyalty.finalizeOrderRedemption(payment.order_id, 'PAYMENT_CONFIRMED');
+        const physicalLifecycleResult = await LoyaltyCard.finalizeOrderRedemption(payment.order_id);
+        if (loyaltyLifecycleResult?.finalized || physicalLifecycleResult?.finalized) {
+            try { await NotificationService.loyaltyRewardUsed({orderId:payment.order_id,reason:'PAYMENT_CONFIRMED'}); }
+            catch (notificationError) { console.error('[NOTIFICATIONS 19.4.1] Avantage Tiop+ utilisé :', notificationError); }
+        }
     } catch (loyaltyLifecycleError) {
         console.error('[TIOP+ 16.7] Finalisation avantage impossible :', loyaltyLifecycleError);
     }
@@ -121,10 +126,15 @@ async function markPaid(
                 description: `${loyaltyResult.points} point(s) Tiop+ crédité(s).`,
                 payload: loyaltyResult
             });
+            try { await NotificationService.loyaltyPointsEarned({paymentId:payment.id,points:loyaltyResult.points}); }
+            catch (notificationError) { console.error("[NOTIFICATIONS 19.4.1] Points Tiop+ :", notificationError); }
         }
     } catch (loyaltyError) {
         console.error("[TIOP+ 16.10.5] Crédit des points impossible :", loyaltyError);
     }
+
+    try { await NotificationService.paymentEvent({paymentId:payment.id,status:"PAID",metadata}); }
+    catch (notificationError) { console.error("[NOTIFICATIONS 19.4.1] Paiement confirmé :", notificationError); }
 
     return updated;
 }
@@ -271,6 +281,9 @@ async function markFailed(
             metadata
     });
 
+
+    try { await NotificationService.paymentEvent({paymentId:payment.id,status:"FAILED",metadata}); }
+    catch (notificationError) { console.error("[NOTIFICATIONS 19.4.1] Paiement échoué :", notificationError); }
 
     return updated;
 }

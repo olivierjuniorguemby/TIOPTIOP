@@ -6,11 +6,23 @@ const AdminPayment = require("../../models/admin-payment.model");
 const PaymentRefund = require("../../models/payment-refund.model");
 const RefundService = require("../../services/refund.service");
 const Payment = require("../../models/payment.model");
+const NotificationService = require("../../services/notification.service");
 
 /* =========================================================
    ADMIN PAYMENT CONTROLLER
    TIOPTIOP — 13.9.2
 ========================================================= */
+
+async function notifyRefund(req,payment,result,kind) {
+    if (!payment?.customer_id) return;
+    const refund=result?.refund || {};
+    const amount=Number(refund.amount || result?.amount || 0);
+    const currency=refund.currency || payment.currency || "XAF";
+    const labels={PENDING:["Remboursement en cours","Votre remboursement est en cours de traitement."],SUCCEEDED:["Remboursement effectué","Votre remboursement a été effectué."],CANCELLED:["Remboursement annulé","La demande de remboursement a été annulée."]};
+    const state=String(kind||refund.status||"SUCCEEDED").toUpperCase();
+    const label=labels[state]||labels.SUCCEEDED;
+    await NotificationService.businessClient(Number(payment.customer_id),{type:`REFUND_${state}`,title:label[0],body:`${label[1]} ${amount>0?amount.toLocaleString("fr-FR")+" "+currency+" — ":""}${payment.order_reference}.`,payload:{paymentId:Number(payment.id),orderId:Number(payment.order_id),reference:payment.order_reference,refundId:refund.id||null,status:state,url:`/compte/commandes/${encodeURIComponent(payment.order_reference)}`},eventKey:`refund:${refund.id||payment.id}:${state.toLowerCase()}`},req.app.get("io"));
+}
 
 function cleanString(value, max = 180) {
     return String(value || "").trim().slice(0, max);
@@ -191,6 +203,8 @@ exports.refundStripe = async function (req, res) {
                     formToken
                 });
 
+        try { await notifyRefund(req,payment,result,result.providerStatus === "pending" ? "PENDING" : "SUCCEEDED"); } catch(e){ console.error("[NOTIFICATIONS 19.4.1] Refund Stripe :",e); }
+
         if (
             result.duplicate
         ) {
@@ -297,6 +311,8 @@ exports.refundMtnCreate = async function (req, res) {
                         )
                 });
 
+        try { await notifyRefund(req,payment,result,"PENDING"); } catch(e){ console.error("[NOTIFICATIONS 19.4.1] Refund MTN pending :",e); }
+
         req.session.flashSuccess =
             result.duplicate
                 ? "Cette demande MTN MoMo existe déjà."
@@ -374,6 +390,8 @@ exports.refundMtnConfirm = async function (req, res) {
                             : null
                 });
 
+        try { await notifyRefund(req,payment,result,"SUCCEEDED"); } catch(e){ console.error("[NOTIFICATIONS 19.4.1] Refund MTN confirmé :",e); }
+
         req.session.flashSuccess =
             result.duplicate
                 ? "Ce remboursement MTN MoMo était déjà confirmé."
@@ -444,6 +462,8 @@ exports.refundMtnCancel = async function (req, res) {
                         ? adminId
                         : null
             });
+
+        try { await notifyRefund(req,payment,result,"CANCELLED"); } catch(e){ console.error("[NOTIFICATIONS 19.4.1] Refund MTN annulé :",e); }
 
         req.session.flashSuccess =
             result.duplicate
@@ -543,6 +563,8 @@ exports.refundCash = async function (req, res) {
                         )
                 });
 
+        try { await notifyRefund(req,payment,result,"SUCCEEDED"); } catch(e){ console.error("[NOTIFICATIONS 19.4.1] Refund espèces :",e); }
+
         req.session.flashSuccess =
             result.duplicate
                 ? "Ce remboursement espèces avait déjà été enregistré."
@@ -615,6 +637,9 @@ exports.collectCash = async function (req, res) {
                     payload: lifecycleResult
                 });
             }
+            if (lifecycleResult?.finalized || physicalLifecycleResult?.finalized) {
+                try { await NotificationService.loyaltyRewardUsed({orderId:collectedPayment.order_id,reason:'CASH_PAYMENT_CONFIRMED'}); } catch(e){ console.error('[NOTIFICATIONS 19.4.1] Avantage Tiop+ CASH :',e); }
+            }
         } catch (loyaltyLifecycleError) {
             // Un paiement espèces déjà encaissé ne doit jamais être annulé à cause d'un souci fidélité.
             console.error("[TIOP+ 16.7] Finalisation avantage CASH impossible :", loyaltyLifecycleError);
@@ -635,10 +660,13 @@ exports.collectCash = async function (req, res) {
                     description: `${loyaltyResult.points} point(s) Tiop+ crédité(s).`,
                     payload: loyaltyResult
                 });
+                try { await NotificationService.loyaltyPointsEarned({paymentId:collectedPayment.id,points:loyaltyResult.points}); } catch(e){ console.error("[NOTIFICATIONS 19.4.1] Points CASH :",e); }
             }
         } catch (loyaltyError) {
             console.error("[TIOP+ 16.10.5] Crédit CASH impossible :", loyaltyError);
         }
+
+        try { await NotificationService.paymentEvent({paymentId:collectedPayment.id,status:"PAID",metadata:{source:"ADMIN_CASH"}}); } catch(e){ console.error("[NOTIFICATIONS 19.4.1] Encaissement CASH :",e); }
 
         req.session.flashSuccess = result?.duplicate
             ? "Ce paiement en espèces était déjà encaissé."

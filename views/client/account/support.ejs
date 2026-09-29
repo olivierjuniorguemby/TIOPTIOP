@@ -62,7 +62,8 @@
 <script>
 (()=>{
   let box=document.getElementById('clientMessages');
-  let ticketId=Number(box?.dataset.ticket||0); let socket=null;
+  let ticketId=Number(box?.dataset.ticket||0); let socket=null; let pendingTargetMessage=Number(new URL(location.href).searchParams.get('message')||0);
+  function focusTargetMessage(){if(!pendingTargetMessage)return false;const target=document.querySelector(`.sd-message-row[data-message-id="${pendingTargetMessage}"]`);if(!target)return false;target.scrollIntoView({behavior:'smooth',block:'center'});target.classList.add('sd-message-highlight');setTimeout(()=>target.classList.remove('sd-message-highlight'),2200);pendingTargetMessage=0;return true;}
   const reactionSet=['👍','❤️','😂','😮','😢','🙏','🔥','✅'];
   const labels={NEW:'Ouverte',IN_PROGRESS:'En cours',WAITING_CUSTOMER:'Attente de votre réponse',RESOLVED:'Résolue',CLOSED:'Fermée'};
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -151,7 +152,7 @@
     try{
       const res=await fetch(`/compte/demandes/poll?ticket=${ticketId}`,{headers:{Accept:'application/json'},cache:'no-store'}); if(!res.ok)return;
       const data=await res.json(); updateTickets(data.tickets||[]);updateCounts(data.counts||{});updateLifecycle(data.selectedTicket,data.history||[]);
-      if(box&&ticketId){const stick=nearBottom(box),oldLast=Number(box.dataset.lastId||0),msgs=(data.messages||[]),newLast=Number(msgs.at(-1)?.id||0),added=msgs.filter(m=>Number(m.id)>oldLast).length;box.innerHTML=messagesHtml(msgs);box.dataset.lastId=String(newLast);bindMessageScroll();bindReadObserver();if(reason==='open'||reason==='initial'){positionInitialRead();}else if(reason==='send'||stick){scrollConversationBottom('auto');}else if(reason==='message:new'&&added>0){pendingBelow+=added;updateScrollBottom();}}
+      if(box&&ticketId){const stick=nearBottom(box),oldLast=Number(box.dataset.lastId||0),msgs=(data.messages||[]),newLast=Number(msgs.at(-1)?.id||0),added=msgs.filter(m=>Number(m.id)>oldLast).length;box.innerHTML=messagesHtml(msgs);box.dataset.lastId=String(newLast);bindMessageScroll();bindReadObserver();if(!focusTargetMessage()){if(reason==='open'||reason==='initial'){positionInitialRead();}else if(reason==='send'||stick){scrollConversationBottom('auto');}else if(reason==='message:new'&&added>0){pendingBelow+=added;updateScrollBottom();}}}
     }finally{syncing=false;if(queued){queued=false;syncSupport('queued');}}
   }
   async function post(url,data){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','X-Requested-With':'XMLHttpRequest',Accept:'application/json'},body:new URLSearchParams(data)});if(!r.ok)throw new Error('Action impossible');return r.json();}

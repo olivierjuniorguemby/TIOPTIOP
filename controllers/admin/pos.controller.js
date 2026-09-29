@@ -9,6 +9,7 @@ const StripeService = require("../../services/stripe.service");
 const Loyalty = require("../../models/loyalty.model");
 const LoyaltyCard = require("../../models/loyalty-card.model");
 const LoyaltyCardQr = require("../../services/loyalty-card-qr.service");
+const NotificationService = require("../../services/notification.service");
 
 function normalizeImage(value) {
     if (!value) return null;
@@ -641,6 +642,12 @@ async function createOrder(req, res) {
                 };
                 console.error("[ADMIN POS] Initialisation Stripe :", error);
             }
+        }
+
+        // 19.4.1 — POS/PHONE/WHATSAPP : notifier uniquement le client identifié.
+        if (!result.duplicate && customer.mode === "ACCOUNT" && customer.userId) {
+            try { await NotificationService.businessClient(Number(customer.userId),{type:"POS_ORDER_CREATED",title:"Commande enregistrée",body:`Votre commande ${result.reference} a été enregistrée par notre équipe (${channel}).`,payload:{orderId:result.orderId,reference:result.reference,channel,url:`/compte/commandes/${encodeURIComponent(result.reference)}`},eventKey:`pos:order:${result.orderId}:created`},req.app.get("io")); }
+            catch(e){ console.error("[NOTIFICATIONS 19.4.1] Commande POS client :",e); }
         }
 
         return res.status(result.duplicate ? 200 : 201).json({

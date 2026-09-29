@@ -94,3 +94,34 @@ exports.markAdminUnread = async id => {
   const result=await db.query("UPDATE notifications SET read_at=NULL WHERE id=? AND user_id IS NULL AND channel='IN_APP'",[Number(id)]);
   return Number(result.affectedRows||0)>0;
 };
+
+
+exports.upsertSupportReaction = async ({scope,userId=null,ticketId,messageId,reactorType,reactorId,emoji,title,body,payload}) => {
+  const recipient = scope === 'ADMIN' ? 'user_id IS NULL' : 'user_id = ?';
+  const recipientParams = scope === 'ADMIN' ? [] : [Number(userId)];
+  const rows = await db.query(`SELECT id FROM notifications WHERE ${recipient} AND channel='IN_APP' AND notification_type='SUPPORT_REACTION' AND JSON_UNQUOTE(JSON_EXTRACT(payload,'$.ticketId'))=? AND JSON_UNQUOTE(JSON_EXTRACT(payload,'$.messageId'))=? AND JSON_UNQUOTE(JSON_EXTRACT(payload,'$.reactorType'))=? AND JSON_UNQUOTE(JSON_EXTRACT(payload,'$.reactorId'))=? ORDER BY id DESC LIMIT 1`, [...recipientParams,String(Number(ticketId)),String(Number(messageId)),String(reactorType),String(Number(reactorId))]);
+  const dataPayload=JSON.stringify(payload||{});
+  if(rows[0]){
+    await db.query(`UPDATE notifications SET title=?,body=?,payload=?,read_at=NULL,sent_at=NOW(),created_at=NOW() WHERE id=?`,[String(title).slice(0,180),String(body||''),dataPayload,Number(rows[0].id)]);
+    return {id:Number(rows[0].id),updated:true};
+  }
+  const id=await exports.create({userId:scope==='ADMIN'?null:Number(userId),type:'SUPPORT_REACTION',title,body,payload});
+  return {id,updated:false};
+};
+
+
+// 19.4.1 — notification métier idempotente par eventKey.
+exports.upsertBusinessEvent = async ({userId=null,type,title,body,payload={},eventKey}) => {
+  const uid = userId ? Number(userId) : null;
+  const key = String(eventKey || '').trim().slice(0,180);
+  if (!key) return {id:await exports.create({userId:uid,type,title,body,payload}),updated:false};
+  const recipientSql = uid ? 'user_id=?' : 'user_id IS NULL';
+  const params = uid ? [uid,key] : [key];
+  const rows = await db.query(`SELECT id FROM notifications WHERE ${recipientSql} AND channel='IN_APP' AND JSON_UNQUOTE(JSON_EXTRACT(payload,'$.eventKey'))=? ORDER BY id DESC LIMIT 1`,params);
+  const finalPayload={...(payload||{}),eventKey:key};
+  if(rows[0]){
+    await db.query('UPDATE notifications SET notification_type=?,title=?,body=?,payload=?,read_at=NULL,sent_at=NOW(),created_at=NOW() WHERE id=?',[String(type||'SYSTEM').slice(0,60),String(title||'Notification').slice(0,180),String(body||''),JSON.stringify(finalPayload),Number(rows[0].id)]);
+    return {id:Number(rows[0].id),updated:true};
+  }
+  return {id:await exports.create({userId:uid,type,title,body,payload:finalPayload}),updated:false};
+};

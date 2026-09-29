@@ -41,6 +41,7 @@ require("./realtime/support-realtime")(io);
 require("./realtime/notification-realtime")(io);
 
 app.set("io", io);
+require("./services/notification.service").setIo(io); // 19.4.1 — notifications depuis services provider
 
 app.disable("x-powered-by");
 
