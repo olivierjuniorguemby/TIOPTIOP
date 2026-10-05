@@ -43,7 +43,33 @@ exports.paymentEvent = async ({paymentId,status,metadata=null}) => {
   const p=rows[0]; if(!p) return null;
   const normalized=String(status||'').toUpperCase();
   const payload={paymentId:Number(p.id),orderId:Number(p.order_id),reference:p.order_reference,status:normalized,method:p.method,provider:p.provider,url:`/compte/commandes/${encodeURIComponent(p.order_reference)}`,metadata};
-  if(normalized==='PAID' && p.user_id) return exports.businessClient(Number(p.user_id),{type:'PAYMENT_PAID',title:'Paiement confirmé',body:`Le paiement de la commande ${p.order_reference} a été confirmé.`,payload,eventKey:`payment:${p.id}:paid`});
+  if(normalized==='PAID'){
+    // 19.4.1 — le client est informé de son encaissement.
+    // L'admin est également informé uniquement pour les paiements externes
+    // confirmés par Stripe ou MTN MoMo. Les espèces/POS locales ne génèrent
+    // pas cette alerte afin d'éviter une notification admin redondante.
+    let clientNotification=null;
+    if(p.user_id){
+      clientNotification=await exports.businessClient(Number(p.user_id),{type:'PAYMENT_PAID',title:'Paiement confirmé',body:`Le paiement de la commande ${p.order_reference} a été confirmé.`,payload,eventKey:`payment:${p.id}:paid`});
+    }
+
+    const method=String(p.method||'').toUpperCase();
+    const provider=String(p.provider||'').toUpperCase();
+    const isStripe=method==='CARD' || provider.includes('STRIPE');
+    const isMtnMomo=method==='MOBILE_MONEY' || provider.includes('MTN');
+
+    if(isStripe || isMtnMomo){
+      const channel=isStripe?'Stripe':'MTN MoMo';
+      await exports.businessAdmin({
+        type:'PAYMENT_PAID',
+        title:'Paiement confirmé',
+        body:`Le paiement ${channel} de ${p.order_reference} a été confirmé.`,
+        payload:{...payload,channel,url:`/admin/paiements/${p.id}`},
+        eventKey:`admin:payment:${p.id}:paid`
+      });
+    }
+    return clientNotification;
+  }
   if(normalized==='FAILED'){
     if(p.user_id) await exports.businessClient(Number(p.user_id),{type:'PAYMENT_FAILED',title:'Paiement non abouti',body:`Le paiement de la commande ${p.order_reference} n’a pas abouti.`,payload,eventKey:`payment:${p.id}:failed`});
     return exports.businessAdmin({type:'PAYMENT_FAILED',title:'Paiement en échec',body:`Le paiement de ${p.order_reference} nécessite une vérification.`,payload:{...payload,url:`/admin/paiements/${p.id}`},eventKey:`admin:payment:${p.id}:failed`});
