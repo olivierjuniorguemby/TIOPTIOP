@@ -38,8 +38,11 @@ const Order =
 
 const GPS_CONFIG = {
 
-    // Au-delà : position trop imprécise
-    MAX_ACCURACY_METERS: 50,
+    // Au-delà : position trop imprécise.
+    // 150 m permet aussi le cas PC / Wi-Fi / intérieur, où le navigateur
+    // peut fournir une précision de 50 à 150 m. Les protections
+    // anti-dérive, cohérence et vitesse impossible restent actives.
+    MAX_ACCURACY_METERS: 150,
 
     // Déplacement absolu minimum
     MIN_MOVEMENT_METERS: 2,

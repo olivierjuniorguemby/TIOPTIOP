@@ -254,6 +254,16 @@
 }
 
 
+.driver-gps-status.filtered {
+
+    background:
+        #fff7e8;
+
+    color:
+        #8a5a00;
+}
+
+
 .driver-gps-values {
 
     display:
@@ -780,10 +790,120 @@ document.addEventListener(
         }
 
 
-        statusElement.textContent =
+        /* =================================================
+           DIAGNOSTIC GPS LIVE 19.4.2.A.2.1
+
+           IMPORTANT : une réponse HTTP 200 / ok:true ne veut
+           pas forcément dire que le point a été transmis.
+           Le serveur peut volontairement filtrer le point
+           (précision, dérive, saut incohérent, etc.).
+        ================================================= */
+
+        console.info(
+          "[TiopTiop GPS] Réponse serveur :",
+          data
+        );
+
+
+        if (
+          data.filtered
+        ) {
+
+          const filterLabels = {
+            BAD_ACCURACY:
+              "précision GPS insuffisante",
+            STATIONARY_NOISE:
+              "dérive GPS ignorée (livreur immobile)",
+            MOVEMENT_CONFIRMATION:
+              "déplacement en cours de confirmation",
+            MOVEMENT_CANDIDATE_RESET:
+              "mouvement incohérent, confirmation recommencée",
+            MOVEMENT_NOT_COHERENT:
+              "mouvement GPS non cohérent",
+            IMPOSSIBLE_SPEED:
+              "saut GPS incohérent",
+            INVALID_COORDINATES:
+              "coordonnées GPS invalides"
+          };
+
+
+          const reason =
+            data.filterReason
+            ||
+            "UNKNOWN";
+
+
+          const label =
+            filterLabels[reason]
+            ||
+            data.message
+            ||
+            reason;
+
+
+          const informationalFilter =
+            [
+              "STATIONARY_NOISE",
+              "MOVEMENT_CONFIRMATION",
+              "MOVEMENT_CANDIDATE_RESET"
+            ].includes(
+              reason
+            );
+
+
+          statusElement.textContent =
+            informationalFilter
+              ? "GPS actif · " + label + ". La dernière position valide reste visible côté client."
+              : "GPS actif · point non transmis : "
+                + label
+                + (
+                    reason === "BAD_ACCURACY"
+                    && Number.isFinite(coords.accuracy)
+                      ? " (précision actuelle : "
+                        + Math.round(coords.accuracy)
+                        + " m)"
+                      : ""
+                  )
+                + ".";
+
+
+          statusElement.classList.remove(
+            "active",
+            "error",
+            "filtered"
+          );
+
+
+          statusElement.classList.add(
+            informationalFilter
+              ? "filtered"
+              : "error"
+          );
+
+
+          return;
+        }
+
+
+        if (
           data.rateLimited
-            ? "GPS actif · fréquence limitée par le serveur."
-            : "GPS actif · position transmise au client.";
+        ) {
+
+          statusElement.textContent =
+            "GPS actif · point reçu mais fréquence limitée par le serveur.";
+        }
+        else if (
+          data.inserted
+        ) {
+
+          statusElement.textContent =
+            "GPS actif · position enregistrée et transmise au client.";
+        }
+        else {
+
+          statusElement.textContent =
+            "GPS actif · point reçu par le serveur mais non inséré.";
+        }
 
 
         statusElement.classList.remove(

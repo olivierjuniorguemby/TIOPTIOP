@@ -161,6 +161,21 @@
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
 </script>
 
+<!-- 19.4.2.A.2 - Fond vectoriel OpenFreeMap sans cle API.
+     Versions epinglees pour ne pas subir une mise a jour CDN imprevisible. -->
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
+/>
+
+<script
+    src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js">
+</script>
+
+<script
+    src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js">
+</script>
+
 
 <section class="section">
 
@@ -289,6 +304,14 @@
 
                         <% } %>
 
+                    </span>
+
+                    <span
+                        id="gpsFreshness"
+                        class="tracking-gps-freshness"
+                        <%= latestTrackingPoint ? "" : "hidden" %>
+                    >
+                        ● Position disponible
                     </span>
 
                 </p>
@@ -586,6 +609,10 @@ max-width:1180px;margin:0 auto;padding:35px 20px 80px
 .tracking-heading p{max-width:680px;color:#746d66;font-size:16px;line-height:1.7}
 .tracking-connection{display:inline-flex;align-items:center;min-height:28px;margin-top:12px;padding:0 10px;border-radius:999px;background:#f2f0ed;color:#716962;font-size:10px;font-weight:900}
 .tracking-connection.connected{background:#eaf8ef;color:#277347}
+.tracking-connection.reconnecting{background:#fff4df;color:#9a5a00}
+.tracking-gps-freshness{display:inline-flex;align-items:center;margin-top:8px;padding:6px 9px;border-radius:999px;background:#eaf8ef;color:#277347;font-size:9px;font-weight:900}
+.tracking-gps-freshness.stale{background:#fff4df;color:#9a5a00}
+.tracking-gps-freshness.lost{background:#fff0f0;color:#a73535}
 .tracking-layout{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
 .tracking-left,.tracking-right{display:flex;flex-direction:column;gap:14px}
 .tracking-map-card{position:relative;padding:8px;border-radius:28px;background:#fff;overflow:hidden;box-shadow:0 15px 40px rgba(32,20,10,.08)}
@@ -725,6 +752,93 @@ document.addEventListener(
             document.getElementById(
                 "gpsSpeedClient"
             );
+
+
+        const gpsFreshnessElement =
+            document.getElementById(
+                "gpsFreshness"
+            );
+
+
+        let lastGpsReceivedAt =
+            <%- JSON.stringify(latestTrackingPoint?.recorded_at || null) %>
+                ? new Date(<%- JSON.stringify(latestTrackingPoint?.recorded_at || null) %>).getTime()
+                : null;
+
+
+        function refreshGpsFreshness() {
+
+            if (
+                !gpsFreshnessElement
+                ||
+                !lastGpsReceivedAt
+            ) {
+                return;
+            }
+
+
+            const ageSeconds =
+                Math.max(
+                    0,
+                    Math.round(
+                        (Date.now() - lastGpsReceivedAt) / 1000
+                    )
+                );
+
+
+            gpsFreshnessElement.hidden =
+                false;
+
+
+            gpsFreshnessElement.classList.remove(
+                "stale",
+                "lost"
+            );
+
+
+            if (
+                ageSeconds <= 30
+            ) {
+
+                gpsFreshnessElement.textContent =
+                    "● Position en direct · "
+                    + ageSeconds
+                    + " s";
+            }
+            else if (
+                ageSeconds <= 120
+            ) {
+
+                gpsFreshnessElement.classList.add(
+                    "stale"
+                );
+
+                gpsFreshnessElement.textContent =
+                    "● Dernière position · "
+                    + ageSeconds
+                    + " s";
+            }
+            else {
+
+                gpsFreshnessElement.classList.add(
+                    "lost"
+                );
+
+                gpsFreshnessElement.textContent =
+                    "● Position ancienne · "
+                    + Math.floor(ageSeconds / 60)
+                    + " min";
+            }
+        }
+
+
+        refreshGpsFreshness();
+
+
+        setInterval(
+            refreshGpsFreshness,
+            5000
+        );
 
 
         const mapWarning =
@@ -937,16 +1051,37 @@ document.addEventListener(
                 );
 
 
-        L
-            .tileLayer(
-                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                {
-                    maxZoom:
-                        19,
+        /*
+         * 19.4.2.A.2
+         * OpenFreeMap fournit les tuiles vectorielles sans compte ni cle API.
+         * Leaflet reste le moteur principal : les marqueurs, la route, fitBounds,
+         * panTo et le flux Socket.IO existants ne changent pas.
+         */
+        const baseMapLayer =
+            L
+                .maplibreGL({
+                    style:
+                        "https://tiles.openfreemap.org/styles/liberty",
 
-                    attribution:
-                        "&copy; OpenStreetMap"
-                }
+                    attributionControl:
+                        false
+                })
+                .addTo(
+                    map
+                );
+
+
+        L
+            .control
+            .attribution({
+                position:
+                    "bottomright",
+
+                prefix:
+                    false
+            })
+            .addAttribution(
+                '<a href="https://openfreemap.org/" target="_blank" rel="noopener noreferrer">OpenFreeMap</a> &copy; <a href="https://openmaptiles.org/" target="_blank" rel="noopener noreferrer">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>'
             )
             .addTo(
                 map
@@ -1355,6 +1490,15 @@ document.addEventListener(
             }
 
 
+            lastGpsReceivedAt =
+                data.recordedAt
+                    ? new Date(data.recordedAt).getTime()
+                    : Date.now();
+
+
+            refreshGpsFreshness();
+
+
             if (
                 gpsStatusElement
             ) {
@@ -1451,6 +1595,11 @@ document.addEventListener(
                 );
 
 
+                connectionElement.classList.remove(
+                    "reconnecting"
+                );
+
+
                 socket.emit(
                     "order:join",
                     orderReference
@@ -1473,6 +1622,11 @@ document.addEventListener(
 
                 connectionElement.classList.remove(
                     "connected"
+                );
+
+
+                connectionElement.classList.add(
+                    "reconnecting"
                 );
             }
         );
